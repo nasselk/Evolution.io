@@ -1,7 +1,5 @@
 import { autoDetectRenderer, Container, Graphics, type Renderer } from "pixi.js";
 
-import { MsgWriter } from "../utils/thread/writer";
-
 import { newContainer } from "./createVisuals";
 
 import type Stats from "stats.js";
@@ -117,17 +115,6 @@ class RenderingLoop {
 		this.scale = Math.min(this.canvas.width, this.canvas.height) / 1080;
 
 		this.game.UI.render(this.scale, this.canvas);
-
-
-		if (this.game.player) {
-			const buffer = new MsgWriter(4);
-
-			buffer.writeUint16(this.canvas.width);
-
-			buffer.writeUint16(this.canvas.height);
-
-			this.game.socket.emit("FOV", buffer.bytes);
-		}
 	}
 }
 

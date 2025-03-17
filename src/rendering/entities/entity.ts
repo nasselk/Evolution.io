@@ -1,24 +1,24 @@
-import { interpolate, interpolateAngle } from "../utils/math/interpolation";
+import { interpolate, interpolateAngle } from "../../utils/math/interpolation";
 
-import { entityTypes as primitiveTypes } from "../utils/thread/connector";
+import { entityTypes as primitiveTypes } from "../../shared/connector";
 
-import { newContainer } from "../rendering/createVisuals";
+import { newContainer } from "../../rendering/createVisuals";
 
-import { worldContainer } from "../rendering/renderer";
+import { worldContainer } from "../../rendering/renderer";
 
-import { MsgReader } from "../utils/thread/reader";
+import { MsgReader } from "../../utils/thread/reader";
 
-import { Interval } from "../utils/timers/interval";
+import { Interval } from "../../utils/timers/interval";
 
-import { Timeout } from "../utils/timers/timeout";
+import { Timeout } from "../../utils/timers/timeout";
 
-import { getLayer } from "../rendering/layers";
+import { getLayer } from "../../rendering/layers";
 
-import { Vector } from "../utils/math/vector";
+import { Vector } from "../../utils/math/vector";
 
 import { Container } from "pixi.js";
 
-import { game } from "../game";
+import { game } from "../../game";
 
 
 
@@ -60,7 +60,7 @@ abstract class Entity {
 
 		this.position = new Vector(
 			MsgReader.fromPrecision(x, game.map.bounds.max.x, 16),
-			MsgReader.fromPrecision(y, game.map.bounds.max.y, 216),
+			MsgReader.fromPrecision(y, game.map.bounds.max.y, 16),
 		);
 
 		this.angle = properties.readFloat32();
@@ -75,6 +75,7 @@ abstract class Entity {
 		this.spawned = true;
 		this.lastUpdate = 0;
 
+		
 		this.container = newContainer({
 			x: this.position.x,
 			y: this.position.y,

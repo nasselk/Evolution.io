@@ -4,24 +4,32 @@ import { randomAngle } from "../../utils/math/angle";
 
 import { Timeout } from "../../utils/timers/timeout";
 
-import Player from "./player";
+import { DynamicEntity } from "./dynamicEntity";
+
+import { Collider } from "../physic/collider";
 
 
 
-@defineCustomType("AIPlayer", "player")
+@defineCustomType("animal")
 
-export default class AIPlayer extends Player {
-	public static override readonly isSubType: boolean = true;
-	
+export default class Animal extends DynamicEntity {
+	static override readonly list: Map<number, Animal> = new Map();
+
+	public readonly collider: Collider<this>;
 	protected timeout?: Timeout;
 
 	public constructor(options: ConstructorOptions) {
-		super(options);
+		super({
+			size: 40,
+			...options
+		});
 
-		this.movesType = "directional";
+		this.collider = new Collider("CIRCLE", this);
+		this.rotationSpeed = 0.085;
 
 		this.animate();
-	}
+  	}
+
 
 	public animate(): void {
 		const angle = randomAngle();

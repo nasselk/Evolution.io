@@ -1,4 +1,4 @@
-import { getTypeEncoder, entityTypes as primitiveTypes } from "../../utils/thread/connector";
+import { getTypeEncoder, entityTypes as primitiveTypes } from "../../shared/connector";
 
 import { Interval } from "../../utils/timers/interval";
 
@@ -41,7 +41,7 @@ interface ConstructorOptions {
 
 abstract class Entity {
 	public static readonly list = new Map<number, Entity | DynamicEntity>();
-	public static readonly savedPlayers = new Map<string, InstanceType<(typeof game.classes.player)>>();
+	public static readonly savedPlayers = new Map<string, InstanceType<(typeof game.classes.animal)>>();
 	private static readonly reservedIDs = new Set<number>();
 	public static readonly isSubType: boolean = false;
 	public static type: keyof typeof primitiveTypes;
@@ -208,25 +208,6 @@ abstract class Entity {
 		buffer.writeFloat32(this.angle);
 		buffer.writeUint16(this.size.x);
 
-
-		return buffer;
-	}
-
-
-	public packUpdates(additionalBytes: number = 0): MsgWriter {
-		const byteLength = 10 + additionalBytes;
-
-		const buffer = new MsgWriter(byteLength);
-
-		buffer.writeUint16(this.id);
-
-		const x = MsgWriter.toPrecision(this.position.x, this.constructor.game.map.bounds.max.x, 16);
-		const y = MsgWriter.toPrecision(this.position.y, this.constructor.game.map.bounds.max.y, 16);
-
-		buffer.writeUint16(x);
-		buffer.writeUint16(y);
-
-		buffer.writeFloat32(this.angle);
 
 		return buffer;
 	}

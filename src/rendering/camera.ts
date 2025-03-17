@@ -1,10 +1,6 @@
 import { interpolate } from "../utils/math/interpolation";
 
-//import { type Socket } from "../networking/socket";
-
-import { type Entity } from "../entities/entity";
-
-import { MsgWriter } from "../utils/thread/writer";
+import { type Entity } from "./entities/entity";
 
 import { Vector } from "../utils/math/vector";
 
@@ -21,7 +17,7 @@ class Camera {
 	public zoom: number;
 
 	
-	public constructor(debug: boolean, socket: Socket, interpolation: any) {
+	public constructor(interpolation: any) {
 		this.zoom = 1;
 		this.position = new Vector();
 		this.target = { position: this.position.clone, zoom: this.zoom };
@@ -29,41 +25,35 @@ class Camera {
 		this.syncZoom = false;
 		this.attached = true;
 
-
-		if (debug) {
-			document.addEventListener("wheel", (event) => {
-				const delta = event.deltaY / 1000;
-
-				if (this.target.zoom - delta > 0.05) {
-					this.target.zoom -= delta;
-
-					if (this.syncZoom) {
-						const buffer = new MsgWriter(4);
-
-						buffer.writeFloat32(this.target.zoom);
-
-						socket.emit("zoom", buffer.bytes);
-					}
-				}
-			});
+		this.gestures();
+	}
 
 
-			window.addEventListener("mousemove", (event) => {
-				if (event.buttons === 2) {
-					this.target.position.x -= event.movementX / this.zoom;
-					this.target.position.y -= event.movementY / this.zoom;
+	public gestures(): void {
+		document.addEventListener("wheel", (event) => {
+			const delta = event.deltaY / 1000;
 
-					this.attached = false;
-				}
-			});
-		}
+			if (this.target.zoom - delta > 0.05) {
+				this.target.zoom -= delta;
+			}
+		});
+
+
+		window.addEventListener("mousemove", (event) => {
+			if (event.buttons === 1) {
+				this.target.position.x -= event.movementX / this.zoom;
+				this.target.position.y -= event.movementY / this.zoom;
+
+				this.attached = false;
+			}
+		});
 	}
 
 
 	public update(scale: number, deltaTime: number): this {
 		if (!this.target.entity) {
-			this.target.position.x += 0.5 * deltaTime;
-			this.target.position.y += 0.5 * deltaTime;
+			//this.target.position.x += 0.5 * deltaTime;
+			//this.target.position.y += 0.5 * deltaTime;
 		}
 
 		else if (this.attached) {

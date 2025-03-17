@@ -1,8 +1,12 @@
-//import { connectToBestServer, type Servers } from "./networking/findServer";
+import { getTypeDecoder, getUpdateDecoder } from "./shared/connector";
 
-import { setComputerControls } from "./controls/keyboard";
+import { SharedBuffer } from "./utils/thread/sharedBuffer";
 
-import { setMobileControls } from "./controls/mobile";
+import Simulation from "./simulation/index?worker&inline";
+
+import * as classes from "./rendering/entities/manager";
+
+import { Entity } from "./rendering/entities/entity";
 
 import { RenderingLoop } from "./rendering/renderer";
 
@@ -12,15 +16,11 @@ import { getRandomInt } from "./utils/math/point";
 
 import { Thread } from "./utils/thread/thread";
 
-import * as classes from "./entities/manager";
-
-//import { Socket } from "./networking/socket";
-
 import { credit, log } from "./utils/logger";
 
 import { Camera } from "./rendering/camera";
 
-import { Entity } from "./entities/entity";
+import updates from "./shared/updates";
 
 import settings from "./settings.json";
 
@@ -33,40 +33,30 @@ import { isMobile } from "pixi.js";
 import config from "./config.json";
 
 import { GameMap } from "./map";
-import { SharedBuffer } from "./utils/thread/sharedBuffer";
-import updates from "./utils/thread/updates";
-import { getTypeDecoder, getUpdateDecoder } from "./utils/thread/connector";
-
 
 
 
 class Game {
 	public readonly camera: Camera;
-	public readonly socket: Socket;
 	public readonly config: typeof config;
 	public readonly classes: typeof classes;
 	public readonly settings: typeof settings;
 	public readonly entities: typeof Entity.list;
 	public readonly renderer: RenderingLoop;
-	public player?: classes.player | null;
 	public sharedBuffer: SharedBuffer;
 	public readonly isMobile: boolean;
-	public playerID?: number | null;
 	public readonly map: GameMap;
 	public readonly UI: GameUI;
-	public simulation?: Thread;
-	public pingEmit?: number;
-	public shopContent?: any;
+	private simulation?: Thread;
 
 
 	public constructor() {
 		this.classes = classes;
 		this.isMobile = isMobile.any;
 		this.UI = new GameUI(this.isMobile);
-		//this.socket = new Socket("TCP");
-		this.camera = new Camera(config.ENV === "development", this.socket, settings.interpolation);
 		this.renderer = new RenderingLoop(this, this.UI.container);
-		this.sharedBuffer = new SharedBuffer(10 * 1024 * 1024); // 10MB allocation
+		this.camera = new Camera(settings.interpolation);
+		this.sharedBuffer = new SharedBuffer(15 * (config.entities.food + config.entities.prey + config.entities.predator) + 10 * (config.entities.prey + config.entities.predator) + 5000); // Allocate shared memory for the entities
 		this.map = new GameMap(this.renderer.worldContainer);
 		this.entities = Entity.list;
 		this.settings = settings;
@@ -99,15 +89,6 @@ class Game {
 		// Retrieve settings saved in localStorage
 		this.retrieveSettings();
 
-		// Set controls based on the device
-		if (this.isMobile) {
-			setMobileControls(this);
-		}
-
-		else {
-			setComputerControls(this);
-		}
-
 
 		// Initialize the renderer
 		this.renderer.init(this.settings.rendering);
@@ -130,7 +111,10 @@ class Game {
 
 
 	public update(count: number): void {
+		const n = performance.now();
 		const buffer = this.sharedBuffer.unlinkReader();
+		console.log(performance.now() - n);
+
 
 
 		let event: typeof updates[number];
@@ -178,29 +162,33 @@ class Game {
 	}
 
 
+
+	public startSimulation(): void {
+		const thread = new Simulation();
+
+		this.simulation = new Thread(thread);
+
+		this.simulation.send("init", game.sharedBuffer.buffer);
+
+		this.simulation.on("update", (count: number) => {
+			game.update(count);
+		});
+
+
+		document.getElementById("menu")!.style.display = "none";
+		document.getElementById("gameUI")!.style.display = "block";
+	}
+
+
+	public stopSimulation(): void {
+		this.simulation?.terminate();
+	}
+	
+
+
 	// Apply settings saved in localStorage
 	private retrieveSettings(): void {
 
-	}
-}
-
-
-
-async function fetchJSON(url: string): Promise<any> {
-	try {
-		const response = await fetch(url, {
-			headers: {
-				accept: "application/json"
-			}
-		});
-
-		return await response.json();
-	}
-
-	catch (error) {
-		console.log(error);
-
-		return null;
 	}
 }
 

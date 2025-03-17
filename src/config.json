@@ -1,14 +1,12 @@
 {
 	"ENV": "development",
 	"gameVersion": "0.9.1",
-	"gameMode": "FFA",
-	"protocol": "TCP",
 	"debug": false,
-	"guestAccount": true,
-	"auth": {
-		"turnstileKey": "",
-		"googleID": "319952653713-toagvvchtueflpffs7s6m9nqilj0b35s",
-		"discordID": "1251631607673257984"
-	},
-	"masterServer": "https://yourdomain.io:3000"
+	"TPS": 60,
+	"seed": 0,
+	"entities": {
+		"prey": 2000,
+		"predator": 2000,
+		"food": 500
+	}
 }

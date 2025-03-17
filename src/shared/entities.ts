@@ -1,8 +1,8 @@
 export default {
-	player: {
+	animal: {
 		dynamic: true,
 	},
-	obstacle: {
-		dynamic: true,
+	food: {
+		dynamic: false,
 	}
 } as const;

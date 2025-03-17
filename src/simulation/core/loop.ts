@@ -1,6 +1,6 @@
 import { type DynamicEntity } from "../entities/dynamicEntity";
 
-import { dynamicTypes } from "../../utils/thread/connector";
+import { dynamicTypes } from "../../shared/connector";
 
 import { log } from "../../utils/logger";
 
@@ -29,6 +29,7 @@ class GameLoop {
 	public updateGameState(): void {
 		// 1 bcs setTimeout is not accurate anyways
 		setTimeout(this.updateGameState.bind(this), 1);
+		//setTimeout(, 1);
 		
 
 		const now: number = performance.now();
@@ -50,6 +51,7 @@ class GameLoop {
 					// Update the entity
 					entity.update(deltaTime / 10, this.game.map);
 
+					
 					// Insert into the grid for pairwise collision
 					this.game.dynamicGrid.insert(entity);
 
@@ -101,7 +103,7 @@ class GameLoop {
 		// Add entities updates
 		for (const entity of this.game.entities.values()) {
 			if (entity.constructor.dynamic) {
-				this.game.addWorldUpdate("position", entity.packUpdates());
+				this.game.addWorldUpdate("position", (entity as DynamicEntity).packUpdates());
 			}
 		}
 

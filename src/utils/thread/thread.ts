@@ -63,6 +63,18 @@ class Thread {
 			this.thread.postMessage(message);
 		}
 	}
+
+
+	public terminate(): void {
+		if (this.thread instanceof Worker) {
+			this.thread.terminate();
+		}
+
+		else if (this.thread instanceof MessagePort) {
+			this.thread.close();
+		}
+	}
+	
 }
 
 

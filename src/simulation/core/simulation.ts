@@ -1,4 +1,4 @@
-import { getUpdateEncoder, type updates } from "../../utils/thread/connector";
+import { getUpdateEncoder, type updates } from "../../shared/connector";
 
 import { type DynamicEntity } from "../entities/dynamicEntity";
 
@@ -22,7 +22,7 @@ import * as classes from "../entities/manager";
 
 import { log } from "../../utils/logger";
 
-import config from "../config.json";
+import config from "../../config.json";
 
 import { GameLoop } from "./loop";
 

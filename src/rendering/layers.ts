@@ -1,4 +1,4 @@
-import { type Entity } from "../entities/entity.js";
+import { type EntityTypes, type Entity } from "./entities/entity.js";
 
 import { error } from "../utils/logger.js";
 
@@ -7,8 +7,8 @@ import { error } from "../utils/logger.js";
 const layers = {
 	default: [
 		"map",
-		"obstacle",
-		"player",
+		"food",
+		"animal",
 	]
 };
 
@@ -54,37 +54,13 @@ const mappedLayers = processLayers(layers);
 
 
 
-function getLayer(entity: Entity | string, ...params: string[]): number {
+function getLayer(entity: Entity | EntityTypes): number {
 	const type = typeof entity === "string" ? entity : entity.type;
 
-	const isEntity = typeof entity !== "string";
 
 	const settings = {
-		flying: isEntity ? entity.flying : false,
-		diving: isEntity ? entity.diving : false,
 		layer: 0,
 	};
-
-
-	for (const key of params) {
-		if (key.startsWith("layer")) {
-			settings.layer = parseInt(key.replace("layer", "")) - 1;
-		}
-
-		else {
-			settings[key as keyof typeof settings] = true;
-		}
-	}
-
-
-	if (settings.flying) {
-		return mappedLayers.get("flying")!.get(type)[settings.layer];
-	}
-
-
-	else if (settings.diving) {
-		return mappedLayers.get("diving")!.get(type)[settings.layer];
-	}
 
 
 	try {

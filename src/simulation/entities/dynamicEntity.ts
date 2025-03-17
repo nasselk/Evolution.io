@@ -2,6 +2,8 @@ import { type ConstructorOptions, Entity } from "./entity";
 
 import { normalizeAngle } from "../../utils/math/angle";
 
+import { MsgWriter } from "../../utils/thread/writer";
+
 import { Vector } from "../../utils/math/vector";
 
 import { type GameMap } from "../map";
@@ -11,7 +13,6 @@ import { type GameMap } from "../map";
 abstract class DynamicEntity extends Entity {
 	protected readonly forces: Set<Vector>;
 	public readonly velocity: Vector;
-	protected readonly gravity: Vector;
 	protected override readonly observable: Entity["observable"] & { position: Vector, angle: number };
 	public angularVelocity: number;
 	public targetAngle?: number;
@@ -21,27 +22,18 @@ abstract class DynamicEntity extends Entity {
 	protected angularFriction: number;
 	protected rotationSpeed?: number;
 	protected movingDirection?: number | null;
-	protected movesType: "axisAligned" | "directional";
-	public pressedKeys?: { 
-		up: boolean,
-		down: boolean,
-		left: boolean,
-		right: boolean
-	};
 
 
 	public constructor(options: ConstructorOptions) {
 		super(options);
 
 		this.velocity = new Vector();
-		this.gravity = new Vector();
 		this.moving = false;
 		this.angularVelocity = 0;
 		this.moveSpeed = 0.25;
 		this.friction = 0.965;
 		this.forces = new Set();
 		this.angularFriction = 0.775;
-		this.movesType = "axisAligned";
 		this.mass = options.mass || 1; // Should be >= 1
 		this.targetAngle = this.movingDirection = this.angle;
 		this.observable = { health: this.health, size: this.size, position: this.position.clone, angle: this.angle};
@@ -70,26 +62,6 @@ abstract class DynamicEntity extends Entity {
 
 
 	protected move(deltaTime: number): this {
-		// Transform the pressed keys axis (up, down, left, right) into a moving direction
-		if (this.movesType === "axisAligned") {
-			const movement = new Vector();
-
-			movement.x += this.pressedKeys?.left ? -1 : 0;
-			movement.x += this.pressedKeys?.right ? 1 : 0;
-			movement.y += this.pressedKeys?.down ? 1 : 0;
-			movement.y += this.pressedKeys?.up ? -1 : 0;
-
-
-			if (movement.x || movement.y) {
-				this.movingDirection = movement.angle;
-			}
-
-			else {
-				this.movingDirection = null;
-			}
-		}
-		
-
 		// Add velocity in the moving direction (entity default movements)
 		if (typeof this.movingDirection === "number") {
 			const x = Math.cos(this.movingDirection) * this.moveSpeed;
@@ -110,9 +82,6 @@ abstract class DynamicEntity extends Entity {
 			this.velocity.add(vector);
 		}
 
-
-		// Apply gravity
-		this.velocity.add(this.gravity, deltaTime);
 
 		// Apply friction
 		this.velocity.scale(this.friction ** deltaTime);
@@ -172,6 +141,25 @@ abstract class DynamicEntity extends Entity {
 			default:
 				throw new Error("Invalid type");
 		}
+	}
+
+
+	public packUpdates(additionalBytes: number = 0): MsgWriter {
+		const byteLength = 10 + additionalBytes;
+
+		const buffer = new MsgWriter(byteLength);
+
+		buffer.writeUint16(this.id);
+
+		const x = MsgWriter.toPrecision(this.position.x, this.constructor.game.map.bounds.max.x, 16);
+		const y = MsgWriter.toPrecision(this.position.y, this.constructor.game.map.bounds.max.y, 16);
+
+		buffer.writeUint16(x);
+		buffer.writeUint16(y);
+
+		buffer.writeFloat32(this.angle);
+
+		return buffer;
 	}
 }
 

@@ -12,24 +12,33 @@ function spawnEntities(spawner: Spawner, config: Game["config"], map: GameMap): 
 	const random = Math.random.bind(Math);
 
 	
-	// Obstacles
-	for (let i: number = 0; i < config.entities.obstacles * Math.pow(map.scale, 2); i++) {
+	// Food
+	for (let i: number = 0; i < config.entities.food * Math.pow(map.scale, 2); i++) {
 		const position = spawner.randomPosition(map.shape);
 
-		const size = spawner.randomInt(75, 250);
+		const size = spawner.randomInt(50, 150);
 
-		Entity.create("obstacle", {
+		Entity.create("food", {
 			position: position,
 			size: size,
 		});		
 	}
 
 
-	// Bots
-	for (let i: number = 0; i < config.entities.bots; i++) {
+	// Animals
+	for (let i: number = 0; i < config.entities.prey; i++) {
 		const position = spawner.randomPosition(map.shape, 0, random);
 
-		Entity.create("AIPlayer", {
+		Entity.create("animal", {
+			position: position,
+		});
+	}
+
+
+	for (let i: number = 0; i < config.entities.predator; i++) {
+		const position = spawner.randomPosition(map.shape, 0, random);
+
+		Entity.create("animal", {
 			position: position,
 		});
 	}

@@ -1,9 +1,4 @@
-//import { writeFOV } from "../networking/listeners";
-import Simulation from "../simulation/index?worker&inline";
-
 import { Timeout } from "../utils/timers/timeout";
-
-import { Thread } from "../utils/thread/thread";
 
 import { game } from "../game";
 
@@ -78,21 +73,7 @@ function hideMessage(): void {
 
 /* ************************************* MAIN MENU ************************************* */
 document.querySelector("#playButton")?.addEventListener("click", function(): void {
-	// Send the canvas size to the server
-	//const buffer = writeFOV();
-
-	//game.socket.emit("startGameSession", buffer.bytes);
-
-	const thread = new Simulation();
-
-	game.simulation = new Thread(thread);
-
-	game.simulation.send("init", game.sharedBuffer.buffer);
-
-
-	game.simulation.on("update", (count: number) => {
-		game.update(count);
-	});
+	game.startSimulation();
 });
 
 
@@ -112,6 +93,18 @@ document.querySelector("#fullscreen")?.addEventListener("click", function(): voi
 		document.documentElement.requestFullscreen();
 	}
 });
+
+
+// Prevent right-click and scrolling
+document.addEventListener("contextmenu", function (event: MouseEvent): void {
+	if ((event.target as HTMLElement).tagName != "INPUT") {
+		event.preventDefault();
+	}
+});
+
+window.addEventListener("wheel", function (event: WheelEvent): void {
+	event.preventDefault();
+}, { passive: false });
 
 
 

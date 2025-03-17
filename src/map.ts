@@ -13,7 +13,7 @@ import map from "./map.json";
 
 
 class GameMap {
-	private static readonly offset: number = map.offset; // 500 offset to avoid uint16 overflow
+	private static readonly offset: number = map.offset; // Offset to avoid uint16 overflow
 
 
 	public readonly bounds: { min: Vector, max: Vector };

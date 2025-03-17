@@ -1,6 +1,6 @@
-import { newContainer, newSprite } from "../rendering/createVisuals";
+import { newContainer, newSprite } from "../createVisuals";
 
-import { type MsgReader } from "../utils/thread/reader";
+import { type MsgReader } from "../../utils/thread/reader";
 
 import { Entity, defineCustomType } from "./entity";
 
@@ -8,10 +8,10 @@ import { type Sprite, Texture } from "pixi.js";
 
 
 
-@defineCustomType("obstacle")
+@defineCustomType("food")
 
-export default class Obstacle extends Entity {
-	public static override readonly list = new Map<number, Obstacle>();
+export default class Food extends Entity {
+	public static override readonly list = new Map<number, Food>();
 	public static override readonly container = newContainer();
 
 	private sprite?: Sprite;
@@ -25,7 +25,9 @@ export default class Obstacle extends Entity {
 
 
 	public init(): this {
-		this.sprite = newSprite(Texture.WHITE);
+		this.sprite = newSprite(Texture.WHITE, {
+			tint: "#00CF44"
+		});
 
 		this.container.addChild(this.sprite);
 

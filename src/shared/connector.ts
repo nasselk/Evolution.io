@@ -1,6 +1,6 @@
 import updates from "./updates";
 
-import types from "../entities";
+import types from "./entities";
 
 
 

@@ -1,18 +1,16 @@
-import { newSprite } from "../rendering/createVisuals";
-
-import { type MsgReader } from "../utils/thread/reader";
+import { type MsgReader } from "../../utils/thread/reader";
 
 import { Entity, defineCustomType } from "./entity";
 
-import { getTexture } from "../loader";
+import { newSprite } from "../createVisuals";
+
+import { getTexture } from "../../loader";
 
 import { type Sprite } from "pixi.js";
 
-import { game } from "../game";
 
 
-
-@defineCustomType("player")
+@defineCustomType("animal")
 
 export default class Player extends Entity {
 	public static override readonly list = new Map<number, Player>();
@@ -28,19 +26,12 @@ export default class Player extends Entity {
 
 
 	public async init(): Promise<this | void> {
-		if (this.id === game.playerID) {
-			game.camera.target.entity = this;
-
-			game.player = this;
-		}
-
-
 		const texture = await getTexture("player", "webp");
 
 		if (this.spawned) {
 			this.sprite = newSprite(texture);
 
-			this.sprite.tint = "orange";
+			this.sprite.tint = Math.random() > 0.5 ? "red" : "cyan";
 
 			this.container.addChild(this.sprite);
 
