@@ -1,0 +1,36 @@
+{
+	"type": "module",
+	"name": "phoenix.engine",
+	"author": "Nassim EL KARATI",
+	"description": "Typescript multiplayer game engine",	
+	"version": "0.9.3",
+	"license": "MIT",
+	"private": true,
+	"engines": {
+		"node": ">=18.0.0 <19.0.0 || >=20.0.0 <21.0.0 || >=22.0.0"
+	},
+	"scripts": {
+		"init:dev": "git worktree add -b production ./production HEAD && git push --set-upstream origin production && npm install && npm run dev",
+		"serve": "vite preview --host",
+		"dev": "vite",
+		"build": "node build.js"
+	},
+	"dependencies": {
+		"pixi.js": "^8.8.1"
+	},
+	"devDependencies": {
+		"@eslint/js": "^9.18.0",
+		"@typescript-eslint/eslint-plugin": "^8.20.0",
+		"@typescript-eslint/parser": "^8.20.0",
+		"eslint": "^9.18.0",
+		"globals": "^16.0.0",
+		"typescript": "^5.8.2",
+		"javascript-obfuscator": "^4.1.1",
+		"@rollup/plugin-strip": "^3.0.4",
+		"stats.js": "^0.17.0",
+		"@types/stats.js": "^0.17.3",
+		"vite": "^6.2.0",
+		"vite-plugin-compression": "^0.5.1",
+		"vite-plugin-html": "^3.2.2"
+	}
+}

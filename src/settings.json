@@ -1,0 +1,41 @@
+{
+	"rendering": {
+		"resolution": 1,
+		"antialiasing": true,
+		"renderer": "webgpu",
+		"backgroundColor": "#242424"
+	},
+
+	"audio": {
+		"volume": 1
+	},
+
+	"interpolation": {
+		"moves": 0.1,
+		"angle": 0.05,
+		"camera": 0.1,
+		"zoom": 0.05
+	},
+
+	"binds": {
+		"up": [
+			"KeyW",
+			"ArrowUp"
+		],
+
+		"down": [
+			"KeyS",
+			"ArrowDown"
+		],
+
+		"left": [
+			"KeyA",
+			"ArrowLeft"
+		],
+
+		"right": [
+			"KeyD",
+			"ArrowRight"
+		]
+	}
+}

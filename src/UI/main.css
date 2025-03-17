@@ -1,0 +1,331 @@
+@font-face {
+	font-family: "Baloo2";
+	src: url("/assets/fonts/Baloo2.woff2") format("woff2");
+	font-weight: normal;
+	font-style: normal;
+}
+
+
+/* GLOBAL */
+* {
+	touch-action: none;
+	-webkit-touch-callout: none;
+}
+
+
+html, body {
+	top: 0px;
+	left: 0px;
+	margin: 0px;
+	width: 100vw;
+	height: 100vh;
+	overflow: hidden;
+	justify-content: center;
+	align-items: center;
+	-ms-user-select: none;
+	-o-user-select: none;
+	-moz-user-select: none;
+	-khtml-user-select: none;
+	-webkit-user-select: none;
+	-webkit-tap-highlight-color: transparent;
+	user-select: none;
+}
+
+
+button, div {
+	font-family: "Baloo2";
+	color: white;
+	font-size: 3vmin;
+	text-shadow: 0 0.25vmin 1vmin rgba(0, 0, 0, 1);
+}
+
+
+button {
+	position: relative;
+	overflow: hidden;
+	cursor: pointer;
+}
+
+button:after {
+	position: absolute;
+	background-color: white;
+	content: "";
+	height: 200%;
+	left: -50%;
+	top: -50%;
+	width: 15%;
+	opacity: 0.2;
+	transform: rotate(35deg);
+	transition: all 1s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+button:hover:after {
+	left: 120%;
+}
+
+
+canvas {
+	position: fixed;
+}
+
+
+.glassMorphism {
+	border-radius: 2vmin;
+	background: rgba(255, 255, 255, 0.2);
+	box-shadow: 0 0.25vmin 1vmin rgba(0, 0, 0, 0.25);
+	-webkit-backdrop-filter: blur(3px);
+	backdrop-filter: blur(3px);
+	border: 0.25vmin solid rgba(255, 255, 255, 0.3);
+}
+
+
+.flexWrapper {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+
+
+/* CENTER BOX */
+#playButton {
+	position: fixed;
+	transform: translate(-50%, -50%);
+	top: 50%;
+	left: 50%;
+	width: 25vmin;
+	height: 7vmin;
+}
+
+
+#serverMessage {
+	display: none;
+	position: absolute;
+	padding: 1.5vmin;
+	top: 20%;
+	/*background-color: rgba(24, 23, 44, 0.75);*/
+	border: 0.35vmin solid rgba(255, 255, 255, 0.75);
+	font-size: 2.5vmin;
+	text-align: center;
+}
+
+
+
+.error {
+	background-color: rgba(255, 0, 0, 0.5);
+	box-shadow: 0 0.25vmin 1vmin rgba(255, 0, 0, 0.35);
+}
+
+
+.warn {
+	background-color: rgba(255, 255, 0, 0.5);
+	box-shadow: 0 0.25vmin 1vmin rgba(255, 255, 0, 0.35);
+}
+
+
+
+/* ACCOUNTS */
+#signIn {
+	position: fixed;
+	top: 8vmin;
+	left: 2vmin;
+	width: 20vmin;
+	height: 5.5vmin;
+	font-size: 2.5vmin;
+	border-radius: 1.5vmin;
+}
+
+
+#signInBox {
+	display: none;
+	position: fixed;
+	transform: translate(-50%, -50%);
+	top: 50%;
+	left: 50%;
+	flex-direction: column;
+	width: 30vmin;
+	text-align: center;
+	align-items: center;
+	vertical-align: middle;
+	padding: 2vmin;
+}
+
+
+#signInBox > h3 {
+	margin: 0;
+	font-size: 3vmin;
+}
+
+
+#signInBox > button {
+	display: none;
+	margin-top: 2vmin;
+	width: 100%;
+	height: 5.5vmin;
+	font-size: 2.5vmin;
+	flex-direction: row;
+	border-radius: 1.5vmin;
+	background-color: rgba(24, 23, 44, 0.75);
+	border: solid 0.25vmin rgba(24, 23, 44, 0.85);
+}
+
+#signInBox > button > svg {
+	margin-right: 1.5vmin;
+	vertical-align: middle;
+	height: 70%;
+}
+
+
+
+#icons {
+	position: fixed;
+	bottom: 1.75vmin;
+	left: 1.75vmin;
+	gap: 2vmin;
+	display: flex;
+	z-index: 5;
+	flex-direction: column;
+}
+
+
+.miniButton {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	width: 5vmin;
+	height: 5vmin;
+	border-radius: 1.5vmin;
+	cursor: pointer;
+	overflow: hidden;
+}
+
+.miniButton svg {
+	width: 3vmin;
+	height: 3vmin;
+	vertical-align: middle;
+	overflow: hidden;
+	fill: white;
+}
+
+
+
+
+/* IN GAME */
+#gameUI {
+	display: none;
+}
+
+
+.joystick {
+	position: fixed;
+	width: 25vmin;
+	height: 25vmin;
+	background-color: rgba(0, 0, 0, 0.5);
+	border-radius: 50%;
+	bottom: 20vmin;
+	right: 20vmin;
+	transition: opacity 0.5s;
+}
+
+
+.joystick > div {
+	position: absolute;
+	width: 50%;
+	height: 50%;
+	left: 50%;
+	top: 50%;
+	border-radius: 50%;
+	pointer-events: none;
+	background-color: rgba(0, 0, 0, 0.5);
+	transform: translate3d(-50%, -50%, 0px);
+}
+
+
+
+
+/* ANIMATIONS */
+
+@-webkit-keyframes heartbeat {
+	from {
+		-webkit-transform: scale(1);
+		transform: scale(1);
+		-webkit-transform-origin: center center;
+		transform-origin: center center;
+		-webkit-animation-timing-function: ease-out;
+		animation-timing-function: ease-out;
+	}
+
+	10% {
+		-webkit-transform: scale(0.91);
+		transform: scale(0.91);
+		-webkit-animation-timing-function: ease-in;
+		animation-timing-function: ease-in;
+	}
+
+	17% {
+		-webkit-transform: scale(0.98);
+		transform: scale(0.98);
+		-webkit-animation-timing-function: ease-out;
+		animation-timing-function: ease-out;
+	}
+
+	33% {
+		-webkit-transform: scale(0.87);
+		transform: scale(0.87);
+		-webkit-animation-timing-function: ease-in;
+		animation-timing-function: ease-in;
+	}
+
+	45% {
+		-webkit-transform: scale(1);
+		transform: scale(1);
+		-webkit-animation-timing-function: ease-out;
+		animation-timing-function: ease-out;
+	}
+}
+
+@keyframes heartbeat {
+	from {
+		-webkit-transform: scale(1);
+		transform: scale(1);
+		-webkit-transform-origin: center center;
+		transform-origin: center center;
+		-webkit-animation-timing-function: ease-out;
+		animation-timing-function: ease-out;
+	}
+
+	10% {
+		-webkit-transform: scale(0.91);
+		transform: scale(0.91);
+		-webkit-animation-timing-function: ease-in;
+		animation-timing-function: ease-in;
+	}
+
+	17% {
+		-webkit-transform: scale(0.98);
+		transform: scale(0.98);
+		-webkit-animation-timing-function: ease-out;
+		animation-timing-function: ease-out;
+	}
+
+	33% {
+		-webkit-transform: scale(0.87);
+		transform: scale(0.87);
+		-webkit-animation-timing-function: ease-in;
+		animation-timing-function: ease-in;
+	}
+
+	45% {
+		-webkit-transform: scale(1);
+		transform: scale(1);
+		-webkit-animation-timing-function: ease-out;
+		animation-timing-function: ease-out;
+	}
+}
+
+
+
+.heartbeat {
+	-webkit-animation: heartbeat 1.5s ease-in-out infinite both;
+	animation: heartbeat 1.5s ease-in-out infinite both;
+}

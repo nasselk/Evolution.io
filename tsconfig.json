@@ -1,0 +1,22 @@
+{
+	"compilerOptions": {
+    	"strict": true,
+		"target": "ES2020",
+		"module": "ESNext",
+		"moduleResolution": "bundler",
+		"resolveJsonModule": true,
+		"incremental": true,
+		//"noEmitOnError": true,
+		"skipLibCheck": true,
+		"noImplicitReturns": true,
+		"skipDefaultLibCheck": true,
+		"noFallthroughCasesInSwitch": true,
+    	"forceConsistentCasingInFileNames": true,
+		"useUnknownInCatchVariables": true,
+		"noImplicitOverride": true,
+		"noUnusedLocals": true,
+		"experimentalDecorators": true,
+    	"outDir": "./production/",
+		"lib": [ "ESNext", "DOM", "DOM.Iterable", "WebWorker" ],
+  	}
+}
