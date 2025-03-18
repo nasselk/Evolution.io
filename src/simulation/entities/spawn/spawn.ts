@@ -20,9 +20,11 @@ function spawnEntities(spawner: Spawner, config: Game["config"], map: GameMap): 
 
 		Entity.create("food", {
 			position: position,
+			initialSpawn: true,
 			size: size,
 		});		
 	}
+
 
 
 	// Animals
@@ -31,6 +33,7 @@ function spawnEntities(spawner: Spawner, config: Game["config"], map: GameMap): 
 
 		Entity.create("animal", {
 			position: position,
+			initialSpawn: true,
 		});
 	}
 
@@ -40,6 +43,7 @@ function spawnEntities(spawner: Spawner, config: Game["config"], map: GameMap): 
 
 		Entity.create("animal", {
 			position: position,
+			initialSpawn: true,
 		});
 	}
 }

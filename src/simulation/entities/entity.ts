@@ -36,6 +36,7 @@ interface ConstructorOptions {
 	readonly health?: number;
 	readonly biome?: Biome;
 	readonly mass?: number,
+	readonly initialSpawn?: boolean
 }
 
 
@@ -69,8 +70,8 @@ abstract class Entity {
 	protected constructor(options: ConstructorOptions) {
 		this.position = new Vector();
 		this.health = options.health ?? 100;
-		this.id = getUnusedID(Entity.list, Entity.reservedIDs);
 		this.cellsKeys = new Array(HashGrid2D.gridCount).fill(new Set());
+		this.id = getUnusedID(Entity.list, Entity.reservedIDs, options.initialSpawn);
 		this.size = new Vector(options.size ?? options.width, options.size ?? options.height ?? options.width);
 		this.observable = { health: this.health, size: this.size.clone };
 		this.creation = performance.now();
@@ -102,7 +103,7 @@ abstract class Entity {
 
 		constructor.list.set(entity.id, entity);
 
-		Entity.game.addWorldUpdate("createEntity", entity.packProperties());
+		Entity.game.addWorldUpdate("createEntity", entity.packProperties.bind(entity));
 
 		return entity;
 	}
@@ -140,7 +141,7 @@ abstract class Entity {
 
 		new Timeout(() => {
 			Entity.reservedIDs.delete(this.id);
-		}, 1000);
+		}, 1000, true);
 
 
 		const buffer = new MsgWriter(2);
@@ -190,13 +191,13 @@ abstract class Entity {
 	}
 
 
-	public packProperties(additionalBytes: number = 0): MsgWriter {
-		const buffer = new MsgWriter(14 + additionalBytes);
+	public packProperties(writer?: MsgWriter, additionalBytes: number = 0): MsgWriter {
+		const buffer = writer ?? new MsgWriter(13 + additionalBytes);
 
 
 		const type = getTypeEncoder(this.type);
 
-		buffer.writeUint16(type);
+		buffer.writeUint8(type);
 		buffer.writeUint16(this.id);
 
 		const x = MsgWriter.toPrecision(this.position.x, this.constructor.game.map.bounds.max.x, 16);

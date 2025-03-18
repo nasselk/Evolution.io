@@ -30,7 +30,7 @@ abstract class DynamicEntity extends Entity {
 		this.velocity = new Vector();
 		this.moving = false;
 		this.angularVelocity = 0;
-		this.moveSpeed = 0.25;
+		this.moveSpeed = 0.15;
 		this.friction = 0.965;
 		this.forces = new Set();
 		this.angularFriction = 0.775;
@@ -144,10 +144,8 @@ abstract class DynamicEntity extends Entity {
 	}
 
 
-	public packUpdates(additionalBytes: number = 0): MsgWriter {
-		const byteLength = 10 + additionalBytes;
-
-		const buffer = new MsgWriter(byteLength);
+	public packUpdates(writer?: MsgWriter, additionalBytes: number = 0): MsgWriter {
+		const buffer = writer ?? new MsgWriter(10 + additionalBytes);
 
 		buffer.writeUint16(this.id);
 

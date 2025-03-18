@@ -1,6 +1,12 @@
 import { type DynamicEntity } from "../entities/dynamicEntity";
 
+import { Interval } from "../../utils/timers/interval";
+
 import { dynamicTypes } from "../../shared/connector";
+
+import { Timeout } from "../../utils/timers/timeout";
+
+import { nextTick } from "../../utils/timers/tick";
 
 import { log } from "../../utils/logger";
 
@@ -27,18 +33,27 @@ class GameLoop {
 
 
 	public updateGameState(): void {
-		// 1 bcs setTimeout is not accurate anyways
-		setTimeout(this.updateGameState.bind(this), 1);
-		//setTimeout(, 1);
-		
-
 		const now: number = performance.now();
 		const deltaTime: number = Math.min(now - this.lastTick, 1000);
 		
 
+		if (this.game.config.turbo) {
+			nextTick(this.updateGameState.bind(this));
+		}
+
+		else {
+			// 1ms because setTimeout is inaccurate
+			setTimeout(this.updateGameState.bind(this), 1);
+		}
+
+
 		// If deltaTime is greater or equal to the server maximum tick rate then update the game state
 		if (deltaTime >= this.minTickDelta) {
 			this.lastTick = now;
+
+
+			Timeout.runTimeouts(now);
+			Interval.runIntervals(now);
 
 			
 			let minID: number = Infinity;
@@ -103,21 +118,18 @@ class GameLoop {
 		// Add entities updates
 		for (const entity of this.game.entities.values()) {
 			if (entity.constructor.dynamic) {
-				this.game.addWorldUpdate("position", (entity as DynamicEntity).packUpdates());
+				this.game.addWorldUpdate("position", (entity as DynamicEntity).packUpdates.bind(entity));
 			}
 		}
 
 
 		// Send the updates to the socket thread (only if there are sockets connected to save resources on burst servers)
-		if (this.game.updates.count > 0) {
-			this.game.writeUpdates();
-
-			this.game.renderingThread.send("update", this.game.updates.count);
+		if (this.game.updatesCount > 0) {
+			this.game.renderingThread.send("update", this.game.updatesCount);
 
 			// Reset the events
-			this.game.updates.global = {};
-			this.game.updates.count = 0;
-			this.game.updates.byteLength = 0;
+			this.game.sharedBuffer?.writer.reset();
+			this.game.updatesCount = 0;
 		}
 	}
 

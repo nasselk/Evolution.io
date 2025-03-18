@@ -3,8 +3,8 @@
 	"offset": 500,
 	"biomes": {
 		"default": {
-			"width": 15000,
-			"height": 15000
+			"width": 25000,
+			"height": 25000
 		}
 	},
 	"colors": {

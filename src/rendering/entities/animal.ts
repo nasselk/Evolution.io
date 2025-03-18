@@ -2,9 +2,9 @@ import { type MsgReader } from "../../utils/thread/reader";
 
 import { Entity, defineCustomType } from "./entity";
 
-import { newSprite } from "../createVisuals";
+import { getTexture } from "../../loader/texture";
 
-import { getTexture } from "../../loader";
+import { newSprite } from "../createVisuals";
 
 import { type Sprite } from "pixi.js";
 

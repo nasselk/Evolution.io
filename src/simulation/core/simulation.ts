@@ -1,5 +1,3 @@
-import { getUpdateEncoder, type updates } from "../../shared/connector";
-
 import { type DynamicEntity } from "../entities/dynamicEntity";
 
 import { SharedBuffer } from "../../utils/thread/sharedBuffer";
@@ -20,6 +18,8 @@ import { spawn } from "../entities/spawn/spawn";
 
 import * as classes from "../entities/manager";
 
+import updates from "../../shared/updates";
+
 import { log } from "../../utils/logger";
 
 import config from "../../config.json";
@@ -30,13 +30,6 @@ import { GameMap } from "../map";
 
 
 
-type worldUpdates = {
-	global: Partial<{ [key in typeof updates[number]]: Uint8Array[] }>,
-	byteLength: number,
-	count: number,
-}
-
-
 
 class Game {
 	public readonly renderingThread: Thread;
@@ -45,11 +38,11 @@ class Game {
 	public readonly entities: typeof Entity.list;
 	public readonly classes: typeof classes;
 	public readonly config: typeof config;
-	public readonly updates: worldUpdates;
 	public sharedBuffer?: SharedBuffer;
 	public readonly spawner: Spawner;
 	private readonly loop: GameLoop;
 	public readonly map: GameMap;
+	public updatesCount: number;
 	public FOVThread?: Thread;
 
 	
@@ -57,16 +50,12 @@ class Game {
 		this.config = config;
 		this.map = new GameMap();
 		this.classes = classes satisfies Record<EntityTypes, typeof Entity>;
-		this.dynamicGrid = new HashGrid2D(500, 500, this.map.bounds.max.x, this.map.bounds.max.y, false);
+		this.dynamicGrid = new HashGrid2D(200, 200, this.map.bounds.max.x, this.map.bounds.max.y, false);
 		this.staticGrid = new HashGrid2D(500, 500, this.map.bounds.max.x, this.map.bounds.max.y, true, this.classes);
 		this.renderingThread = new Thread(self);
 		this.loop = new GameLoop(this);
 		this.entities = Entity.list;
-		this.updates = {
-			global: {},
-			byteLength: 0,
-			count: 0,
-		};
+		this.updatesCount = 0;
 		
 
 		if (!this.config.seed) {
@@ -101,45 +90,24 @@ class Game {
 	
 
 	// Add a tick udpate
-	public addWorldUpdate(type: typeof updates[number], data?: MsgWriter): void {
-		const buffer = data?.bytes;
+	public addWorldUpdate(type: keyof typeof updates, param?: MsgWriter | ((writer: MsgWriter) => MsgWriter)): void {
+		const encoder = updates[type];
 
-		if (!this.updates.global[type]) {
-			this.updates.global[type] = [];
+		this.sharedBuffer?.writer.writeUint8(encoder);
 
-			this.updates.byteLength += 2;
+		if (param instanceof MsgWriter) {
+			const buffer = param.bytes;
+
+			this.sharedBuffer?.writer.writeBuffer(buffer);
 		}
 
-		if (buffer) {
-			this.updates.global[type].push(buffer);
-
-			this.updates.byteLength += buffer.byteLength;
+		// Callback to write the data directly (2x faster)
+		else if (param) {
+			param(this.sharedBuffer!.writer);
 		}
-
-		this.updates.count++;
-	}
-
-
-	public writeUpdates(): void {
-		this.sharedBuffer?.writer.reset();
-
-
-		const buffer = new MsgWriter(this.updates.byteLength);
-
-		//console.log(this.updates.global, performance.now());
-
-		for (const [ key, updates ] of Object.entries(this.updates.global)) {
-			const encoder = getUpdateEncoder(key as any);
-
-			buffer.writeUint16(encoder); // event
-
-			for (const update of updates) {
-				buffer.writeBuffer(update);
-			}
-		}
-
 		
-		this.sharedBuffer?.writer.writeBuffer(buffer.bytes);
+
+		this.updatesCount++;
 	}
 }
 

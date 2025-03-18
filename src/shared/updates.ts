@@ -1,9 +1,9 @@
-const updates = [
-	"position",
-	"createEntity",
-	"destroyEntity",
-	"resize",
-] as const;
+enum updates {
+	position,
+	createEntity,
+	destroyEntity,
+	resize,
+}
 
 
 

@@ -2,11 +2,12 @@
 	"ENV": "development",
 	"gameVersion": "0.9.1",
 	"debug": false,
+	"turbo": true,
 	"TPS": 60,
 	"seed": 0,
 	"entities": {
-		"prey": 2000,
-		"predator": 2000,
+		"prey": 20000,
+		"predator": 20000,
 		"food": 500
 	}
 }

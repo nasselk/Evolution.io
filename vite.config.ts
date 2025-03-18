@@ -38,7 +38,7 @@ export default {
 	},
 
 	build: {
-		outDir: "../production/client",
+		outDir: "./production/client",
 		emptyOutDir: true,
 
 		rollupOptions: {

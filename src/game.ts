@@ -1,5 +1,3 @@
-import { getTypeDecoder, getUpdateDecoder } from "./shared/connector";
-
 import { SharedBuffer } from "./utils/thread/sharedBuffer";
 
 import Simulation from "./simulation/index?worker&inline";
@@ -10,6 +8,8 @@ import { Entity } from "./rendering/entities/entity";
 
 import { RenderingLoop } from "./rendering/renderer";
 
+import { getTypeDecoder } from "./shared/connector";
+
 import { Interval } from "./utils/timers/interval";
 
 import { getRandomInt } from "./utils/math/point";
@@ -18,13 +18,13 @@ import { Thread } from "./utils/thread/thread";
 
 import { credit, log } from "./utils/logger";
 
-import { Camera } from "./rendering/camera";
+import { loadAssets } from "./loader/global";
 
-import updates from "./shared/updates";
+import { Camera } from "./rendering/camera";
 
 import settings from "./settings.json";
 
-import { loadAssets } from "./loader";
+import updates from "./shared/updates";
 
 import { GameUI } from "./UI/gameUI";
 
@@ -56,7 +56,7 @@ class Game {
 		this.UI = new GameUI(this.isMobile);
 		this.renderer = new RenderingLoop(this, this.UI.container);
 		this.camera = new Camera(settings.interpolation);
-		this.sharedBuffer = new SharedBuffer(15 * (config.entities.food + config.entities.prey + config.entities.predator) + 10 * (config.entities.prey + config.entities.predator) + 5000); // Allocate shared memory for the entities
+		this.sharedBuffer = new SharedBuffer(14 * (config.entities.food + config.entities.prey + config.entities.predator) + 11 * (config.entities.prey + config.entities.predator) + 5000); // Allocate shared memory for the entities
 		this.map = new GameMap(this.renderer.worldContainer);
 		this.entities = Entity.list;
 		this.settings = settings;
@@ -111,24 +111,16 @@ class Game {
 
 
 	public update(count: number): void {
-		const n = performance.now();
 		const buffer = this.sharedBuffer.unlinkReader();
-		console.log(performance.now() - n);
-
-
-
-		let event: typeof updates[number];
-
 
 		for (let i = 0; i < count; i++) {
-			if (getUpdateDecoder(buffer.readUint16(false)) != undefined) { // If the next data is an update marker
-				event = getUpdateDecoder(buffer.readUint16());
-			}
+			const encoder = buffer.readUint8();
 
+			const event = updates[encoder] as keyof typeof updates;
 
-			switch (event!) {
+			switch (event) {
 				case "createEntity": {
-					const rawType = buffer.readUint16();
+					const rawType = buffer.readUint8();
 
 					const type = getTypeDecoder(rawType);
 
@@ -155,12 +147,10 @@ class Game {
 				}
 			}
 
-
 			// Flags aren't merged between different updates within the world update
 			buffer.lastFlagIndex = 0;
 		}
 	}
-
 
 
 	public startSimulation(): void {
@@ -182,8 +172,7 @@ class Game {
 
 	public stopSimulation(): void {
 		this.simulation?.terminate();
-	}
-	
+	}	
 
 
 	// Apply settings saved in localStorage

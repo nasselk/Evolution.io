@@ -15,8 +15,11 @@ import { Collider } from "../physic/collider";
 export default class Animal extends DynamicEntity {
 	static override readonly list: Map<number, Animal> = new Map();
 
+	
 	public readonly collider: Collider<this>;
+	protected damages: number;
 	protected timeout?: Timeout;
+
 
 	public constructor(options: ConstructorOptions) {
 		super({
@@ -25,6 +28,7 @@ export default class Animal extends DynamicEntity {
 		});
 
 		this.collider = new Collider("CIRCLE", this);
+		this.damages = Math.random() * 10 + 10;
 		this.rotationSpeed = 0.085;
 
 		this.animate();
@@ -38,6 +42,6 @@ export default class Animal extends DynamicEntity {
 
 		this.targetAngle = angle;
 
-		this.timeout = new Timeout(this.animate.bind(this), Math.random() * 1000 + 1000);
+		this.timeout = new Timeout(this.animate.bind(this), Math.random() * 1000 + 1000, true);
 	}
 }
