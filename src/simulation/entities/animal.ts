@@ -8,6 +8,8 @@ import { DynamicEntity } from "./dynamicEntity";
 
 import { Collider } from "../physic/collider";
 
+import { Hitboxes } from "../physic/hitboxes";
+
 
 
 @defineCustomType("animal")
@@ -27,7 +29,7 @@ export default class Animal extends DynamicEntity {
 			...options
 		});
 
-		this.collider = new Collider("CIRCLE", this);
+		this.collider = new Collider(Hitboxes.CIRCLE, this);
 		this.damages = Math.random() * 10 + 10;
 		this.rotationSpeed = 0.085;
 

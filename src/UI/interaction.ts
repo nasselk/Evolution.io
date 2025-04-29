@@ -108,4 +108,29 @@ window.addEventListener("wheel", function (event: WheelEvent): void {
 
 
 
+
+const settingsLabels = document.querySelectorAll<HTMLLabelElement>("#settings label");
+settingsLabels.forEach(label => {
+	const range = label.querySelector<HTMLInputElement>("input[type='range']");
+	const number = label.querySelector<HTMLInputElement>("input[type='number']");
+	
+	const title = label.title as keyof typeof game.config.entities;
+
+	if (range && number) {
+		range.addEventListener("input", () => {
+			number.value = range.value;
+
+			game.config.entities[title] = parseInt(range.value);
+		});
+
+		number.addEventListener("input", () => {
+			range.value = number.value;
+
+			game.config.entities[title] = parseInt(range.value);
+		});
+	}
+});
+
+
+
 export { switchUI, showMessage, hideMessage };

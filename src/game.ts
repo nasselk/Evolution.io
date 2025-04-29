@@ -1,4 +1,4 @@
-import { SharedBuffer } from "./utils/thread/sharedBuffer";
+import { SharedBuffer } from "./shared/thread/sharedBuffer";
 
 import Simulation from "./simulation/index?worker&inline";
 
@@ -14,7 +14,7 @@ import { Interval } from "./utils/timers/interval";
 
 import { getRandomInt } from "./utils/math/point";
 
-import { Thread } from "./utils/thread/thread";
+import { Thread } from "./shared/thread/thread";
 
 import { credit, log } from "./utils/logger";
 
@@ -43,7 +43,7 @@ class Game {
 	public readonly settings: typeof settings;
 	public readonly entities: typeof Entity.list;
 	public readonly renderer: RenderingLoop;
-	public sharedBuffer: SharedBuffer;
+	public sharedBuffer?: SharedBuffer;
 	public readonly isMobile: boolean;
 	public readonly map: GameMap;
 	public readonly UI: GameUI;
@@ -55,14 +55,13 @@ class Game {
 		this.isMobile = isMobile.any;
 		this.UI = new GameUI(this.isMobile);
 		this.renderer = new RenderingLoop(this, this.UI.container);
-		this.camera = new Camera(settings.interpolation);
-		this.sharedBuffer = new SharedBuffer(14 * (config.entities.food + config.entities.prey + config.entities.predator) + 11 * (config.entities.prey + config.entities.predator) + 5000); // Allocate shared memory for the entities
+		this.camera = new Camera(this.renderer.canvas, settings.interpolation);
 		this.map = new GameMap(this.renderer.worldContainer);
 		this.entities = Entity.list;
 		this.settings = settings;
 		this.config = config;
 
-		
+
 		this.init();
 
 
@@ -111,7 +110,8 @@ class Game {
 
 
 	public update(count: number): void {
-		const buffer = this.sharedBuffer.unlinkReader();
+		const buffer = this.sharedBuffer!.unlinkReader();
+
 
 		for (let i = 0; i < count; i++) {
 			const encoder = buffer.readUint8();
@@ -154,14 +154,23 @@ class Game {
 
 
 	public startSimulation(): void {
+		this.sharedBuffer = game.createBuffer();
+
 		const thread = new Simulation();
 
 		this.simulation = new Thread(thread);
 
-		this.simulation.send("init", game.sharedBuffer.buffer);
+		this.simulation.send("init", {
+			buffer: game.sharedBuffer?.buffer,
+			entities: game.config.entities,
+		});
 
-		this.simulation.on("update", (count: number) => {
-			game.update(count);
+		this.simulation.on("update", game.update.bind(this));
+
+		this.simulation.on("stats", function(stats: any) {
+			game.UI.TPS.text = `${ stats.TPS } TPS`;
+
+			game.UI.mspt.text = `${ stats.mspt } mspt`;
 		});
 
 
@@ -173,6 +182,11 @@ class Game {
 	public stopSimulation(): void {
 		this.simulation?.terminate();
 	}	
+
+
+	public createBuffer(): SharedBuffer {
+		return new SharedBuffer(14 * (this.config.entities.plant + this.config.entities.herbivore + this.config.entities.carnivore) + 5000);
+	}
 
 
 	// Apply settings saved in localStorage

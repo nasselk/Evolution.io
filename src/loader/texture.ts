@@ -1,8 +1,6 @@
 import { Assets, Texture } from "pixi.js";
 
-/*import "pixi.js/basis";
-
-import "pixi.js/ktx2";*/
+import { warn } from "../utils/logger";
 
 
 
@@ -12,7 +10,7 @@ const textures: Map<string, Texture | Promise<Texture>> = new Map();
 
 
 
-async function getTexture(url: string, format?: textureFormats): Promise<Texture> {
+async function getTexture(url: string, format?: textureFormats, fallbacks: string | string[] = []): Promise<Texture> {
 	url = formatTextureURL(url, format);
 
 	const texture = textures.get(url);
@@ -22,7 +20,23 @@ async function getTexture(url: string, format?: textureFormats): Promise<Texture
 	}
 
 	else {
-		const promise: Promise<Texture> = Assets.load(url);
+		const promise: Promise<Texture> = Assets.load(url).catch(() => {
+			if (typeof fallbacks === "string") {
+				fallbacks = [fallbacks];
+			}
+
+			if (fallbacks.length > 0) {
+				warn("CLIENT", `Texture ${url} not found`);
+
+				const fallback = fallbacks.shift()!;
+
+				return getTexture(fallback, format, fallbacks);
+			}
+
+			else {
+				throw new Error(`Texture ${url} not found`);
+			}
+		});
 
 		textures.set(url, promise);
 

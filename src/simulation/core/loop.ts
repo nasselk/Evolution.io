@@ -8,8 +8,6 @@ import { Timeout } from "../../utils/timers/timeout";
 
 import { nextTick } from "../../utils/timers/tick";
 
-import { log } from "../../utils/logger";
-
 import { Game } from "./simulation";
 
 
@@ -21,6 +19,7 @@ class GameLoop {
 	private lastTick: number;
 	private ticks: number;
 	private mspt: number;
+	public tick: number;
 	
 	
 	public constructor(game: Game) {
@@ -29,6 +28,7 @@ class GameLoop {
 		this.lastTick = this.lastStatDisplay = performance.now();
 		this.ticks = 0;
 		this.mspt = 0;
+		this.tick = 0;
 	}
 
 
@@ -50,6 +50,8 @@ class GameLoop {
 		// If deltaTime is greater or equal to the server maximum tick rate then update the game state
 		if (deltaTime >= this.minTickDelta) {
 			this.lastTick = now;
+
+			this.tick++;
 
 
 			Timeout.runTimeouts(now);
@@ -78,14 +80,24 @@ class GameLoop {
 					else if (entity.id > maxID) {
 						maxID = entity.id;
 					}
+
+
+
+					/*this.game.dynamicGrid.query(entity, function (objects, queryID) {
+						for (const object of objects) {
+							if (object.id !== entity.id && object.queryID !== queryID) {
+								entity.collider.collide(object.collider);
+							}
+						}
+					});*/
 				}
 			}
 
 
 			// Do the pairwise interactions check
 			this.game.dynamicGrid.pairwiseCombination(function (entity1, entity2) {
-				entity1.collider!.collide(entity2.collider!);
-			}, minID, maxID);
+				entity1.collider.collide(entity2.collider!);
+			}, minID, maxID, false);
 
 
 			this.processOutboundMessages();
@@ -117,7 +129,7 @@ class GameLoop {
 	private processOutboundMessages(): void {
 		// Add entities updates
 		for (const entity of this.game.entities.values()) {
-			if (entity.constructor.dynamic) {
+			if (entity.constructor.dynamic && entity.creationTick !== this.tick) {
 				this.game.addWorldUpdate("position", (entity as DynamicEntity).packUpdates.bind(entity));
 			}
 		}
@@ -141,13 +153,10 @@ class GameLoop {
 
 		//const memoryUsage = Math.round(process.memoryUsage().rss / 1024 / 1024);
 
-		log(
-			"Game Server",
-			this.game.entities.size, "entities",
-			"·", avgTPS, "TPS",
-			"·", avgMSPT, "mspt",
-			//"·", memoryUsage + "MB"
-		);
+		this.game.renderingThread.send("stats", {
+			TPS: avgTPS,
+			mspt: avgMSPT,
+		});
 	}
 }
 

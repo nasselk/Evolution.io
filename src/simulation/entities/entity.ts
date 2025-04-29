@@ -2,7 +2,7 @@ import { getTypeEncoder, entityTypes as primitiveTypes } from "../../shared/conn
 
 import { Interval } from "../../utils/timers/interval";
 
-import { MsgWriter } from "../../utils/thread/writer";
+import { BufferWriter } from "../../shared/thread/writer";
 
 import { type DynamicEntity } from "./dynamicEntity";
 
@@ -36,6 +36,8 @@ interface ConstructorOptions {
 	readonly health?: number;
 	readonly biome?: Biome;
 	readonly mass?: number,
+	readonly creation?: number;
+	readonly creationTick?: number;
 	readonly initialSpawn?: boolean
 }
 
@@ -62,6 +64,7 @@ abstract class Entity {
 	public queryID: number;
 	public spawned: boolean;
 	public mass: number;
+	public readonly creationTick?: number;
 	declare ["constructor"]: typeof Entity;
 	public abstract readonly collider: Collider<this>;	
 	public interaction?<T extends Entity>(entity: T, ...args: any[]): void;
@@ -71,10 +74,11 @@ abstract class Entity {
 		this.position = new Vector();
 		this.health = options.health ?? 100;
 		this.cellsKeys = new Array(HashGrid2D.gridCount).fill(new Set());
-		this.id = getUnusedID(Entity.list, Entity.reservedIDs, options.initialSpawn);
+		this.id = getUnusedID(Entity.list, Entity.reservedIDs, options.creationTick === 1);
 		this.size = new Vector(options.size ?? options.width, options.size ?? options.height ?? options.width);
 		this.observable = { health: this.health, size: this.size.clone };
-		this.creation = performance.now();
+		this.creation = options.creation ?? performance.now();
+		this.creationTick = options.creationTick;
 		this.type = this.constructor.type;
 		this.angle = options.angle ?? 0;
 		this.mass = Infinity; // Entity are by default static
@@ -144,7 +148,7 @@ abstract class Entity {
 		}, 1000, true);
 
 
-		const buffer = new MsgWriter(2);
+		const buffer = new BufferWriter(2);
 
 		buffer.writeUint16(this.id);
 
@@ -191,8 +195,8 @@ abstract class Entity {
 	}
 
 
-	public packProperties(writer?: MsgWriter, additionalBytes: number = 0): MsgWriter {
-		const buffer = writer ?? new MsgWriter(13 + additionalBytes);
+	public packProperties(writer?: BufferWriter, additionalBytes: number = 0): BufferWriter {
+		const buffer = writer ?? new BufferWriter(13 + additionalBytes);
 
 
 		const type = getTypeEncoder(this.type);
@@ -200,8 +204,8 @@ abstract class Entity {
 		buffer.writeUint8(type);
 		buffer.writeUint16(this.id);
 
-		const x = MsgWriter.toPrecision(this.position.x, this.constructor.game.map.bounds.max.x, 16);
-		const y = MsgWriter.toPrecision(this.position.y, this.constructor.game.map.bounds.max.y, 16);
+		const x = BufferWriter.toPrecision(this.position.x, this.constructor.game.map.bounds.max.x, 16);
+		const y = BufferWriter.toPrecision(this.position.y, this.constructor.game.map.bounds.max.y, 16);
 
 		buffer.writeUint16(x);
 		buffer.writeUint16(y);

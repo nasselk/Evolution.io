@@ -6,9 +6,9 @@ import { newContainer } from "../../rendering/createVisuals";
 
 import { worldContainer } from "../../rendering/renderer";
 
-import { MsgReader } from "../../utils/thread/reader";
-
 import { Interval } from "../../utils/timers/interval";
+
+import { BufferReader } from "../../shared/thread/reader";
 
 import { Timeout } from "../../utils/timers/timeout";
 
@@ -23,7 +23,7 @@ import { game } from "../../game";
 
 
 type EntityTypes = keyof typeof game.classes;
-
+type GetEntityInstanceType<T extends EntityTypes> = InstanceType<(typeof game.classes)[T]>;
 
 
 // Global entity class being used by all entities
@@ -49,18 +49,17 @@ abstract class Entity {
 	protected angle: number;
 	public readonly type: EntityTypes;
 	protected abstract init(): void;
-	declare ["constructor"]: typeof Entity;
-	
+	declare ["constructor"]: typeof Entity;	
 
-	protected constructor(properties: MsgReader) {
+	protected constructor(properties: BufferReader) {
 		this.id = properties.readUint16();
 
 		const x = properties.readUint16();
 		const y = properties.readUint16();
 
 		this.position = new Vector(
-			MsgReader.fromPrecision(x, game.map.bounds.max.x, 16),
-			MsgReader.fromPrecision(y, game.map.bounds.max.y, 16),
+			BufferReader.fromPrecision(x, game.map.bounds.max.x, 16),
+			BufferReader.fromPrecision(y, game.map.bounds.max.y, 16),
 		);
 
 		this.angle = properties.readFloat32();
@@ -89,7 +88,7 @@ abstract class Entity {
 		this.constructor.container.addChild(this.container);
 	}
 
-
+		
 	public static create<T extends EntityTypes>(type: T, ...args: ConstructorParameters<(typeof game.classes)[T]>): InstanceType<(typeof game.classes)[T]> {
 		const constructor = game.classes[type] as any;
 
@@ -135,12 +134,12 @@ abstract class Entity {
 	}
 
 
-	public update(buffer: MsgReader): this {
+	public update(buffer: BufferReader): this {
 		const x = buffer.readUint16();
 		const y = buffer.readUint16();
 
-		this.target.position.x = MsgReader.fromPrecision(x, game.map.bounds.max.x, 16);
-		this.target.position.y = MsgReader.fromPrecision(y, game.map.bounds.max.y, 16);
+		this.target.position.x = BufferReader.fromPrecision(x, game.map.bounds.max.x, 16);
+		this.target.position.y = BufferReader.fromPrecision(y, game.map.bounds.max.y, 16);
 
 		this.target.angle = buffer.readFloat32();
 
@@ -250,5 +249,4 @@ function defineCustomType(name: EntityTypes, layer?: number) {
 }
 
 
-
-export { Entity, type EntityTypes, defineCustomType };
+export { Entity, type EntityTypes, type GetEntityInstanceType, defineCustomType };

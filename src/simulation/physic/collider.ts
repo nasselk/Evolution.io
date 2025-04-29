@@ -24,14 +24,14 @@ class Collider<T extends Entity = Entity> {
 	public restitution: number;
 
 
-	public constructor(type: keyof typeof Hitboxes, entity: T, position?: Vector, size?: Vector, restitution: number = 0.5) {
+	public constructor(type: Hitboxes, entity: T, position?: Vector, size?: Vector, restitution: number = 0.5) {
 		this.velocity = entity instanceof DynamicEntity ? entity.velocity : Vector.null;
 		this.position = position ?? entity.position;
 		this.size = size ?? entity.size;
 		this.restitution = restitution;
-		this.type = Hitboxes[type];
 		this.forceChecks = true;
 		this.entity = entity;
+		this.type = type;
 	}
 
 
@@ -52,8 +52,7 @@ class Collider<T extends Entity = Entity> {
 			return r2rResolution(this, collider);
 		}
 
-
-		throw new Error(`Not implemented collision resolution for ${ Hitboxes[this.type] } and ${ Hitboxes[collider.type] }`);
+		throw new Error(`Not implemented collision resolution for ${ this.type } and ${ collider.type }`);
 	}
 
 
@@ -74,8 +73,7 @@ class Collider<T extends Entity = Entity> {
 			return c2rDetection(collider, this, offset) != undefined;
 		}
 
-
-		throw new Error(`Not implemented collision detection for ${ Hitboxes[this.type] } and ${ Hitboxes[collider.type] }`);
+		throw new Error(`Not implemented collision detection for ${ this.type } and ${ collider.type }`);
 	}
 }
 

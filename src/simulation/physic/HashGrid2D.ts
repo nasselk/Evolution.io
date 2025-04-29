@@ -197,7 +197,7 @@ class HashGrid2D<T extends Entity, Types extends Record<string, Constructor<T>> 
 		const maxY: number = Math.min(Math.floor((object.position.y + rangeY / 2) / this.cellHeight), this.maxKeyY);
 
 
-		if (this.queryID > Number.MAX_SAFE_INTEGER - 1) {
+		if (this.queryID === Number.MAX_SAFE_INTEGER - 1) {
 			this.queryID = 0;
 		}
 
@@ -225,20 +225,22 @@ class HashGrid2D<T extends Entity, Types extends Record<string, Constructor<T>> 
 	}
 
 
-	public pairwiseCombination(callback: PairwiseCallback<T>, minID: number = 0, maxID: number): void {
+	public pairwiseCombination(callback: PairwiseCallback<T>, minID: number = 0, maxID: number, restrictive: boolean = true): void {
 		if (this.typed) {
 			throw new Error("Cannot use pairwiseCombination with typed HashGrid2D");
 		}
 
 		else {
-			if (maxID - minID > this.checkedPairs.length) {
-				const maxPairID: number = this.getPairID(maxID - minID + 50, maxID - minID + 50);
+			if (restrictive) {
+				if (maxID - minID > this.checkedPairs.length) {
+					const maxPairID: number = this.getPairID(maxID - minID + 50, maxID - minID + 50);
 
-				this.checkedPairs.resize(maxPairID);
-			}
+					this.checkedPairs.resize(maxPairID);
+				}
 
-			else {
-				this.checkedPairs.clear();
+				else {
+					this.checkedPairs.clear();
+				}
 			}
 
 
@@ -254,7 +256,7 @@ class HashGrid2D<T extends Entity, Types extends Record<string, Constructor<T>> 
 							if (entity1.spawned && entity2.spawned) {
 								const hash: number = this.getPairID(entity1.id - minID, entity2.id - minID);
 
-								if (!this.checkedPairs.hasAndAdd(hash)) {
+								if (!restrictive || !this.checkedPairs.hasAndAdd(hash)) {
 									callback(entity1, entity2);
 								}
 							}

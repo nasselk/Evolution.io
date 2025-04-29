@@ -2,7 +2,7 @@ import { type ConstructorOptions, Entity } from "./entity";
 
 import { normalizeAngle } from "../../utils/math/angle";
 
-import { MsgWriter } from "../../utils/thread/writer";
+import { BufferWriter } from "../../shared/thread/writer";
 
 import { Vector } from "../../utils/math/vector";
 
@@ -144,13 +144,13 @@ abstract class DynamicEntity extends Entity {
 	}
 
 
-	public packUpdates(writer?: MsgWriter, additionalBytes: number = 0): MsgWriter {
-		const buffer = writer ?? new MsgWriter(10 + additionalBytes);
+	public packUpdates(writer?: BufferWriter, additionalBytes: number = 0): BufferWriter {
+		const buffer = writer ?? new BufferWriter(10 + additionalBytes);
 
 		buffer.writeUint16(this.id);
 
-		const x = MsgWriter.toPrecision(this.position.x, this.constructor.game.map.bounds.max.x, 16);
-		const y = MsgWriter.toPrecision(this.position.y, this.constructor.game.map.bounds.max.y, 16);
+		const x = BufferWriter.toPrecision(this.position.x, this.constructor.game.map.bounds.max.x, 16);
+		const y = BufferWriter.toPrecision(this.position.y, this.constructor.game.map.bounds.max.y, 16);
 
 		buffer.writeUint16(x);
 		buffer.writeUint16(y);

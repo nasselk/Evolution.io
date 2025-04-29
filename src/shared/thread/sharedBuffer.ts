@@ -1,14 +1,14 @@
-import { MsgReader } from "./reader";
+import { BufferReader } from "./reader";
 
-import { MsgWriter } from "./writer";
+import { BufferWriter } from "./writer";
 
 
 
 class SharedBuffer {
 	public readonly flags: { bytes: number, value: number }[];
 	public readonly buffer: SharedArrayBuffer;
-	public readonly writer: MsgWriter;
-	public readonly reader: MsgReader;
+	public readonly writer: BufferWriter;
+	public readonly reader: BufferReader;
 
 
 	public constructor(buffer: SharedArrayBuffer | number, flags: { bytes: number, value: number }[] = []) {
@@ -20,8 +20,8 @@ class SharedBuffer {
 			this.buffer = buffer;
 		}
 
-		this.writer = new MsgWriter(this.buffer);
-		this.reader = new MsgReader(this.buffer);
+		this.writer = new BufferWriter(this.buffer);
+		this.reader = new BufferReader(this.buffer);
 		this.flags = flags;
 
 		this.resetFlags();
@@ -56,12 +56,12 @@ class SharedBuffer {
 	}
 
 
-	public unlinkReader(): MsgReader {
+	public unlinkReader(): BufferReader {
 		// Create a new ArrayBuffer of the same size
 		const copy = this.buffer.slice(0);
 
 
-		return new MsgReader(copy);
+		return new BufferReader(copy);
 	}
 }
 

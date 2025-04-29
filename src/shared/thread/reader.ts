@@ -1,26 +1,32 @@
-class MsgReader {
+import { type BufferWriter } from "./writer";
+
+import { createBuffer } from "./buffer";
+
+
+
+class BufferReader {
 	private static readonly textDecoder = new TextDecoder();
 
-	public readonly buffer: ArrayBufferLike;
+	public readonly buffer: Uint8Array;
 	private readonly view: DataView;
 	public readonly byteLength: number;
-	public lastFlagIndex: number;
-	public flagOffset: number;
+	public lastBitOffset: number;
+	public lastBitIndex: number;
 	public offset: number;
 
 
-	public constructor(buffer: ArrayBufferLike) {
-		this.buffer = buffer;
-		this.view = new DataView(this.buffer);
+	public constructor(buffer: ArrayBufferLike | ArrayBufferView | Buffer | BufferWriter | BufferReader, clone: boolean = false) {
+		this.buffer = createBuffer(buffer, clone);
+		this.view = new DataView(this.buffer.buffer);
 		this.byteLength = this.buffer.byteLength;
-		this.lastFlagIndex = 0;
-		this.flagOffset = 0;
+		this.lastBitIndex = 0;
+		this.lastBitOffset = 0;
 		this.offset = 0;
 	}
 
 
 	public static readTextBuffer(buffer: ArrayBuffer): string {
-		return MsgReader.textDecoder.decode(buffer);
+		return BufferReader.textDecoder.decode(buffer);
 	}
 
 
@@ -31,29 +37,38 @@ class MsgReader {
 	}
 
 
-	public readBit(bits: number = 1, increment: boolean = true): boolean | number {
+	public readBits(bits: number = 1, signed: boolean = false, increment: boolean = true): boolean | number {
 		let value: number = 0;
 
 
 		for (let i: number = 0; i < bits; i++) {
-			if (this.lastFlagIndex === 0) {
-				this.flagOffset = this.offset;
-				
+			if (this.lastBitIndex === 0) {
+				this.lastBitOffset = this.offset;
+
 				this.offset++;
 			}
 
-			const flag = this.readUint8(increment, this.flagOffset);
-			const bit = (flag >> this.lastFlagIndex) & 1;
+			const flag = this.readUint8(increment, this.lastBitOffset);
+			const bit = (flag >> this.lastBitIndex) & 1;
 
 			value |= bit << i;
 
 			if (increment) {
-				this.lastFlagIndex = (this.lastFlagIndex + 1) % 8;
+				this.lastBitIndex = (this.lastBitIndex + 1) % 8;
 			}
 		}
 
 
-		return bits === 1 ? Boolean(value) : value;
+		if (bits === 1) return Boolean(value);
+
+		if (signed) {
+			const min = -(2 ** (bits - 1));
+
+			value += min;
+		}
+
+
+		return value;
 	}
 
 
@@ -167,44 +182,49 @@ class MsgReader {
 	}
 
 
-	public readBuffer(length: number = this.buffer.byteLength - this.offset, increment: boolean = true, offset: number = this.offset): ArrayBufferLike {
+	public readBuffer(length: number = this.buffer.byteLength - this.offset, increment: boolean = true, offset: number = this.offset): Uint8Array {
 		const buffer = this.buffer.slice(offset, offset + length);
-		
+
 		if (increment && offset === this.offset) {
 			this.offset += length;
 		}
-		
+
 		return buffer;
 	}
 
 
 	public readText(readLength?: boolean, increment?: boolean, offset?: number): string;
 	public readText(length?: number, increment?: boolean, offset?: number): string;
-	public readText(a: number | boolean = this.buffer.byteLength - this.offset, increment: boolean = true, offset: number = this.offset): string {
-		let additionalOffset = 0;
+	public readText(a?: number | boolean, increment: boolean = true, offset: number = this.offset): string {
+		let length: number;
 
-		if (typeof a === "boolean") {
-			a = this.readUint16(increment, offset);
 
-			additionalOffset = 2;
+		if (a === true) {
+			length = this.readUint16(increment, offset);
+
+			offset += 2;
+		}
+
+		else {
+			length = a || this.buffer.byteLength - this.offset;
 		}
 
 
-		const buffer = this.buffer.slice(offset + additionalOffset, offset + additionalOffset + a);
+		const buffer = this.buffer.slice(offset, offset + length);
 
 		if (increment && offset === this.offset) {
-			this.offset += a;
+			this.offset += length;
 		}
 
 
-		return MsgReader.textDecoder.decode(buffer as ArrayBuffer);
+		return BufferReader.textDecoder.decode(buffer);
 	}
 
 
 	public reset(offset: number = 0): void {
 		this.offset = offset;
-		this.lastFlagIndex = 0;
-		this.flagOffset = 0;
+		this.lastBitIndex = 0;
+		this.lastBitOffset = 0;
 	}
 
 
@@ -220,4 +240,4 @@ class MsgReader {
 
 
 
-export { MsgReader };
+export { BufferReader };

@@ -7,7 +7,7 @@ import { error } from "../utils/logger.js";
 const layers = {
 	default: [
 		"map",
-		"food",
+		"plant",
 		"animal",
 	]
 };

@@ -1,8 +1,8 @@
 {
 	"type": "module",
-	"name": "phoenix.engine",
+	"name": "evolution.io",
 	"author": "Nassim EL KARATI",
-	"description": "Typescript multiplayer game engine",	
+	"description": "Typescript ecosystem simulation",	
 	"version": "0.9.3",
 	"license": "MIT",
 	"private": true,

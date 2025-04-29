@@ -6,5 +6,4 @@ enum updates {
 }
 
 
-
 export default updates;

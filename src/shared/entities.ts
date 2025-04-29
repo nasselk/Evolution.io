@@ -2,7 +2,7 @@ export default {
 	animal: {
 		dynamic: true,
 	},
-	food: {
+	plant: {
 		dynamic: false,
 	}
 } as const;

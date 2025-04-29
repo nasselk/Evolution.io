@@ -1,4 +1,4 @@
-enum Hitboxes {
+const enum Hitboxes {
 	CIRCLE,
 	RECTANGLE,
 	LINE,

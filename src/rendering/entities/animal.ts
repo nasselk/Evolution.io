@@ -1,4 +1,4 @@
-import { type MsgReader } from "../../utils/thread/reader";
+import { type BufferReader } from "../../shared/thread/reader";
 
 import { Entity, defineCustomType } from "./entity";
 
@@ -18,7 +18,7 @@ export default class Player extends Entity {
 	private sprite?: Sprite;
 
 
-	public constructor(properties: MsgReader) {
+	public constructor(properties: BufferReader) {
 		super(properties);
 
 		this.init();

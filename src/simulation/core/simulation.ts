@@ -1,16 +1,16 @@
 import { type DynamicEntity } from "../entities/dynamicEntity";
 
-import { SharedBuffer } from "../../utils/thread/sharedBuffer";
+import { SharedBuffer } from "../../shared/thread/sharedBuffer";
 
 import { Entity, type EntityTypes } from "../entities/entity";
 
 import { getRandomInt } from "../../utils/math/point";
 
-import { MsgWriter } from "../../utils/thread/writer";
+import { BufferWriter } from "../../shared/thread/writer";
 
 import { Spawner } from "../entities/spawn/spawner";
 
-import { Thread } from "../../utils/thread/thread";
+import { Thread } from "../../shared/thread/thread";
 
 import { HashGrid2D } from "../physic/HashGrid2D";
 
@@ -50,7 +50,7 @@ class Game {
 		this.config = config;
 		this.map = new GameMap();
 		this.classes = classes satisfies Record<EntityTypes, typeof Entity>;
-		this.dynamicGrid = new HashGrid2D(200, 200, this.map.bounds.max.x, this.map.bounds.max.y, false);
+		this.dynamicGrid = new HashGrid2D(150, 150, this.map.bounds.max.x, this.map.bounds.max.y, false);
 		this.staticGrid = new HashGrid2D(500, 500, this.map.bounds.max.x, this.map.bounds.max.y, true, this.classes);
 		this.renderingThread = new Thread(self);
 		this.loop = new GameLoop(this);
@@ -65,14 +65,16 @@ class Game {
 		this.spawner = new Spawner(this.config.seed);
 
 
-		this.renderingThread.on("init", (buffer) => {
-			this.init(buffer);
+		this.renderingThread.on("init", (data) => {
+			this.init(data);
 		});
 	}
 
 
-	public init(sharedBuffer: SharedArrayBuffer): void {
-		this.sharedBuffer = new SharedBuffer(sharedBuffer);
+	public init(data: any): void {
+		this.sharedBuffer = new SharedBuffer(data.buffer);
+
+		this.config.entities = data.entities;
 
 
 		Entity.game = this;
@@ -90,12 +92,12 @@ class Game {
 	
 
 	// Add a tick udpate
-	public addWorldUpdate(type: keyof typeof updates, param?: MsgWriter | ((writer: MsgWriter) => MsgWriter)): void {
+	public addWorldUpdate(type: keyof typeof updates, param?: BufferWriter | ((writer: BufferWriter) => BufferWriter)): void {
 		const encoder = updates[type];
 
 		this.sharedBuffer?.writer.writeUint8(encoder);
 
-		if (param instanceof MsgWriter) {
+		if (param instanceof BufferWriter) {
 			const buffer = param.bytes;
 
 			this.sharedBuffer?.writer.writeBuffer(buffer);

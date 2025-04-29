@@ -17,7 +17,7 @@ class Camera {
 	public zoom: number;
 
 	
-	public constructor(interpolation: any) {
+	public constructor(canvas: HTMLCanvasElement, interpolation: any) {
 		this.zoom = 1;
 		this.position = new Vector();
 		this.target = { position: this.position.clone, zoom: this.zoom };
@@ -25,12 +25,12 @@ class Camera {
 		this.syncZoom = false;
 		this.attached = true;
 
-		this.gestures();
+		this.gestures(canvas);
 	}
 
 
-	public gestures(): void {
-		document.addEventListener("wheel", (event) => {
+	public gestures(canvas: HTMLCanvasElement): void {
+		canvas.addEventListener("wheel", (event) => {
 			const delta = event.deltaY / 1000;
 
 			if (this.target.zoom - delta > 0.05) {
@@ -39,7 +39,7 @@ class Camera {
 		});
 
 
-		window.addEventListener("mousemove", (event) => {
+		canvas.addEventListener("mousemove", (event) => {
 			if (event.buttons === 1) {
 				this.target.position.x -= event.movementX / this.zoom;
 				this.target.position.y -= event.movementY / this.zoom;
