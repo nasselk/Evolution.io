@@ -1,6 +1,6 @@
-import { Vector } from "../../../utils/math/vector";
+import { type Vector } from "../../../utils/math/vector.js";
 
-import { type Collider } from "../collider";
+import { type Collider } from "../collider.js";
 
 
 

@@ -1,18 +1,16 @@
 import { getTypeEncoder, entityTypes as primitiveTypes } from "../../shared/connector";
 
-import { Interval } from "../../utils/timers/interval";
-
 import { BufferWriter } from "../../shared/thread/writer";
 
 import { type DynamicEntity } from "./dynamicEntity";
-
-import { Timeout } from "../../utils/timers/timeout";
 
 import { HashGrid2D } from "../physic/HashGrid2D";
 
 import { Vector } from "../../utils/math/vector";
 
-import { getUnusedID } from "../../utils/getID";
+import { Timer } from "../../utils/timers/timer";
+
+import { Simulation } from "../core/simulation";
 
 import { Collider } from "../physic/collider";
 
@@ -36,16 +34,11 @@ interface ConstructorOptions {
 	readonly health?: number;
 	readonly biome?: Biome;
 	readonly mass?: number,
-	readonly creation?: number;
-	readonly creationTick?: number;
-	readonly initialSpawn?: boolean
 }
 
 
 abstract class Entity {
 	public static readonly list = new Map<number, Entity | DynamicEntity>();
-	public static readonly savedPlayers = new Map<string, InstanceType<(typeof game.classes.animal)>>();
-	private static readonly reservedIDs = new Set<number>();
 	public static readonly isSubType: boolean = false;
 	public static type: keyof typeof primitiveTypes;
 	public static game: typeof game;
@@ -59,7 +52,7 @@ abstract class Entity {
 	protected readonly creation: number;
 	public readonly position: Vector;
 	public readonly size: Vector;
-	protected health: number;
+	public health: number;
 	public angle: number;
 	public queryID: number;
 	public spawned: boolean;
@@ -74,11 +67,11 @@ abstract class Entity {
 		this.position = new Vector();
 		this.health = options.health ?? 100;
 		this.cellsKeys = new Array(HashGrid2D.gridCount).fill(new Set());
-		this.id = getUnusedID(Entity.list, Entity.reservedIDs, options.creationTick === 1);
 		this.size = new Vector(options.size ?? options.width, options.size ?? options.height ?? options.width);
 		this.observable = { health: this.health, size: this.size.clone };
-		this.creation = options.creation ?? performance.now();
-		this.creationTick = options.creationTick;
+		this.id = Simulation.instance.spawner.IDAllocator.allocate();
+		this.creationTick = Simulation.instance.loop.tick;
+		this.creation = performance.now();
 		this.type = this.constructor.type;
 		this.angle = options.angle ?? 0;
 		this.mass = Infinity; // Entity are by default static
@@ -137,14 +130,12 @@ abstract class Entity {
 	public destroy(): void {
 		Entity.list.delete(this.id);
 
-		Entity.game.classes[this.type].list.delete(this.id);
+		Simulation.instance.classes[this.type].list.delete(this.id);
 
 		
 		// Make sure the ID is not reused for 1 second (for client-side animations)
-		Entity.reservedIDs.add(this.id);
-
-		new Timeout(() => {
-			Entity.reservedIDs.delete(this.id);
+		new Timer(() => {
+			Simulation.instance.spawner.IDAllocator.free(this.id);
 		}, 1000, true);
 
 
@@ -163,7 +154,7 @@ abstract class Entity {
 
 	private cleanup(): void {
 		for (const key in this) {
-			if (this[key] instanceof Timeout || this[key] instanceof Interval) {
+			if (this[key] instanceof Timer) {
 				this[key].clear();
 			}
 

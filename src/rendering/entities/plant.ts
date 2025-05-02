@@ -1,10 +1,12 @@
-import { newContainer, newSprite } from "../createVisuals";
-
 import { type BufferReader } from "../../shared/thread/reader";
+
+import { newContainer, newSprite } from "../createVisuals";
 
 import { Entity, defineCustomType } from "./entity";
 
-import { type Sprite, Texture } from "pixi.js";
+import { getTexture } from "../../loader/texture";
+
+import { type Sprite } from "pixi.js";
 
 
 
@@ -24,14 +26,16 @@ export default class Plant extends Entity {
   	}
 
 
-	public init(): this {
-		this.sprite = newSprite(Texture.WHITE, {
-			tint: "#00CF44"
-		});
+	public async init(): Promise<this> {
+		const texture = await getTexture("plant", "png");
 
-		this.container.addChild(this.sprite);
+		if (this.spawned) {
+			this.sprite = newSprite(texture);
 
-		this.initiated = true;
+			this.container.addChild(this.sprite);
+
+			this.initiated = true;
+		}
 
 		return this;
 	}

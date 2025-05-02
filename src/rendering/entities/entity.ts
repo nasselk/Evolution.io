@@ -6,15 +6,13 @@ import { newContainer } from "../../rendering/createVisuals";
 
 import { worldContainer } from "../../rendering/renderer";
 
-import { Interval } from "../../utils/timers/interval";
-
 import { BufferReader } from "../../shared/thread/reader";
-
-import { Timeout } from "../../utils/timers/timeout";
 
 import { getLayer } from "../../rendering/layers";
 
 import { Vector } from "../../utils/math/vector";
+
+import { Timer } from "../../utils/timers/timer";
 
 import { Container } from "pixi.js";
 
@@ -153,7 +151,7 @@ abstract class Entity {
 		}
 
 		for (const value of Object.values(this)) {
-			if (value instanceof Timeout || value instanceof Interval) {
+			if (value instanceof Timer) {
 				value.clear();
 			}
 		}
@@ -194,7 +192,7 @@ abstract class Entity {
 
 	private cleanup(): void {
 		for (const key in this) {
-			if (this[key] instanceof Timeout || this[key] instanceof Interval) {
+			if (this[key] instanceof Timer) {
 				this[key].clear();
 			}
 

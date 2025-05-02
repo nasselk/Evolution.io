@@ -100,6 +100,11 @@ class GameMap {
 	}
 
 
+	public isOutside(position: Vector): boolean {
+		return position.x < this.bounds.min.x || position.x > this.bounds.max.x || position.y < this.bounds.min.y || position.y > this.bounds.max.y;
+	}
+	
+
 	public getBiome(entity: Entity): Biome | void {
 		for (const biome of Object.values(this.biomes)) {
 			if (biome.intersects(entity.position)) {

@@ -1,8 +1,8 @@
-import { type ConstructorOptions, defineCustomType } from "./entity";
-
 import { randomAngle } from "../../utils/math/angle";
 
-import { Timeout } from "../../utils/timers/timeout";
+import { type ConstructorOptions } from "./entity";
+
+import { Timer } from "../../utils/timers/timer";
 
 import { DynamicEntity } from "./dynamicEntity";
 
@@ -12,15 +12,13 @@ import { Hitboxes } from "../physic/hitboxes";
 
 
 
-@defineCustomType("animal")
-
 export default class Animal extends DynamicEntity {
 	static override readonly list: Map<number, Animal> = new Map();
 
 	
 	public readonly collider: Collider<this>;
 	protected damages: number;
-	protected timeout?: Timeout;
+	protected timeout?: Timer;
 
 
 	public constructor(options: ConstructorOptions) {
@@ -44,6 +42,11 @@ export default class Animal extends DynamicEntity {
 
 		this.targetAngle = angle;
 
-		this.timeout = new Timeout(this.animate.bind(this), Math.random() * 1000 + 1000, true);
+		this.timeout = new Timer(this.animate.bind(this), Math.random() * 1000 + 1000, true);
+	}
+
+
+	public override dynamicInteraction(entity: DynamicEntity): void {
+		super.dynamicInteraction(entity);
 	}
 }

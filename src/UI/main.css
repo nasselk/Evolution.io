@@ -40,7 +40,7 @@ button, div {
 }
 
 
-button {
+/*button {
 	position: relative;
 	overflow: hidden;
 	cursor: pointer;
@@ -61,7 +61,7 @@ button:after {
 
 button:hover:after {
 	left: 120%;
-}
+}*/
 
 
 canvas {
@@ -93,60 +93,6 @@ canvas {
 
 
 /* CENTER BOX */
-#menu {
-	position: fixed;
-	top: 50%;
-	left: 50%;
-	transform: translate(-50%, -50%);
-	display: flex;
-	flex-direction: column;
-	justify-content: center;
-	align-items: center;
-	gap: 5vmin;
-}
-
-
-#playButton {
-	width: 25vmin;
-	height: 7vmin;
-}
-
-
-#settings {
-	display: flex;
-	padding: 2vmin;
-	flex-direction: column;
-}
-
-#settings label {
-	display: flex;
-	align-items: center;
-	gap: 1vmin;
-}
-
-#settings label span {
-	width: 15vmin;
-}
-
-
-
-#serverMessage {
-	display: none;
-	position: absolute;
-	padding: 1.5vmin;
-	top: 20%;
-	/*background-color: rgba(24, 23, 44, 0.75);*/
-	border: 0.35vmin solid rgba(255, 255, 255, 0.75);
-	font-size: 2.5vmin;
-	text-align: center;
-}
-
-
-
-
-.info {
-
-}
 
 .error {
 	background-color: rgba(255, 0, 0, 0.5);
@@ -156,39 +102,6 @@ canvas {
 .warn {
 	background-color: rgba(255, 255, 0, 0.5);
 	box-shadow: 0 0.25vmin 1vmin rgba(255, 255, 0, 0.35);
-}
-
-
-
-
-#icons {
-	position: fixed;
-	bottom: 1.75vmin;
-	left: 1.75vmin;
-	gap: 2vmin;
-	display: flex;
-	z-index: 5;
-	flex-direction: column;
-}
-
-
-.miniButton {
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	width: 5vmin;
-	height: 5vmin;
-	border-radius: 1.5vmin;
-	cursor: pointer;
-	overflow: hidden;
-}
-
-.miniButton svg {
-	width: 3vmin;
-	height: 3vmin;
-	vertical-align: middle;
-	overflow: hidden;
-	fill: white;
 }
 
 

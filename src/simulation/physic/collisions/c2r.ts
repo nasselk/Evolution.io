@@ -1,8 +1,8 @@
-import { type DynamicEntity } from "../../entities/dynamicEntity";
+import { type DynamicEntity } from "../../entities/dynamicEntity.js";
 
-import { Vector } from "../../../utils/math/vector";
+import { Vector } from "../../../utils/math/vector.js";
 
-import { type Collider } from "../collider";
+import { type Collider } from "../collider.js";
 
 
 

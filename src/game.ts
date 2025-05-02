@@ -10,8 +10,6 @@ import { RenderingLoop } from "./rendering/renderer";
 
 import { getTypeDecoder } from "./shared/connector";
 
-import { Interval } from "./utils/timers/interval";
-
 import { getRandomInt } from "./utils/math/point";
 
 import { Thread } from "./shared/thread/thread";
@@ -20,7 +18,11 @@ import { credit, log } from "./utils/logger";
 
 import { loadAssets } from "./loader/global";
 
+import { Timer } from "./utils/timers/timer";
+
 import { Camera } from "./rendering/camera";
+
+import { IDAllocator } from "./utils/getID";
 
 import settings from "./settings.json";
 
@@ -42,6 +44,7 @@ class Game {
 	public readonly classes: typeof classes;
 	public readonly settings: typeof settings;
 	public readonly entities: typeof Entity.list;
+	public readonly IDAllocator: IDAllocator;
 	public readonly renderer: RenderingLoop;
 	public sharedBuffer?: SharedBuffer;
 	public readonly isMobile: boolean;
@@ -57,6 +60,7 @@ class Game {
 		this.renderer = new RenderingLoop(this, this.UI.container);
 		this.camera = new Camera(this.renderer.canvas, settings.interpolation);
 		this.map = new GameMap(this.renderer.worldContainer);
+		this.IDAllocator = new IDAllocator();
 		this.entities = Entity.list;
 		this.settings = settings;
 		this.config = config;
@@ -65,11 +69,11 @@ class Game {
 		this.init();
 
 
-		new Interval(() => {
+		new Timer(() => {
 			this.UI.FPS.text = `${ Math.round(this.renderer.frames) } FPS`;
 
 			this.renderer.frames = 0;
-		}, 1000);
+		}, 1000, false, true);
 	}
 
 
@@ -98,7 +102,7 @@ class Game {
 
 
 		// Set the camera position to a random point on the map
-		this.camera.setPosition(
+		this.camera.move(
 			getRandomInt(this.map.bounds.min.x, this.map.bounds.max.x),
 			getRandomInt(this.map.bounds.min.y, this.map.bounds.max.y),
 			true
@@ -109,9 +113,10 @@ class Game {
 	}
 
 
-	public update(count: number): void {
-		const buffer = this.sharedBuffer!.unlinkReader();
+	public async update(count: number): Promise<void> {
+		await this.sharedBuffer!.lockAsync();
 
+		const buffer = this.sharedBuffer!.unlinkReader();
 
 		for (let i = 0; i < count; i++) {
 			const encoder = buffer.readUint8();
@@ -148,8 +153,10 @@ class Game {
 			}
 
 			// Flags aren't merged between different updates within the world update
-			buffer.lastFlagIndex = 0;
+			buffer.lastBitIndex = 0;
 		}
+
+		this.sharedBuffer!.unlock();
 	}
 
 
@@ -185,7 +192,7 @@ class Game {
 
 
 	public createBuffer(): SharedBuffer {
-		return new SharedBuffer(14 * (this.config.entities.plant + this.config.entities.herbivore + this.config.entities.carnivore) + 5000);
+		return new SharedBuffer(4 + 14 * (this.config.entities.plant + this.config.entities.herbivore + this.config.entities.carnivore) + 5000);
 	}
 
 

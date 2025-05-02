@@ -1,15 +1,20 @@
-import { getRandomTrianglePoint, triangleArea } from "../../../utils/math/global.js";
+import { getRandomTrianglePoint, triangleArea } from "../../../utils/math/global";
 
-import { Polygon } from "../../../utils/math/polygon.js";
+import { Polygon } from "../../../utils/math/polygon";
 
-import { Vector } from "../../../utils/math/vector.js";
+import { Vector } from "../../../utils/math/vector";
+
+import { IDAllocator } from "../../../utils/getID";
 
 
 
 class Spawner {
+	public readonly IDAllocator: IDAllocator;
 	private seed: number;
 
+
 	public constructor(seed: number) {
+		this.IDAllocator = new IDAllocator();
 		this.seed = seed;
 	}
 
@@ -23,17 +28,22 @@ class Spawner {
 
 		return this.seed / m;
 	}
-	
+
 
 	public randomInt(min: number, max: number) {
 		return Math.floor(this.random() * (max - min + 1) + min);
 	}
 
 
+	public randomAngle() {
+		return this.random() * Math.PI * 2;
+	}
+
+
 	public randomPosition(polygon: Polygon, offset: number = 0, random: () => number = this.random.bind(this)): Vector {
 		// Shrink the polygon globally.
 		const shrinked = polygon.extrude(-offset).points;
-		
+
 
 		// Triangulate the contracted polygon.
 		const triangles: { p1: Vector, p2: Vector, p3: Vector }[] = [];
@@ -50,11 +60,11 @@ class Spawner {
 
 			triangles.push({ p1, p2, p3 });
 			areas.push(area);
-			
+
 			totalArea += area;
 		}
 
-		
+
 		let r = random() * totalArea;
 
 		for (let i = 0; i < triangles.length; i++) {

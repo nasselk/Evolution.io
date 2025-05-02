@@ -1,19 +1,17 @@
 import { type DynamicEntity } from "../entities/dynamicEntity";
 
-import { Interval } from "../../utils/timers/interval";
-
 import { dynamicTypes } from "../../shared/connector";
-
-import { Timeout } from "../../utils/timers/timeout";
 
 import { nextTick } from "../../utils/timers/tick";
 
-import { Game } from "./simulation";
+import { Timer } from "../../utils/timers/timer";
+
+import { Simulation } from "./simulation";
 
 
 
 class GameLoop {
-	private readonly game: Game;
+	private readonly game: Simulation;
 	private readonly minTickDelta: number;
 	private lastStatDisplay: number;
 	private lastTick: number;
@@ -22,7 +20,7 @@ class GameLoop {
 	public tick: number;
 	
 	
-	public constructor(game: Game) {
+	public constructor(game: Simulation) {
 		this.game = game;
 		this.minTickDelta = this.game.config.TPS === 0 ? 0 : 1000 / this.game.config.TPS;
 		this.lastTick = this.lastStatDisplay = performance.now();
@@ -51,11 +49,8 @@ class GameLoop {
 		if (deltaTime >= this.minTickDelta) {
 			this.lastTick = now;
 
-			this.tick++;
 
-
-			Timeout.runTimeouts(now);
-			Interval.runIntervals(now);
+			Timer.runAll(now);
 
 			
 			let minID: number = Infinity;
@@ -80,23 +75,13 @@ class GameLoop {
 					else if (entity.id > maxID) {
 						maxID = entity.id;
 					}
-
-
-
-					/*this.game.dynamicGrid.query(entity, function (objects, queryID) {
-						for (const object of objects) {
-							if (object.id !== entity.id && object.queryID !== queryID) {
-								entity.collider.collide(object.collider);
-							}
-						}
-					});*/
 				}
 			}
 
 
 			// Do the pairwise interactions check
 			this.game.dynamicGrid.pairwiseCombination(function (entity1, entity2) {
-				entity1.collider.collide(entity2.collider!);
+				entity1.dynamicInteraction(entity2);
 			}, minID, maxID, false);
 
 
@@ -122,11 +107,16 @@ class GameLoop {
 					this.lastStatDisplay = now;
 				}
 			}
+
+			this.tick++;
 		}
 	}
 
 
 	private processOutboundMessages(): void {
+		this.game.sharedBuffer?.lock();
+
+
 		// Add entities updates
 		for (const entity of this.game.entities.values()) {
 			if (entity.constructor.dynamic && entity.creationTick !== this.tick) {
@@ -143,6 +133,8 @@ class GameLoop {
 			this.game.sharedBuffer?.writer.reset();
 			this.game.updatesCount = 0;
 		}
+
+		this.game.sharedBuffer?.unlock();
 	}
 
 

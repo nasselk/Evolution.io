@@ -15,10 +15,11 @@ class BufferReader {
 	public offset: number;
 
 
-	public constructor(buffer: ArrayBufferLike | ArrayBufferView | Buffer | BufferWriter | BufferReader, clone: boolean = false) {
-		this.buffer = createBuffer(buffer, clone);
-		this.view = new DataView(this.buffer.buffer);
-		this.byteLength = this.buffer.byteLength;
+	public constructor(buffer: ArrayBufferLike | ArrayBufferView | Buffer | BufferWriter | BufferReader, clone: boolean = false, offset: number = 0) {
+		this.buffer = createBuffer(buffer, clone, offset);
+		
+		this.view = new DataView(this.buffer.buffer, this.buffer.byteOffset, this.buffer.byteLength);
+		this.byteLength = this.view.byteLength;
 		this.lastBitIndex = 0;
 		this.lastBitOffset = 0;
 		this.offset = 0;

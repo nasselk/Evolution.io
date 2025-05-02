@@ -1,21 +1,56 @@
-// Get the lowest unused id in a list
-export function getUnusedID(map: Map<number, any> | Set<number>, excluded: Set<number> | number = new Set(), init: boolean = false): number {
-	// Way faster if we know the map is empty (init)
-	if (init) {
-		return map.size + 1;
+class IDAllocator {
+	private readonly freePositiveIDs: number[];
+	private readonly freeNegativeIDs: number[];
+	private nextPositiveID: number;
+	private nextNegativeID: number;
+
+
+	constructor() {
+		this.freePositiveIDs = [];
+		this.freeNegativeIDs = [];
+		this.nextPositiveID = 1;
+		this.nextNegativeID = -1;
 	}
 
-	else {
-		if (typeof excluded === "number") {
-			excluded = new Set([excluded]);
+
+	public allocate(): number {
+		if (this.freePositiveIDs.length > 0) {
+			return this.freePositiveIDs.pop()!;
 		}
 
-		let i = 1;
+		else {
+			return this.nextPositiveID++;
+		}
+	}
 
-		while (map.has(i) || excluded.has(i)) {
-			i++;
+
+	public allocateNegative(): number {
+		if (this.freeNegativeIDs.length > 0) {
+			return this.freeNegativeIDs.pop()!;
 		}
 
-		return i;
+		else {
+			return this.nextNegativeID--;
+		}
+	}
+
+
+	public free(...ids: number[]): void {
+		for (const id of ids) {
+			if (id > 0) {
+				if (id < this.nextPositiveID) {
+					this.freePositiveIDs.push(id);
+				}
+			}
+
+			else {
+				if (id > this.nextNegativeID) {
+					this.freeNegativeIDs.push(id);
+				}
+			}
+		}
 	}
 }
+
+
+export { IDAllocator };

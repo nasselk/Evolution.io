@@ -1,7 +1,7 @@
-import { Game } from "./core/simulation";
+import { Simulation } from "./core/simulation";
 
 
-const game = new Game();
+const game = new Simulation();
 
 
 export { game };

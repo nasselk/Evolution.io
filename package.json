@@ -10,13 +10,14 @@
 		"node": ">=18.0.0 <19.0.0 || >=20.0.0 <21.0.0 || >=22.0.0"
 	},
 	"scripts": {
-		"init:dev": "git worktree add -b production ./production HEAD && git push --set-upstream origin production && npm install && npm run dev",
+		"init:dev": "npm install && npm run dev",
 		"serve": "vite preview --host",
 		"dev": "vite",
 		"build": "node build.js"
 	},
 	"dependencies": {
-		"pixi.js": "^8.8.1"
+		"pixi.js": "^8.8.1",
+		"svelte": "^5.28.2"
 	},
 	"devDependencies": {
 		"@eslint/js": "^9.18.0",
@@ -28,6 +29,7 @@
 		"typescript": "^5.8.2",
 		"javascript-obfuscator": "^4.1.1",
 		"@rollup/plugin-strip": "^3.0.4",
+		"@sveltejs/vite-plugin-svelte": "^5.0.3",
 		"stats.js": "^0.17.0",
 		"@types/stats.js": "^0.17.3",
 		"vite": "^6.2.0",

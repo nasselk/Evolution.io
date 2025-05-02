@@ -1,4 +1,4 @@
-import { Timeout } from "../utils/timers/timeout";
+import { Timer } from "../utils/timers/timer";
 
 import { game } from "../game";
 
@@ -40,7 +40,7 @@ function switchUI(appear: string, disappear: string | string[] = displayedBox, d
 
 
 
-let messageTimeout: Timeout | undefined;
+let messageTimeout: Timer | undefined;
 
 const messageBox = document.querySelector<HTMLDivElement>("#serverMessage")!;
 
@@ -59,7 +59,7 @@ function showMessage(message: string, type: "info" | "warn" | "error" = "info", 
 	}
 
 	if (timeout) {
-		new Timeout(() => {
+		new Timer(() => {
 			messageBox.style.display = "none";
 		}, timeout);
 	}

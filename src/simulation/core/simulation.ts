@@ -30,8 +30,9 @@ import { GameMap } from "../map";
 
 
 
+class Simulation {
+	private static _instance: Simulation;
 
-class Game {
 	public readonly renderingThread: Thread;
 	public readonly dynamicGrid: HashGrid2D<DynamicEntity>;
 	public readonly staticGrid: HashGrid2D<Entity, typeof classes>;
@@ -40,7 +41,7 @@ class Game {
 	public readonly config: typeof config;
 	public sharedBuffer?: SharedBuffer;
 	public readonly spawner: Spawner;
-	private readonly loop: GameLoop;
+	public readonly loop: GameLoop;
 	public readonly map: GameMap;
 	public updatesCount: number;
 	public FOVThread?: Thread;
@@ -68,6 +69,15 @@ class Game {
 		this.renderingThread.on("init", (data) => {
 			this.init(data);
 		});
+	}
+
+
+	public static get instance(): Simulation {
+		if (!this._instance) {
+			this._instance = new Simulation();
+		}
+
+		return this._instance;
 	}
 
 
@@ -115,4 +125,4 @@ class Game {
 
 
 
-export { Game };
+export { Simulation };

@@ -36,7 +36,7 @@ abstract class DynamicEntity extends Entity {
 		this.angularFriction = 0.775;
 		this.mass = options.mass || 1; // Should be >= 1
 		this.targetAngle = this.movingDirection = this.angle;
-		this.observable = { health: this.health, size: this.size, position: this.position.clone, angle: this.angle};
+		this.observable = { health: this.health, size: this.size, position: this.position.clone, angle: this.angle };
 	}
 
 
@@ -50,6 +50,11 @@ abstract class DynamicEntity extends Entity {
 		map.constrain(this.position);
 
 		this.collider.forceChecks = false;
+	}
+
+
+	public dynamicInteraction(entity: DynamicEntity): void {
+		this.collider.collide(entity.collider);
 	}
 
 
@@ -129,14 +134,14 @@ abstract class DynamicEntity extends Entity {
 			case "strict":
 				return this.position.distanceWith(this.observable.position) > acceptedDelta;
 
+			case "velocity":
+				return Math.sqrt(this.velocity.x ** 2 + this.velocity.y ** 2) > acceptedDelta;
+
 			case "strictX":
 				return Math.abs(this.position.x - this.observable.position.x) > acceptedDelta;
 
 			case "strictY":
 				return Math.abs(this.position.y - this.observable.position.y) > acceptedDelta;
-
-			case "velocity":
-				return Math.sqrt(this.velocity.x ** 2 + this.velocity.y ** 2) > acceptedDelta;
 
 			default:
 				throw new Error("Invalid type");

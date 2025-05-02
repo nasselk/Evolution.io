@@ -4,7 +4,7 @@ import { BufferWriter } from "./writer.js";
 
 
 
-export function createBuffer(allocation: number | ArrayBufferLike | ArrayBufferView | BufferWriter | BufferReader = 0, clone: boolean = false): Uint8Array {
+export function createBuffer(allocation: number | ArrayBufferLike | ArrayBufferView | BufferWriter | BufferReader = 0, clone: boolean = false, offset: number = 0): Uint8Array {
 	if (typeof allocation === "number") {
 		return new Uint8Array(allocation);
 	}
@@ -13,7 +13,7 @@ export function createBuffer(allocation: number | ArrayBufferLike | ArrayBufferV
 	let output: Uint8Array;
 
 	if (allocation instanceof ArrayBuffer || allocation instanceof SharedArrayBuffer) {
-		output = new Uint8Array(allocation);
+		output = new Uint8Array(allocation, offset, allocation.byteLength - offset);
 	}
 	
 	else if (allocation instanceof BufferReader || allocation instanceof BufferWriter) {
@@ -21,7 +21,7 @@ export function createBuffer(allocation: number | ArrayBufferLike | ArrayBufferV
 	}
 	
 	else {
-		output = new Uint8Array(allocation.buffer);
+		output = new Uint8Array(allocation.buffer, allocation.byteOffset, allocation.byteLength);
 	}
 
 

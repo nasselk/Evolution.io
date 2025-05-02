@@ -1,5 +1,7 @@
 import viteCompression from "vite-plugin-compression";
 
+import { svelte } from "@sveltejs/vite-plugin-svelte";
+
 import { createHtmlPlugin } from "vite-plugin-html";
 
 import obfuscator from "javascript-obfuscator";
@@ -16,20 +18,13 @@ const obfuscationConfig = JSON.parse(readFileSync(new URL("./obfuscator.json", i
 
 export default {
 	base: "./",
-    
-	esbuild: {
-		logOverride: {
-			"pixi.js": "silent"
-		},
-		drop: [ "debugger" ],
-	},
 
 	server: {
 		port: 80,
-		open: true,
+		//open: true,
 		headers: {
 			"Cross-Origin-Opener-Policy": "same-origin",
-			"Cross-Origin-Embedder-Policy": "require-corp"
+			"Cross-Origin-Embedder-Policy": "require-corp",
 		}
 	},
 
@@ -38,11 +33,11 @@ export default {
 	},
 
 	build: {
-		outDir: "./production/client",
+		outDir: "../production/client",
 		emptyOutDir: true,
 
 		rollupOptions: {
-			external: [ "stats.js" ],
+			external: ["stats.js"],
 			output: {
 				format: "esm",
 
@@ -94,10 +89,12 @@ export default {
 	},
 
 	optimizeDeps: {
-		include: [ "pixi.js", "pixi-filters" ],
+		include: ["pixi.js", "pixi-filters"],
 	},
 
 	plugins: [
+		svelte(),
+
 		createHtmlPlugin({
 			minify: true,
 		}),
@@ -108,8 +105,8 @@ export default {
 		}),
 
 		viteCompression({
-        	algorithm: "gzip",
-        	ext: ".gz",
-    	}),
+			algorithm: "gzip",
+			ext: ".gz",
+		}),
 	],
 } satisfies UserConfig;

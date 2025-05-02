@@ -1,5 +1,8 @@
 export default {
-	animal: {
+	carnivore: {
+		dynamic: true,
+	},
+	herbivore: {
 		dynamic: true,
 	},
 	plant: {

@@ -1,4 +1,4 @@
-import { type Collider } from "../collider";
+import { type Collider } from "../collider.js";
 
 
 

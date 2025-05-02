@@ -1,21 +1,19 @@
 import { type BufferReader } from "../../shared/thread/reader";
 
-import { Entity, defineCustomType } from "./entity";
-
 import { getTexture } from "../../loader/texture";
 
 import { newSprite } from "../createVisuals";
 
 import { type Sprite } from "pixi.js";
 
+import { Entity } from "./entity";
 
 
-@defineCustomType("animal")
 
-export default class Player extends Entity {
-	public static override readonly list = new Map<number, Player>();
+export default class Animal extends Entity {
+	public static override readonly list = new Map<number, Animal>();
 
-	private sprite?: Sprite;
+	protected sprite?: Sprite;
 
 
 	public constructor(properties: BufferReader) {
@@ -25,7 +23,7 @@ export default class Player extends Entity {
   	}
 
 
-	public async init(): Promise<this | void> {
+	public async init(): Promise<this> {
 		const texture = await getTexture("player", "webp");
 
 		if (this.spawned) {
@@ -36,9 +34,9 @@ export default class Player extends Entity {
 			this.container.addChild(this.sprite);
 
 			this.initiated = true;
-
-			return this;
 		}
+
+		return this;
 	}
 	
 

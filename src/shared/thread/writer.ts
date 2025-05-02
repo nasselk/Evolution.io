@@ -15,12 +15,12 @@ class BufferWriter {
 
 
 	public constructor(byteLength?: number, resizable?: boolean);
-	public constructor(buffer: ArrayBufferLike | ArrayBufferView | Buffer | BufferWriter, resizable?: boolean, clone?: boolean);
-	public constructor(allocation: number | ArrayBufferLike | ArrayBufferView | Buffer | BufferWriter = 0, resizable: boolean = allocation === 0, clone: boolean = false) {
-		this.buffer = createBuffer(allocation, clone);
+	public constructor(buffer: ArrayBufferLike | ArrayBufferView | Buffer | BufferWriter, resizable?: boolean, clone?: boolean, offset?: number);
+	public constructor(allocation: number | ArrayBufferLike | ArrayBufferView | Buffer | BufferWriter = 0, resizable: boolean = allocation === 0, clone: boolean = false, offset: number = 0) {
+		this.buffer = createBuffer(allocation, clone, offset);
 
-		this.view = new DataView(this.buffer.buffer);
-		this.byteLength = this.buffer.byteLength;
+		this.view = new DataView(this.buffer.buffer, this.buffer.byteOffset, this.buffer.byteLength);
+		this.byteLength = this.view.byteLength;
 		this.resizable = resizable;
 		this.lastBitOffset = 0;
 		this.lastBitIndex = 0;
