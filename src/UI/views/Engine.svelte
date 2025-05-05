@@ -1,12 +1,10 @@
 <script lang="ts">
     import Grid from "../components/GridLayout.svelte";
-	import ActionBar from "../components/ActionBar.svelte";
     import ToolBar from "../components/ToolBar.svelte";
 	import ToggleBar from "../components/ToggleBar.svelte";
 	import ContextMenu from "../components/ContextMenu.svelte";
 	import Window from "../components/Window.svelte";
 
-	import { actions } from "../stores/action";
 	import { toggles } from "../stores/toggle";
 	import { tools } from "../stores/tool";
 
@@ -85,6 +83,29 @@
 
 
 <style>
+	:global(:root) {
+		--padding: 15px;
+		--gap: 12px;
+	}
+
+
+	:global(:root) {
+  /* Padding sizes */
+  --padding-sm: 0.5rem;    /* 8px - Small padding */
+  --padding-md: 1rem;      /* 16px - Medium/default padding */
+  --padding-lg: 1.5rem;    /* 24px - Large padding */
+  
+  /* Font sizes */
+  --font-sm: 0.875rem;     /* 14px - Small text */
+  --font-md: 1rem;         /* 16px - Regular text */
+  --font-lg: 1.25rem;      /* 20px - Large text */
+  
+  /* Border radius */
+  --radius-sm: 4px;        /* Small rounding */
+  --radius-md: 8px;        /* Medium rounding */
+  --radius-lg: 16px;       /* Large rounding */
+}
+
 	:global(.editorBox) {
 		box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 		background: rgba(50, 50, 50, 0.2);
@@ -92,7 +113,14 @@
 		-webkit-backdrop-filter: blur(3px);
 		backdrop-filter: blur(3px);
 		border: 0.25vmin solid rgba(150, 150, 150, 0.3);
-		border-radius: 2vmin;
+		border-radius: 18px;
+		box-sizing: border-box;
+	}
+
+	:global(.editorBox.pretty) {
+		background: rgba(50, 50, 50, 0.2);
+		-webkit-backdrop-filter: blur(3px);
+		backdrop-filter: blur(3px);
 	}
 
 	:global(button:focus) {
@@ -101,13 +129,12 @@
 </style>
 
 
-<Grid id="editor" padding=2vw gap=1vw bottom_left_direction="row">
+<Grid id="editor" padding="var(--padding)" gap="var(--gap)" bottom_left_direction="row">
     {#snippet bottom_left()}
         <ToolBar id="editorTools" class="editorBox" { tools } />
-		<ToggleBar id="editorToggles" class="editorBox" {toggles} />
+		<ToggleBar id="editorToggles" class="editorBox" { toggles } />
     {/snippet}
 </Grid>
-
 
 
 <ContextMenu {menuItems} />

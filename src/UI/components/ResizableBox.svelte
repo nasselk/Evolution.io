@@ -1,19 +1,20 @@
 <script lang="ts">
+    import { clamp } from "../../utils/math/global";
 	import { Vector } from "../../utils/math/vector";
 
 
   	const {
     	id = "",
     	class: classList = "",
+		style = "",
     	x = "0px",
     	y = "0px",
     	width = "400px",
     	height = "300px",
-    	minWidth = "200px",
+    	minWidth = "0px",
     	minHeight = "150px",
     	maxWidth = "500px",
     	maxHeight = "500px",
-		children = () => {},
 		directions = [
 			"n",
 			"e",
@@ -23,124 +24,142 @@
 			"ne",
 			"sw",
 			"se"
-		]
+		],
+		transition = false,
+		children = () => {}
   	} = $props();
 
 
+	 
   	// Initialize state with parsed values and export it
-  	const state = $state({
-    	x: parseInt(x),
-    	y: parseInt(y),
-    	width: parseInt(width),
-    	height: parseInt(height),
+  	export const state = $state({
+		position: x === "0px" && y === "0px" ? "static" : "fixed",
+    	x,
+    	y,
+    	width,
+    	height,
+		transition
   	});
 
-  	let isResizing = false;
-  	let activePointerId = -1;
-  	let resizeDirection: keyof typeof resizeHandlers;
-  	const startBox = { x: 0, y: 0, width: 0, height: 0 };
-  	const startPointer = new Vector();
+
+	let box: HTMLDivElement;
+  	let activePointerID = -1;
+  	let resizeAxis: keyof typeof handlers;
+  	const startProperties = { x: 0, y: 0, width: 0, height: 0 };
+  	const startAnchor = new Vector();
 
 
-  	const resizeHandlers = {
-    	n:  (dx: number, dy: number): void => {
-      		const newHeight = startBox.height - dy;
-      		const constrainedHeight = Math.min(Math.max(newHeight, parseFloat(minHeight)), parseFloat(maxHeight));
-      		const actualDy = startBox.height - constrainedHeight;
-      		state.height = constrainedHeight;
-      		state.y = startBox.y + actualDy;
-    	},
+  	const handlers = {
+    	n: (dx: number, dy: number): void => {
+      		const newHeight = startProperties.height - dy;
+      		const constrainedHeight = clamp(newHeight, parseFloat(minHeight), parseFloat(maxHeight));
+      		const actualDy = startProperties.height - constrainedHeight;
+
+			state.height = `${ constrainedHeight }px`;
+			state.y = `${ startProperties.y + actualDy }px`;
+		},
+
     	e: (dx: number, dy: number): void => {
-      		state.width = Math.max(startBox.width + dx, parseFloat(minWidth));
+      		const width = Math.max(startProperties.width + dx, parseFloat(minWidth));
+
+			state.width = `${ width }px`;
     	},
+
     	s: (dx: number, dy: number): void => {
-      		state.height = Math.max(startBox.height + dy, parseFloat(minHeight));
+      		const height =  Math.max(startProperties.height + dy, parseFloat(minHeight));
+
+			state.height = `${ height }px`;
     	},
+
     	w: (dx: number, dy: number): void => {
-      		const newWidth = startBox.width - dx;
-      		const constrainedWidth = Math.min(Math.max(newWidth, parseFloat(minWidth)), parseFloat(maxWidth));
-      		const actualDx = startBox.width - constrainedWidth;
-      		state.width = constrainedWidth;
-      		state.x = startBox.x + actualDx;
+      		const newWidth = startProperties.width - dx;
+      		const constrainedWidth = clamp(newWidth, parseFloat(minWidth), parseFloat(maxWidth));
+      		const actualDx = startProperties.width - constrainedWidth;
+
+      		state.width = `${ constrainedWidth }px`;
+      		state.x = `${ startProperties.x + actualDx }px`;
     	},
+
     	nw: (dx: number, dy: number): void => {
-      		resizeHandlers.n(dx, dy);
-      		resizeHandlers.w(dx, dy);
+      		handlers.n(dx, dy);
+      		handlers.w(dx, dy);
     	},
+
     	ne: (dx: number, dy: number): void => {
-      		resizeHandlers.n(dx, dy);
-      		resizeHandlers.e(dx, dy);
+      		handlers.n(dx, dy);
+      		handlers.e(dx, dy);
     	},
+
     	sw: (dx: number, dy: number): void => {
-     	 	resizeHandlers.s(dx, dy);
-      		resizeHandlers.w(dx, dy);
+     	 	handlers.s(dx, dy);
+      		handlers.w(dx, dy);
     	},
+
     	se: (dx: number, dy: number): void => {
-      		resizeHandlers.s(dx, dy);
-      		resizeHandlers.e(dx, dy);
+      		handlers.s(dx, dy);
+      		handlers.e(dx, dy);
     	}
   	};
 
-  	function startResize(event: PointerEvent, direction: keyof typeof resizeHandlers): void {
-		if (directions.includes(direction)) {
-			activePointerId = event.pointerId;
-    		resizeDirection = direction;
-			isResizing = true;
 
-    		startBox.x = state.x;
-    		startBox.y = state.y;
-    		startBox.width = state.width;
-    		startBox.height = state.height; 
+  	function startResize(event: PointerEvent, direction: keyof typeof handlers): void {
+		// Set the active pointer ID and resize axis
+		state.position = "fixed";
+		activePointerID = event.pointerId;
+    	resizeAxis = direction;
 
-    		startPointer.set(event.clientX, event.clientY);
+		const bounds = box.getBoundingClientRect();
 
-    		document.addEventListener("pointermove", handlePointerMove);
-    		document.addEventListener("pointerup", stopInteraction);
-    		document.addEventListener("pointercancel", stopInteraction);
-		}
+		state.x = `${ bounds.x }px`;
+		state.y = `${ bounds.y }px`;
+    	startProperties.x = bounds.x;
+    	startProperties.y = bounds.y;
+    	startProperties.width = bounds.width;
+    	startProperties.height = bounds.height; 
+
+		startAnchor.set(event.clientX, event.clientY);
+
+    	document.addEventListener("pointermove", resize);
+    	document.addEventListener("pointerup", stopResize);
+    	document.addEventListener("pointercancel", stopResize);
   	}
 
-  	function handlePointerMove(event: PointerEvent): void {
-    	if (isResizing && event.pointerId === activePointerId) {
-      		const dx = event.clientX - startPointer.x;
-      		const dy = event.clientY - startPointer.y;
-      		resizeHandlers[resizeDirection](dx, dy);
+
+  	function resize(event: PointerEvent): void {
+    	if (event.pointerId === activePointerID) {
+      		const dx = event.clientX - startAnchor.x;
+      		const dy = event.clientY - startAnchor.y;
+
+      		handlers[resizeAxis](dx, dy);
     	}
   	}
 
-  	function stopInteraction(): void {
-    	isResizing = false;
-    	activePointerId = -1;
-    	document.removeEventListener("pointermove", handlePointerMove);
-    	document.removeEventListener("pointerup", stopInteraction);
-    	document.removeEventListener("pointercancel", stopInteraction);
+
+  	function stopResize(): void {
+    	document.removeEventListener("pointermove", resize);
+    	document.removeEventListener("pointerup", stopResize);
+    	document.removeEventListener("pointercancel", stopResize);
+
+    	activePointerID = -1;
   	}
+
 
 	export function getPosition(): { x: number; y: number } {
-		return { x: state.x, y: state.y };
+		const position = box.getBoundingClientRect();
+
+		return { x: position.x, y: position.y };
   	}
 
-  	export function setPosition(x: number, y: number): void {
-		state.x = x;
-		state.y = y;
-  	}
 
 	export function getSize(): { width: number; height: number } {
-		return { width: state.width, height: state.height };
-  	}
+		const size = box.getBoundingClientRect();
 
-	export function setSize(width: number, height: number): void {
-		state.width = width;
-		state.height = height;
+		return { width: size.width, height: size.height };
   	}
 </script>
 
 
 <style>
-  	.resizable-box {
-    	position: absolute;
-  	}
-
   	.resize-handle {
     	position: absolute;
     	z-index: 2;
@@ -172,21 +191,19 @@
 	id={id}
   	class="resizable-box {classList}"
   	style="
-    	left: {state.x}px;
-    	top: {state.y}px;
-    	width: {state.width}px;
-    	height: {state.height}px;
-    	min-width: {minWidth};
-    	min-height: {minHeight};
-    	max-width: {maxWidth};
-    	max-height: {maxHeight};
-  	"
+		position: {state.position};
+    	left: {state.x};
+    	top: {state.y};
+    	width: {state.width ?? minWidth};
+    	height: {state.height ?? minHeight};
+		transition: {transition ? "height 0.2s ease, width 0.2s ease" : "none"};
+		{style}
+	"
+	bind:this={box}
 	>
 
-  	{#each Object.keys(resizeHandlers) as direction}
-	  	{#if directions.includes(direction)}
-    		<div class="resize-handle {direction}" onpointerdown={e => startResize(e, direction)} role="button"></div>
-		{/if}
+  	{#each directions as direction}
+	  	<div class="resize-handle {direction}" onpointerdown={e => startResize(e, direction)} role="button"></div>
   	{/each}
 
   	{@render children()}

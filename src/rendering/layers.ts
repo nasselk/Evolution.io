@@ -8,6 +8,7 @@ const layers = {
 	default: [
 		"map",
 		"plant",
+		"leaf",
 		"herbivore",
 		"carnivore",
 	]

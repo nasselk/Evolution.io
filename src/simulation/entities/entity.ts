@@ -14,13 +14,11 @@ import { Simulation } from "../core/simulation";
 
 import { Collider } from "../physic/collider";
 
-import { type game } from "../index";
-
 import { type Biome } from "../map";
 
 
 
-type EntityTypes = keyof typeof game.classes;
+type EntityTypes = keyof typeof Simulation.instance.classes;
 
 
 interface ConstructorOptions {
@@ -41,39 +39,38 @@ abstract class Entity {
 	public static readonly list = new Map<number, Entity | DynamicEntity>();
 	public static readonly isSubType: boolean = false;
 	public static type: keyof typeof primitiveTypes;
-	public static game: typeof game;
 	public static dynamic: boolean;
 
 
 	public readonly id: number;
 	public readonly cellsKeys: Set<number>[];
-	protected readonly observable: { health: number, size: Vector };
 	public readonly type: keyof typeof primitiveTypes;
 	protected readonly creation: number;
 	public readonly position: Vector;
 	public readonly size: Vector;
 	public health: number;
+	public mass: number;
 	public angle: number;
 	public queryID: number;
 	public spawned: boolean;
-	public mass: number;
+	protected lastReproduction;
 	public readonly creationTick?: number;
 	declare ["constructor"]: typeof Entity;
 	public abstract readonly collider: Collider<this>;	
 	public interaction?<T extends Entity>(entity: T, ...args: any[]): void;
 
 
-	protected constructor(options: ConstructorOptions) {
+	protected constructor(options: ConstructorOptions = {}) {
 		this.position = new Vector();
 		this.health = options.health ?? 100;
 		this.cellsKeys = new Array(HashGrid2D.gridCount).fill(new Set());
 		this.size = new Vector(options.size ?? options.width, options.size ?? options.height ?? options.width);
-		this.observable = { health: this.health, size: this.size.clone };
 		this.id = Simulation.instance.spawner.IDAllocator.allocate();
 		this.creationTick = Simulation.instance.loop.tick;
 		this.creation = performance.now();
 		this.type = this.constructor.type;
 		this.angle = options.angle ?? 0;
+		this.lastReproduction = 0;
 		this.mass = Infinity; // Entity are by default static
 		this.spawned = true;
 		this.queryID = 0;
@@ -93,14 +90,12 @@ abstract class Entity {
 	}
 	
 
-	public static create<T extends EntityTypes>(type: T, ...args: ConstructorParameters<typeof game.classes[T]>): InstanceType<typeof game.classes[T]> {
-		const constructor = Entity.game.classes[type] as any;
+	public static create<T extends EntityTypes>(type: T, ...args: ConstructorParameters<typeof Simulation.instance.classes[T]>): InstanceType<typeof Simulation.instance.classes[T]> {
+		const constructor = Simulation.instance.classes[type] as any;
 
-		const entity = new constructor(...args) as InstanceType<typeof game.classes[T]>;
+		const entity = new constructor(...args) as InstanceType<typeof Simulation.instance.classes[T]>;
 
 		constructor.list.set(entity.id, entity);
-
-		Entity.game.addWorldUpdate("createEntity", entity.packProperties.bind(entity));
 
 		return entity;
 	}
@@ -113,7 +108,7 @@ abstract class Entity {
 	}
 
 
-	public static get<T extends EntityTypes | undefined>(id: number): (T extends EntityTypes ? InstanceType<typeof game.classes[T]> : Entity) | undefined {
+	public static get<T extends EntityTypes | undefined>(id: number): (T extends EntityTypes ? InstanceType<typeof Simulation.instance.classes[T]> : Entity) | undefined {
 		return Entity.list.get(id) as ReturnType<typeof this.get<T>>;
 	}
 
@@ -143,8 +138,6 @@ abstract class Entity {
 
 		buffer.writeUint16(this.id);
 
-		Entity.game.addWorldUpdate("destroyEntity", buffer);
-
 		
 		this.spawned = false;
 
@@ -163,12 +156,6 @@ abstract class Entity {
 	}
 
 
-	protected storeProperties(): void {
-		this.observable.health = this.health;
-		this.observable.size.set(this.size);
-	}
-	
-
 	public resize(size: number): void;
 	public resize(width: number, height: number): void;
 	public resize(a: number, b?: number): void {
@@ -180,14 +167,14 @@ abstract class Entity {
 		this.size.y = b ?? a;
 
 		// Means it's inserted in the static grid
-		if (this.cellsKeys[Entity.game.staticGrid.id].size > 0) {
-			Entity.game.staticGrid.move(this, this.collider.size.x, this.collider.size.y);
+		if (this.cellsKeys[Simulation.instance.staticGrid.id].size > 0) {
+			Simulation.instance.staticGrid.move(this, this.collider.size.x, this.collider.size.y);
 		}
 	}
 
 
 	public packProperties(writer?: BufferWriter, additionalBytes: number = 0): BufferWriter {
-		const buffer = writer ?? new BufferWriter(13 + additionalBytes);
+		const buffer = writer ?? new BufferWriter(10 + additionalBytes);
 
 
 		const type = getTypeEncoder(this.type);
@@ -195,13 +182,15 @@ abstract class Entity {
 		buffer.writeUint8(type);
 		buffer.writeUint16(this.id);
 
-		const x = BufferWriter.toPrecision(this.position.x, this.constructor.game.map.bounds.max.x, 16);
-		const y = BufferWriter.toPrecision(this.position.y, this.constructor.game.map.bounds.max.y, 16);
+		const x = BufferWriter.toPrecision(this.position.x, Simulation.instance.map.bounds.max.x, 16);
+		const y = BufferWriter.toPrecision(this.position.y, Simulation.instance.map.bounds.max.y, 16);
 
 		buffer.writeUint16(x);
 		buffer.writeUint16(y);
 
-		buffer.writeFloat32(this.angle);
+		const angle = BufferWriter.toPrecision(this.angle, 2 * Math.PI, 8, 0);
+		buffer.writeUint8(angle);
+
 		buffer.writeUint16(this.size.x);
 
 

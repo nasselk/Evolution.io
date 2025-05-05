@@ -49,18 +49,18 @@ abstract class Entity {
 	protected abstract init(): void;
 	declare ["constructor"]: typeof Entity;	
 
-	protected constructor(properties: BufferReader) {
-		this.id = properties.readUint16();
-
+	protected constructor(id: number, properties: BufferReader) {
 		const x = properties.readUint16();
 		const y = properties.readUint16();
+		const angle = properties.readUint8();
 
 		this.position = new Vector(
 			BufferReader.fromPrecision(x, game.map.bounds.max.x, 16),
 			BufferReader.fromPrecision(y, game.map.bounds.max.y, 16),
 		);
 
-		this.angle = properties.readFloat32();
+		this.id = id;
+		this.angle = BufferReader.fromPrecision(angle, 2 * Math.PI, 8, 0);
 		this.target = { position: this.position.clone, angle: this.angle, size: new Vector(properties.readUint16()), opacity: 1 };
 		this.interpolation = game.settings.interpolation;
 		this.type = this.constructor.type;
@@ -135,11 +135,13 @@ abstract class Entity {
 	public update(buffer: BufferReader): this {
 		const x = buffer.readUint16();
 		const y = buffer.readUint16();
+		const angle = buffer.readUint8();
+		const size = buffer.readUint16();
 
 		this.target.position.x = BufferReader.fromPrecision(x, game.map.bounds.max.x, 16);
 		this.target.position.y = BufferReader.fromPrecision(y, game.map.bounds.max.y, 16);
-
-		this.target.angle = buffer.readFloat32();
+		this.target.angle = BufferReader.fromPrecision(angle, 2 * Math.PI, 8, 0);
+		this.target.size.set(size);
 
 		return this;
 	}
@@ -245,6 +247,7 @@ function defineCustomType(name: EntityTypes, layer?: number) {
 		}
 	};
 }
+
 
 
 export { Entity, type EntityTypes, type GetEntityInstanceType, defineCustomType };

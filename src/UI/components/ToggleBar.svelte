@@ -30,7 +30,7 @@
             const isActive = toggle.toggled;
             
             if (button && highlightComponents[toggle.id]) {
-                highlightComponents[toggle.id].updateHighlight(button, pressed, isActive);
+                highlightComponents[toggle.id].updateHighlight(pressed, isActive, button);
             }
         }
     }

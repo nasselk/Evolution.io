@@ -2,18 +2,15 @@ import { type ConstructorOptions, Entity } from "./entity";
 
 import { normalizeAngle } from "../../utils/math/angle";
 
-import { BufferWriter } from "../../shared/thread/writer";
-
 import { Vector } from "../../utils/math/vector";
 
-import { type GameMap } from "../map";
+import { Simulation } from "../core/simulation";
 
 
 
 abstract class DynamicEntity extends Entity {
 	protected readonly forces: Set<Vector>;
 	public readonly velocity: Vector;
-	protected override readonly observable: Entity["observable"] & { position: Vector, angle: number };
 	public angularVelocity: number;
 	public targetAngle?: number;
 	protected moveSpeed: number;
@@ -22,9 +19,10 @@ abstract class DynamicEntity extends Entity {
 	protected angularFriction: number;
 	protected rotationSpeed?: number;
 	protected movingDirection?: number | null;
+	public staticInteraction?: (objects: Parameters<Parameters<typeof Simulation.instance.staticGrid.query>[1]>[0], queryID: number) => void;
 
 
-	public constructor(options: ConstructorOptions) {
+	public constructor(options?: ConstructorOptions) {
 		super(options);
 
 		this.velocity = new Vector();
@@ -34,35 +32,27 @@ abstract class DynamicEntity extends Entity {
 		this.friction = 0.965;
 		this.forces = new Set();
 		this.angularFriction = 0.775;
-		this.mass = options.mass || 1; // Should be >= 1
 		this.targetAngle = this.movingDirection = this.angle;
-		this.observable = { health: this.health, size: this.size, position: this.position.clone, angle: this.angle };
+		this.mass = options?.mass || Math.pow(this.size.x, 2) * 0.01; // Should be >= 1
 	}
 
 
-	public update(deltaTime: number, map: GameMap): void {
-		this.storeProperties();
+	public update(deltaTime: number, now?: number): void {
+		void now;
 
 		this.move(deltaTime);
-
 		this.rotate(deltaTime);
 
-		map.constrain(this.position);
+		if (this.staticInteraction) {
+			Simulation.instance.staticGrid.query(this, this.staticInteraction);
+		}
 
-		this.collider.forceChecks = false;
+		Simulation.instance.map.constrain(this.position);
 	}
 
 
 	public dynamicInteraction(entity: DynamicEntity): void {
 		this.collider.collide(entity.collider);
-	}
-
-
-	protected override storeProperties(): void {
-		super.storeProperties();
-
-		this.observable.position.set(this.position);
-		this.observable.angle = this.angle;
 	}
 
 
@@ -95,9 +85,6 @@ abstract class DynamicEntity extends Entity {
 		this.position.add(this.velocity, deltaTime);
 
 
-		this.collider.forceChecks = this.isMoving("strict");
-
-
 		return this;
 	}
 
@@ -126,43 +113,6 @@ abstract class DynamicEntity extends Entity {
 
 
 		return this;
-	}
-
-
-	private isMoving(type: "strict" | "strictX" | "strictY" | "velocity" = "velocity", acceptedDelta: number = 0.0025): boolean {
-		switch (type) {
-			case "strict":
-				return this.position.distanceWith(this.observable.position) > acceptedDelta;
-
-			case "velocity":
-				return Math.sqrt(this.velocity.x ** 2 + this.velocity.y ** 2) > acceptedDelta;
-
-			case "strictX":
-				return Math.abs(this.position.x - this.observable.position.x) > acceptedDelta;
-
-			case "strictY":
-				return Math.abs(this.position.y - this.observable.position.y) > acceptedDelta;
-
-			default:
-				throw new Error("Invalid type");
-		}
-	}
-
-
-	public packUpdates(writer?: BufferWriter, additionalBytes: number = 0): BufferWriter {
-		const buffer = writer ?? new BufferWriter(10 + additionalBytes);
-
-		buffer.writeUint16(this.id);
-
-		const x = BufferWriter.toPrecision(this.position.x, this.constructor.game.map.bounds.max.x, 16);
-		const y = BufferWriter.toPrecision(this.position.y, this.constructor.game.map.bounds.max.y, 16);
-
-		buffer.writeUint16(x);
-		buffer.writeUint16(y);
-
-		buffer.writeFloat32(this.angle);
-
-		return buffer;
 	}
 }
 

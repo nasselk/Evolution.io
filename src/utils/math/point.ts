@@ -12,7 +12,6 @@ export function getDistanceSquared(obj1: Vector, obj2: Vector): number {
 }
 
 
-
 // Get a random integer between min and max
 export function getRandomInt(min: number, max: number, random = Math.random.bind(Math)): number {
 	return Math.floor(random() * (max - min + 1) + min);

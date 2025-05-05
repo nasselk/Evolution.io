@@ -16,10 +16,8 @@ export default class Animal extends Entity {
 	protected sprite?: Sprite;
 
 
-	public constructor(properties: BufferReader) {
-		super(properties);
-
-		this.init();
+	public constructor(id: number, properties: BufferReader) {
+		super(id, properties);
   	}
 
 
@@ -28,8 +26,6 @@ export default class Animal extends Entity {
 
 		if (this.spawned) {
 			this.sprite = newSprite(texture);
-
-			this.sprite.tint = Math.random() > 0.5 ? "red" : "cyan";
 
 			this.container.addChild(this.sprite);
 

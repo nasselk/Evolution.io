@@ -1,3 +1,5 @@
+import { type BufferReader } from "./reader";
+
 import { createBuffer } from "./buffer";
 
 
@@ -15,11 +17,11 @@ class BufferWriter {
 
 
 	public constructor(byteLength?: number, resizable?: boolean);
-	public constructor(buffer: ArrayBufferLike | ArrayBufferView | Buffer | BufferWriter, resizable?: boolean, clone?: boolean, offset?: number);
-	public constructor(allocation: number | ArrayBufferLike | ArrayBufferView | Buffer | BufferWriter = 0, resizable: boolean = allocation === 0, clone: boolean = false, offset: number = 0) {
-		this.buffer = createBuffer(allocation, clone, offset);
+	public constructor(buffer: ArrayBufferLike | ArrayBufferView | BufferWriter | BufferReader, resizable?: boolean, clone?: boolean, offset?: number);
+	public constructor(allocation: number | ArrayBufferLike | ArrayBufferView | BufferWriter | BufferReader = 0, resizable: boolean = allocation === 0, clone: boolean = false, offset: number = 0) {
+		this.buffer = createBuffer(allocation, clone);
 
-		this.view = new DataView(this.buffer.buffer, this.buffer.byteOffset, this.buffer.byteLength);
+		this.view = new DataView(this.buffer.buffer, offset);
 		this.byteLength = this.view.byteLength;
 		this.resizable = resizable;
 		this.lastBitOffset = 0;
@@ -86,9 +88,7 @@ class BufferWriter {
 
 
 	public writeUint8(value: number, offset: number = this.offset): void {
-		if (this.resizable && offset === this.byteLength) {
-			this.expand(1);
-		}
+		this.ensureCapacity(1);
 
 		this.view.setUint8(offset, value);
 
@@ -99,9 +99,7 @@ class BufferWriter {
 
 
 	public writeInt8(value: number, offset: number = this.offset): void {
-		if (this.resizable && offset === this.byteLength) {
-			this.expand(1);
-		}
+		this.ensureCapacity(1);
 
 		this.view.setInt8(offset, value);
 
@@ -112,9 +110,7 @@ class BufferWriter {
 
 
 	public writeUint16(value: number, offset: number = this.offset): void {
-		if (this.resizable && offset === this.byteLength) {
-			this.expand(2);
-		}
+		this.ensureCapacity(2);
 
 		this.view.setUint16(offset, value, true);
 
@@ -125,9 +121,7 @@ class BufferWriter {
 
 
 	public writeInt16(value: number, offset: number = this.offset): void {
-		if (this.resizable && offset === this.byteLength) {
-			this.expand(2);
-		}
+		this.ensureCapacity(2);
 
 		this.view.setInt16(offset, value, true);
 
@@ -138,9 +132,7 @@ class BufferWriter {
 
 
 	public writeUint32(value: number, offset: number = this.offset): void {
-		if (this.resizable && offset === this.byteLength) {
-			this.expand(4);
-		}
+		this.ensureCapacity(4);
 
 		this.view.setUint32(offset, value, true);
 
@@ -151,9 +143,7 @@ class BufferWriter {
 
 
 	public writeInt32(value: number, offset: number = this.offset): void {
-		if (this.resizable && offset === this.byteLength) {
-			this.expand(4);
-		}
+		this.ensureCapacity(4);
 
 		this.view.setInt32(offset, value, true);
 
@@ -164,9 +154,7 @@ class BufferWriter {
 
 
 	public writeFloat32(value: number, offset: number = this.offset): void {
-		if (this.resizable && offset === this.byteLength) {
-			this.expand(4);
-		}
+		this.ensureCapacity(4);
 
 		this.view.setFloat32(offset, value, true);
 
@@ -177,9 +165,7 @@ class BufferWriter {
 
 
 	public writeUint64(value: bigint, offset: number = this.offset): void {
-		if (this.resizable && offset === this.byteLength) {
-			this.expand(8);
-		}
+		this.ensureCapacity(8);
 
 		this.view.setBigUint64(offset, value, true);
 
@@ -190,9 +176,7 @@ class BufferWriter {
 
 
 	public writeInt64(value: bigint, offset: number = this.offset): void {
-		if (this.resizable && offset === this.byteLength) {
-			this.expand(8);
-		}
+		this.ensureCapacity(8);
 
 		this.view.setBigInt64(offset, value, true);
 
@@ -203,9 +187,7 @@ class BufferWriter {
 
 
 	public writeFloat64(value: number, offset: number = this.offset): void {
-		if (this.resizable && offset === this.byteLength) {
-			this.expand(8);
-		}
+		this.ensureCapacity(8);
 
 		this.view.setFloat64(offset, value, true);
 
@@ -233,7 +215,7 @@ class BufferWriter {
 			this.expand(buffer.length);
 		}
 
-		this.buffer.set(buffer, this.offset);
+		this.buffer.set(buffer, offset);
 
 		if (offset === this.offset) {
 			this.offset += buffer.length;
@@ -241,10 +223,10 @@ class BufferWriter {
 	}
 
 
-	public expand(add: number = 1): void {
+	public expand(bytes: number = 1): void {
 		const buffer = this.buffer;
 
-		this.buffer = new Uint8Array(buffer.byteLength + add);
+		this.buffer = new Uint8Array(buffer.byteLength + bytes);
 
 		this.view = new DataView(this.buffer.buffer);
 
@@ -252,10 +234,23 @@ class BufferWriter {
 	}
 
 
-	public shrink(remove: number = this.byteLength - this.offset): void {
+	private ensureCapacity(bytes: number): void {
+		if (this.offset + bytes > this.byteLength) {
+			if (this.resizable) {
+				this.expand(bytes);
+			}
+
+			else {
+				throw new RangeError(`Buffer overflow ${ this.offset } ${ this.byteLength }`);
+			}
+		}
+	}
+
+
+	public shrink(bytes: number = this.byteLength - this.offset): void {
 		const buffer = this.buffer;
 
-		this.buffer = new Uint8Array(buffer.buffer, 0, buffer.byteLength - remove);
+		this.buffer = new Uint8Array(buffer.buffer, 0, buffer.byteLength - bytes);
 
 		this.view = new DataView(this.buffer.buffer);
 	}

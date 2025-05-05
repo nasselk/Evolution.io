@@ -1,52 +1,32 @@
-
-
 <script lang="ts">
     import { activeTool, Tools, type Tool } from "../stores/tool";
     import SelectorHighlight from "./SelectorHighlight.svelte";
     import { onMount, onDestroy } from "svelte";
     
 
-    const { id = "", class: classList = "", tools = [], default: defaultTool = Tools.Default } = $props();
+    const { id = "", class: classList = "", tools = [], default: defaultTool = Tools.Camera } = $props();
     
 
-    let highlightComponent: SelectorHighlight;
-    let activeButton: HTMLButtonElement | null = null;
-    let pressedTool: Tools | null = null;
-    
+    let highlightComponent: SelectorHighlight;    
 
-    function updateHighlight(toolId: Tools, pressed: boolean = false, event?: MouseEvent) {
+    function updateHighlight(pressed: boolean = false, toolId?: Tools, event?: MouseEvent) {
         if (!event || event.button === 0) {
-            if (pressed) {
-                pressedTool = toolId;
-            } 
+			const button = document.querySelector(`.toolbar > button[data-tool-id="${ toolId }"]`) as HTMLButtonElement;
 			
-			else if (pressedTool === toolId) {
-                pressedTool = null;
-            }
-            
-            const button = document.querySelector(`.toolbar > button[data-tool-id="${toolId}"]`) as HTMLButtonElement;
-            //const isActive = $activeTool?.id === toolId;
-            
-            if (button && highlightComponent) {
-                activeButton = button;
-                highlightComponent.updateHighlight(button, pressed, true);
-            }
+			highlightComponent.updateHighlight(pressed, true, button);
         }
     }
 
 
 	function selectTool(tool: Tool): void {
         document.body.style.cursor = tool.cursor;
+
         activeTool.set(tool);
-        
-        updateHighlight(tool.id);
     }
     
 
     function handleGlobalMouseUp() {
-        if (pressedTool !== null) {
-            updateHighlight(pressedTool, false);
-        }
+		updateHighlight();
     }
 
     
@@ -54,14 +34,13 @@
         if (tools.length > 0) {
             const firstTool = tools.find(tool => tool.id === defaultTool);
             const button = document.querySelector(`.toolbar > button[data-tool-id="${firstTool.id}"]`);
-            
+
             if (button) {
-                activeButton = button as HTMLButtonElement;
                 activeTool.set(firstTool);
                 document.body.style.cursor = firstTool.cursor;
                 
-                if (highlightComponent && activeButton) {
-                	highlightComponent.updateHighlight(activeButton, false, true);
+                if (highlightComponent) {
+                	highlightComponent.updateHighlight(false, true, button);
                 }
             }
         }
@@ -84,8 +63,8 @@
     .toolbar {
         display: flex;
         position: relative;
-        padding: 1vmin;
-        gap: 3vmin;
+        padding: 8px;
+        gap: 20px;
         transition: all 0.3s ease;
     }
 
@@ -127,7 +106,7 @@
 			data-tool-id={tool.id}
             title={tool.label}
             onclick={(event) => selectTool(tool)}
-            onmousedown={(event) => updateHighlight(tool.id, true, event)}
+            onmousedown={(event) => updateHighlight(true, tool.id, event)}
         >
             <img src={tool.icon} alt={tool.label} class="cursor-icon" />
         </button>

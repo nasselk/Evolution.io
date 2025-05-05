@@ -11,7 +11,7 @@ import { Simulation } from "./simulation";
 
 
 class GameLoop {
-	private readonly game: Simulation;
+	private readonly simulation: Simulation;
 	private readonly minTickDelta: number;
 	private lastStatDisplay: number;
 	private lastTick: number;
@@ -20,9 +20,9 @@ class GameLoop {
 	public tick: number;
 	
 	
-	public constructor(game: Simulation) {
-		this.game = game;
-		this.minTickDelta = this.game.config.TPS === 0 ? 0 : 1000 / this.game.config.TPS;
+	public constructor(simulation: Simulation) {
+		this.simulation = simulation;
+		this.minTickDelta = this.simulation.config.TPS === 0 ? 0 : 1000 / this.simulation.config.TPS;
 		this.lastTick = this.lastStatDisplay = performance.now();
 		this.ticks = 0;
 		this.mspt = 0;
@@ -35,7 +35,7 @@ class GameLoop {
 		const deltaTime: number = Math.min(now - this.lastTick, 1000);
 		
 
-		if (this.game.config.turbo) {
+		if (this.simulation.config.turbo) {
 			nextTick(this.updateGameState.bind(this));
 		}
 
@@ -59,38 +59,39 @@ class GameLoop {
 
 			// Update dynamic entities
 			for (const type of dynamicTypes) {
-				for (const entity of this.game.classes[type].list.values() as unknown as DynamicEntity[]) {
+				for (const entity of this.simulation.classes[type].list.values() as unknown as DynamicEntity[]) {
 					// Update the entity
-					entity.update(deltaTime / 10, this.game.map);
-
+					entity.update(deltaTime / 10, now);
 					
 					// Insert into the grid for pairwise collision
-					this.game.dynamicGrid.insert(entity);
+					if (entity.type != "plant") {
+						this.simulation.dynamicGrid.insert(entity);
 
-					// Find the min and max IDs of dynamic entities for the pairwise collision check
-					if (entity.id < minID) {
-						minID = entity.id;
-					}
+						// Find the min and max IDs of dynamic entities for the pairwise collision check
+						if (entity.id < minID) {
+							minID = entity.id;
+						}
 
-					else if (entity.id > maxID) {
-						maxID = entity.id;
+						else if (entity.id > maxID) {
+							maxID = entity.id;
+						}
 					}
 				}
 			}
 
 
 			// Do the pairwise interactions check
-			this.game.dynamicGrid.pairwiseCombination(function (entity1, entity2) {
+			this.simulation.dynamicGrid.pairwiseCombination(function (entity1, entity2) {
 				entity1.dynamicInteraction(entity2);
-			}, minID, maxID, false);
+			}, minID, maxID, true);
 
 
 			this.processOutboundMessages();
 
-			this.game.dynamicGrid.clear();
+			this.simulation.dynamicGrid.clear();
 	
 
-			if (this.game.config.ENV === "development") {
+			if (this.simulation.config.ENV === "development") {
 				this.ticks++;
 
 				this.mspt += performance.now() - now;
@@ -114,27 +115,32 @@ class GameLoop {
 
 
 	private processOutboundMessages(): void {
-		this.game.sharedBuffer?.lock();
+		this.simulation.sharedBuffer?.lock();
 
-
+		
 		// Add entities updates
-		for (const entity of this.game.entities.values()) {
-			if (entity.constructor.dynamic && entity.creationTick !== this.tick) {
-				this.game.addWorldUpdate("position", (entity as DynamicEntity).packUpdates.bind(entity));
+		for (const entity of this.simulation.entities.values()) {
+			if (this.simulation.sharedBuffer) {
+				entity.packProperties(this.simulation.sharedBuffer.writer);
+
+				this.simulation.updatesCount++;
+			}
+
+			else {
+				console.warn("Shared buffer is not initialized. Cannot add world update.");
 			}
 		}
 
 
-		// Send the updates to the socket thread (only if there are sockets connected to save resources on burst servers)
-		if (this.game.updatesCount > 0) {
-			this.game.renderingThread.send("update", this.game.updatesCount);
+		// Send the updates to the rendering thread
+		this.simulation.renderingThread.send("update", this.simulation.updatesCount);
 
-			// Reset the events
-			this.game.sharedBuffer?.writer.reset();
-			this.game.updatesCount = 0;
-		}
+		// Reset the events
+		this.simulation.sharedBuffer?.writer.reset();
+		this.simulation.updatesCount = 0;
+		
 
-		this.game.sharedBuffer?.unlock();
+		this.simulation.sharedBuffer?.unlock();
 	}
 
 
@@ -145,7 +151,7 @@ class GameLoop {
 
 		//const memoryUsage = Math.round(process.memoryUsage().rss / 1024 / 1024);
 
-		this.game.renderingThread.send("stats", {
+		this.simulation.renderingThread.send("stats", {
 			TPS: avgTPS,
 			mspt: avgMSPT,
 		});

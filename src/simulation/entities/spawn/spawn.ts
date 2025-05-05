@@ -1,4 +1,4 @@
-import { type Simulation } from "../../core/simulation";
+import { Simulation } from "../../core/simulation";
 
 import { type GameMap } from "../../map";
 
@@ -9,40 +9,28 @@ import { Entity } from "../entity";
 
 
 function spawnEntities(spawner: Spawner, config: Simulation["config"], map: GameMap): void {
-	const random = Math.random.bind(Math);
-
-	
 	// Plant
 	const spotsThreshold = 0.0015;
 
 	const plants = config.entities.plant * Math.pow(map.scale, 2);
 
 	for (let i: number = 0; i < plants * spotsThreshold; i++) {
-		const position = spawner.randomPosition(map.shape);
+		const count = Simulation.instance.classes.plant.list.size;
+		
+		const replications = Math.max(Math.min((1 - spotsThreshold) / spotsThreshold, plants - count) - 1, 0);
 
-		Entity.create("plant", {
-			position: position,
-		}, (1 - spotsThreshold) / spotsThreshold);		
+		Entity.create("plant", {}, replications);		
 	}
-
 
 
 	// Animals
 	for (let i: number = 0; i < config.entities.herbivore; i++) {
-		const position = spawner.randomPosition(map.shape, 0, random);
-
-		Entity.create("herbivore", {
-			position: position,
-		});
+		Entity.create("herbivore");
 	}
 
 
 	for (let i: number = 0; i < config.entities.carnivore; i++) {
-		const position = spawner.randomPosition(map.shape, 0, random);
-
-		Entity.create("carnivore", {
-			position: position,
-		});
+		Entity.create("carnivore");
 	}
 }
 

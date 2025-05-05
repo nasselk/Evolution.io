@@ -46,24 +46,6 @@ export function radiansToDegrees(radians: number): number {
 }
 
 
-// Encoding
-export function toUint8Angle(angle: number): number {
-	return Math.round(radiansToDegrees(normalizeAngle(angle)) * 0.7);
-}
-
-export function toUint16Angle(angle: number): number {
-	return Math.round(radiansToDegrees(normalizeAngle(angle)) * 182);
-}
-
-export function fromUint8Angle(angle: number): number {
-	return degreesToRadians(angle / 0.7);
-}
-
-export function fromUint16Angle(angle: number): number {
-	return degreesToRadians(angle / 182);
-}
-
-
 // Return the closest angle to the reference angle
 export function closestAngle(reference: number, ...angles: number[]): number {
 	reference = normalizeAngle(reference);

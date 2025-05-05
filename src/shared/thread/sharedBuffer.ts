@@ -16,41 +16,41 @@ class SharedBuffer {
 	public readonly writer: BufferWriter;
 	public readonly reader: BufferReader;
 	private readonly locker: Int32Array; // For atomic operations
+	public readonly byteLength: number;
 
 
-	public constructor(buffer: SharedArrayBuffer | number, flags: { bytes: number, value: number }[] = []) {
-		if (typeof buffer === "number") {
-			if (buffer <= 4) {
-				throw new Error("SharedBuffer size must be greater than 4 bytes");
-			}
-
-			this.buffer = new SharedArrayBuffer(buffer);
+	public constructor(allocation: SharedArrayBuffer | number, flags: { bytes: number, value: number }[] = []) {
+		if (typeof allocation === "number") {
+			this.buffer = new SharedArrayBuffer(4 + allocation);
 		}
 
 		else {
-			if (buffer.byteLength <= 4) {
+			if (allocation.byteLength <= 4) {
 				throw new Error("SharedBuffer size must be greater than 4 bytes");
 			}
 
-			this.buffer = buffer;
+			this.buffer = allocation;
 		}
 		
-
 		this.locker = new Int32Array(this.buffer, 0, 1);
 		this.writer = new BufferWriter(this.buffer, false, false, 4);
 		this.reader = new BufferReader(this.buffer, false, 4);
+		this.byteLength = this.buffer.byteLength;
 		this.flags = flags;
 
 		this.resetFlags();
+	}
 
-		console.log(this.buffer.byteLength);
+
+	public tryLock(): boolean {
+		return Atomics.compareExchange(this.locker, 0, State.UNLOCKED, State.LOCKED) === State.UNLOCKED;
 	}
 
 
 	public lock(timeout: number = Infinity): boolean {
 		const start = performance.now();
 
-		while (Atomics.compareExchange(this.locker, 0, State.UNLOCKED, State.LOCKED) !== State.UNLOCKED) {
+		while (!this.tryLock()) {
 			if (timeout !== Infinity && performance.now() - start > timeout) {
 				return false;
 			}
@@ -69,36 +69,17 @@ class SharedBuffer {
 	}
 
 
-	public tryLock(): boolean {
-		// Non-blocking attempt to acquire lock
-		return Atomics.compareExchange(this.locker, 0, State.UNLOCKED, State.LOCKED) === State.UNLOCKED;
-	}
-
 	// For main thread - async polling approach
-	public async lockAsync(timeout: number = 5000): Promise<boolean> {
+	public lockAsync(timeout: number = Infinity): boolean {
 		const start = performance.now();
 
-		// Try immediately first
-		if (this.tryLock()) return true;
+		while (!this.tryLock()) {
+			if (timeout !== Infinity && performance.now() - start > timeout) {
+				return false;
+			}
+		}
 
-		// Then keep trying with setTimeout
-		return new Promise(resolve => {
-			const attempt = () => {
-				if (this.tryLock()) {
-					resolve(true);
-					return;
-				}
-
-				if (timeout !== Infinity && performance.now() - start > timeout) {
-					resolve(false);
-					return;
-				}
-
-				setTimeout(attempt, 1);
-			};
-
-			setTimeout(attempt, 1);
-		});
+		return true;
 	}
 
 

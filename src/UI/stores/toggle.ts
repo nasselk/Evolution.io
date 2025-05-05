@@ -21,7 +21,7 @@ export const toggles: Toggle[] = [
 	{
 		id: Toggles.Vertices,
 		label: "Show/hide vertices of the scene",
-		icon: "../../../public/assets/engine/vertex.png",
+		icon: "/assets/engine/toggles/vertex.png",
 		toggled: false,
 		callback: (toggled: boolean) => {
 			game.renderer.renderVertices = toggled;
@@ -30,7 +30,7 @@ export const toggles: Toggle[] = [
 	{
 		id: Toggles.Textures,
 		label: "Show/hide textures",
-		icon: "../../../public/assets/engine/texture.png",
+		icon: "/assets/engine/toggles/texture.png",
 		toggled: true,
 		callback: (toggled: boolean) => {
 			game.renderer.renderTextures = toggled;

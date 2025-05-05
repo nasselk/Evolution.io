@@ -40,6 +40,23 @@ button, div {
 }
 
 
+img {
+	-webkit-touch-callout: none;
+	-ms-touch-action: none;
+	-moz-user-select: none;
+	-o-user-select: none;
+	-khtml-user-select: none;
+	-webkit-user-select: none;
+	-webkit-touch-callout: none;
+	touch-action: none;
+	user-select: none;
+	pointer-events: auto;
+	-webkit-user-drag: none;
+	-khtml-user-drag: none;
+	-moz-user-drag: none;
+	-o-user-drag: none;
+}
+
 /*button {
 	position: relative;
 	overflow: hidden;

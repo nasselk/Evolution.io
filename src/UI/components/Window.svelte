@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Vector } from "../../utils/math/vector";
+
   	import ResizableBox from "./ResizableBox.svelte";
 
 
@@ -7,95 +8,107 @@
     	id = "",
     	class: classList = "",
     	title = "Window",
+		style = "",
     	isOpen = true,
-    	x = null,
-    	y = null,
-    	width = "400px",
-    	height = "300px",
-    	minWidth = "200px",
-    	minHeight = "150px",
-    	padding = "16px",
-    	maxWidth = "1200px",
-    	maxHeight = "800px",
+    	x = undefined,
+    	y = undefined,
+    	width = undefined,
+    	height = undefined,
+    	minWidth = undefined,
+    	minHeight = undefined,
+    	maxWidth = undefined,
+    	maxHeight = undefined,
 		children = () => {},
+		padding = "16px",
+		resizable = true,
+		moveable = true,
   	} = $props();
 
 
   	let box: ResizableBox;
-	let originalSize = {};
-	let isMinimized = $state(false);
-	let zIndex = $state(10);
+	let header: HTMLDivElement;
+	let originalHeight: number;	
   	let isDragging = false;
  	let activePointerId = -1;
   	const dragOffset = new Vector();
 
+	const state = $state({
+		minimized: false,
+		zIndex: 0,
+	});
+
+
+	function focus() {
+		state.zIndex = 1000;
+	}
+
 
   	function startDrag(event: PointerEvent): void {
-    	if (event.target?.classList.contains("controls")) return;
+		focus();
 
-    	isDragging = true;
-    	activePointerId = event.pointerId;
+		if (moveable) {
+			if ((event.target as HTMLElement)?.classList.contains("control")) return;
 
-		const position = box.getPosition();
+			box.state.position = "fixed";
+    		isDragging = true;
+    		activePointerId = event.pointerId;
 
-    	dragOffset.set(
-      		event.clientX - position.x,
-      		event.clientY - position.y
-    	);
+			const position = box.getPosition();
 
-    	document.addEventListener("pointermove", handlePointerMove);
-    	document.addEventListener("pointerup", stopInteraction);
-    	document.addEventListener("pointercancel", stopInteraction);
-    	event.preventDefault();
+    		dragOffset.set(
+      			event.clientX - position.x,
+      			event.clientY - position.y
+    		);
+
+    		document.addEventListener("pointermove", drag);
+    		document.addEventListener("pointerup", stopDrag);
+    		document.addEventListener("pointercancel", stopDrag);
+
+			drag(event);
+
+    		event.preventDefault();
+		}
   	}
 
 
-  	function handlePointerMove(event: PointerEvent): void {
+  	function drag(event: PointerEvent): void {
     	if (isDragging && event.pointerId === activePointerId) {
-			box.setPosition(
-				event.clientX - dragOffset.x,
-				event.clientY - dragOffset.y
-			)
+			box.state.x = `${ event.clientX - dragOffset.x }px`;
+			box.state.y = `${ event.clientY - dragOffset.y }px`;
 			
       		event.preventDefault();
     	}
  	}
 
 
-  	function stopInteraction() {
+  	function stopDrag() {
     	isDragging = false;
     	activePointerId = -1;
 
-    	document.removeEventListener("pointermove", handlePointerMove);
-    	document.removeEventListener("pointerup", stopInteraction);
-    	document.removeEventListener("pointercancel", stopInteraction);
+    	document.removeEventListener("pointermove", drag);
+    	document.removeEventListener("pointerup", stopDrag);
+    	document.removeEventListener("pointercancel", stopDrag);
   	}
 
 
-	function minimizeWindow() {
-    if (!isMinimized) {
-      originalSize =  box.getSize();
-      isMinimized = true;
+	function minimize() {
+    	originalHeight = box.getSize().height;
+      	state.minimized = true;
 
-	  //get the height of the header
-	  const header = document.querySelector(".header");
-	  const headerHeight = header ? header.clientHeight : 0;
+	  	const headerHeight = header.getBoundingClientRect().height;
 
-
-	  box.setSize(originalSize.width, headerHeight - 1);
-    }
-  }
+		box.state.height = `${ headerHeight }px`;
+  	}
   
-  function expandWindow() {
-    if (isMinimized) {
-      isMinimized = false;
 
-		box.setSize(originalSize.width, originalSize.height);
-	}
-  }
+  	function expand() {
+		box.state.height = `${ originalHeight }px`;
+
+		state.minimized = false;
+  	}
 
 
-  	function closeWindow() {
+  	function close() {
     	// You could dispatch an event here for parent components to handle
   	}
 </script>
@@ -121,8 +134,11 @@
     	display: flex;
     	align-items: center;
     	justify-content: space-between;
-    	cursor: move;
     	border-bottom: 0.15vmin solid rgba(150, 150, 150, 0.3);
+  	}
+
+	.header.moveable:hover {
+		cursor: move;
   	}
 
   	.title {
@@ -229,7 +245,7 @@
     	height: 1.1rem;
     	border-radius: 50%;
     	display: flex;
-    		align-items: center;
+    	align-items: center;
     	justify-content: center;
     	transition: all 0.2s ease;
     	position: relative;
@@ -268,31 +284,32 @@
   	<ResizableBox
     	id={id}
     	class="window {classList}"
-    	x="{x}px"
-    	y="{y}px"
+    	x={x}
+    	y={y}
     	width={width}
     	height={height}
     	minWidth={minWidth}
     	minHeight={minHeight}
     	maxWidth={maxWidth}
     	maxHeight={maxHeight}
+		directions={ resizable ? undefined : []}
+		style={style + `z-index: ${state.zIndex};`}
+		transition={state.minimized}
 		bind:this={box}
   	>
-		<div style="z-index: {zIndex}">
-      		<div class="header" onpointerdown={startDrag}>
-        		<div class="title">{title}</div>
-        		<div class="controls">
-          			{#if isMinimized}
-            			<button class="expand" onclick={expandWindow} aria-label="Expand window"></button>
-          			{:else}
-            			<button class="minimize" onclick={minimizeWindow} aria-label="Minimize window"></button>
-          			{/if}
-          			<button class="close" onclick={closeWindow} aria-label="Close window"></button>
-       			</div>
-     		</div>
-      		<div class="content" style="--padding: {padding};">
-        		{@render children()}
-      		</div>
-    	</div>
+    	<div class="header { moveable ? "moveable": ""}" onpointerdown={startDrag} bind:this={header}>
+        	<div class="title">{title}</div>
+        	<div class="controls">
+        		{#if state.minimized}
+           			<button class="control expand" onclick={expand} aria-label="Expand window"></button>
+        		{:else}
+           			<button class="control minimize" onclick={minimize} aria-label="Minimize window"></button>
+        		{/if}
+        		<button class="control close" onclick={close} aria-label="Close window"></button>
+       		</div>
+     	</div>
+      	<div class="content" style="--padding: {padding};" onpointerdown={focus}>
+        	{@render children()}
+      	</div>
   	</ResizableBox>
 {/if}

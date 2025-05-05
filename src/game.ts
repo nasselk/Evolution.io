@@ -24,9 +24,9 @@ import { Camera } from "./rendering/camera";
 
 import { IDAllocator } from "./utils/getID";
 
-import settings from "./settings.json";
+import { BitSet } from "./utils/bitset";
 
-import updates from "./shared/updates";
+import settings from "./settings.json";
 
 import { GameUI } from "./UI/gameUI";
 
@@ -46,6 +46,7 @@ class Game {
 	public readonly entities: typeof Entity.list;
 	public readonly IDAllocator: IDAllocator;
 	public readonly renderer: RenderingLoop;
+	private readonly updateIDs: BitSet;
 	public sharedBuffer?: SharedBuffer;
 	public readonly isMobile: boolean;
 	public readonly map: GameMap;
@@ -61,6 +62,7 @@ class Game {
 		this.camera = new Camera(this.renderer.canvas, settings.interpolation);
 		this.map = new GameMap(this.renderer.worldContainer);
 		this.IDAllocator = new IDAllocator();
+		this.updateIDs = new BitSet();
 		this.entities = Entity.list;
 		this.settings = settings;
 		this.config = config;
@@ -114,54 +116,54 @@ class Game {
 
 
 	public async update(count: number): Promise<void> {
-		await this.sharedBuffer!.lockAsync();
+		if (this.sharedBuffer) {
+			this.sharedBuffer.lockAsync();
 
-		const buffer = this.sharedBuffer!.unlinkReader();
+			this.sharedBuffer.reader.reset();
 
-		for (let i = 0; i < count; i++) {
-			const encoder = buffer.readUint8();
+			this.updateIDs.clear();
 
-			const event = updates[encoder] as keyof typeof updates;
 
-			switch (event) {
-				case "createEntity": {
-					const rawType = buffer.readUint8();
+			for (let i = 0; i < count; i++) {
+				const rawType = this.sharedBuffer.reader.readUint8();
+				const id = this.sharedBuffer.reader.readUint16();
 
-					const type = getTypeDecoder(rawType);
+				const type = getTypeDecoder(rawType);
 
-					Entity.create(type, buffer);
 
-					break;
-				}
-					
-				case "destroyEntity": {
-					const id = buffer.readUint16();
+				const entity = Entity.get(id);
 
-					Entity.get(id)?.destroy();
 
-					break;
+				if (entity) {
+					entity.update(this.sharedBuffer.reader);
 				}
 
-
-				case "position": {
-					const id = buffer.readUint16();
-
-					Entity.get(id)?.update(buffer);
-
-					break;
+				else {
+					Entity.create(type, id, this.sharedBuffer.reader);
 				}
+
+				this.updateIDs.add(id);
+
+				// Flags aren't merged between different updates within the world update
+				this.sharedBuffer.reader.lastBitIndex = 0;
 			}
 
-			// Flags aren't merged between different updates within the world update
-			buffer.lastBitIndex = 0;
-		}
 
-		this.sharedBuffer!.unlock();
+			this.sharedBuffer.unlock();
+
+
+			for (const entity of Entity.list.values()) {
+				if (!this.updateIDs.has(entity.id)) {
+					entity.destroy();
+				}
+			}
+		}
 	}
 
 
 	public startSimulation(): void {
 		this.sharedBuffer = game.createBuffer();
+		this.updateIDs.resize(this.sharedBuffer.byteLength);
 
 		const thread = new Simulation();
 
@@ -181,8 +183,8 @@ class Game {
 		});
 
 
-		document.getElementById("menu")!.style.display = "none";
-		document.getElementById("gameUI")!.style.display = "block";
+		document.querySelector<HTMLDivElement>("#menu")!.style.display = "none";
+		document.querySelector<HTMLDivElement>("#gameUI")!.style.display = "grid";
 	}
 
 
@@ -192,7 +194,7 @@ class Game {
 
 
 	public createBuffer(): SharedBuffer {
-		return new SharedBuffer(4 + 14 * (this.config.entities.plant + this.config.entities.herbivore + this.config.entities.carnivore) + 5000);
+		return new SharedBuffer(10 * (this.config.entities.plant + this.config.entities.herbivore + this.config.entities.carnivore));
 	}
 
 

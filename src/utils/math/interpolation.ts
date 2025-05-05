@@ -1,7 +1,7 @@
 export function interpolate(start: number, end: number, factor: number = 0.05, deltaTime: number, limit?: number): number {
 	const delta: number = end - start;
 
-	if (limit && Math.abs(delta) < limit || document.hidden) {
+	if (limit && Math.abs(delta) < limit || globalThis.document?.hidden) {
 		return end;
 	}
 

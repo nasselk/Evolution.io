@@ -6,8 +6,6 @@ import { Entity, type EntityTypes } from "../entities/entity";
 
 import { getRandomInt } from "../../utils/math/point";
 
-import { BufferWriter } from "../../shared/thread/writer";
-
 import { Spawner } from "../entities/spawn/spawner";
 
 import { Thread } from "../../shared/thread/thread";
@@ -17,8 +15,6 @@ import { HashGrid2D } from "../physic/HashGrid2D";
 import { spawn } from "../entities/spawn/spawn";
 
 import * as classes from "../entities/manager";
-
-import updates from "../../shared/updates";
 
 import { log } from "../../utils/logger";
 
@@ -87,8 +83,6 @@ class Simulation {
 		this.config.entities = data.entities;
 
 
-		Entity.game = this;
-
 		spawn(this.spawner, this.config, this.map);
 
 
@@ -98,28 +92,6 @@ class Simulation {
 		
 		// Start the game loop
 		this.loop.updateGameState();
-	}
-	
-
-	// Add a tick udpate
-	public addWorldUpdate(type: keyof typeof updates, param?: BufferWriter | ((writer: BufferWriter) => BufferWriter)): void {
-		const encoder = updates[type];
-
-		this.sharedBuffer?.writer.writeUint8(encoder);
-
-		if (param instanceof BufferWriter) {
-			const buffer = param.bytes;
-
-			this.sharedBuffer?.writer.writeBuffer(buffer);
-		}
-
-		// Callback to write the data directly (2x faster)
-		else if (param) {
-			param(this.sharedBuffer!.writer);
-		}
-		
-
-		this.updatesCount++;
 	}
 }
 

@@ -18,38 +18,30 @@ interface Tool {
 
 
 const enum Tools {
-	Default,
-	Select,
+	Camera,
 	Move,
 	Destroy,
-	Camera
 }
 
 
 const tools: Tool[] = [
 	{
-		id: Tools.Default,
-		label: "Inputs are transmitted to the game normally",
-		icon: "../../../public/assets/cursors/pointer.png",
-		cursor: "auto",
+		id: Tools.Camera,
+		label: "Move the camera",
+		icon: "/assets/engine/tools/move.png",
+		cursor: "move"
 	},
 	{
 		id: Tools.Move,
 		label: "Move an object in the scene",
-		icon: "../../../public/assets/cursors/target.png",
+		icon: "/assets/engine/tools/target.png",
 		cursor: "move"
 	},
 	{
 		id: Tools.Destroy,
 		label: "Delete an object in the scene",
-		icon: "../../../public/assets/cursors/delete.png",
+		icon: "/assets/engine/tools/delete.png",
 		cursor: "crosshair"
-	},
-	{
-		id: Tools.Camera,
-		label: "Move the camera",
-		icon: "../../../public/assets/cursors/move.png",
-		cursor: "move"
 	},
 ];
 
@@ -68,8 +60,22 @@ function selectEntity(entity: Entity | null): void {
 
 
 // Camera gestures
-window.addEventListener("mousemove", (event) => {
-	if (currentTool === Tools.Camera && event.buttons === 1) {
+let draggingCamera = false;
+
+document.querySelector<HTMLCanvasElement>("#canvas")?.addEventListener("pointerdown", (event: PointerEvent) => {
+	if (currentTool === Tools.Camera && event.button === 0) {
+		draggingCamera = true;
+	}
+});
+
+document.querySelector<HTMLCanvasElement>("#canvas")?.addEventListener("pointerup", (event: PointerEvent) => {
+	if (event.button === 0) {
+		draggingCamera = false;
+	}
+});
+
+window.addEventListener("pointermove", (event: PointerEvent) => {
+	if (draggingCamera && currentTool === Tools.Camera && event.buttons === 1) {
 		const movement = new Vector(
 			event.movementX / game.camera.zoom,
 			event.movementY / game.camera.zoom
@@ -77,10 +83,13 @@ window.addEventListener("mousemove", (event) => {
 
 		game.camera.target.position.subtract(movement);
 	}
+
+	else {
+		draggingCamera = false;
+	}
 });
 
-
-window.addEventListener("wheel", (event) => {
+document.querySelector<HTMLCanvasElement>("#canvas")?.addEventListener("wheel", (event: WheelEvent) => {
 	if (currentTool === Tools.Camera) {
 		const delta = event.deltaY / 1000;
 

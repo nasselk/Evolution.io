@@ -6,6 +6,9 @@ export default {
 		dynamic: true,
 	},
 	plant: {
+		dynamic: false,
+	},
+	leaf: {
 		dynamic: true,
 	}
 } as const;

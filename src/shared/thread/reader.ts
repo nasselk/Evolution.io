@@ -15,13 +15,13 @@ class BufferReader {
 	public offset: number;
 
 
-	public constructor(buffer: ArrayBufferLike | ArrayBufferView | Buffer | BufferWriter | BufferReader, clone: boolean = false, offset: number = 0) {
-		this.buffer = createBuffer(buffer, clone, offset);
+	public constructor(buffer: ArrayBufferLike | ArrayBufferView | BufferWriter | BufferReader, clone: boolean = false, offset: number = 0) {
+		this.buffer = createBuffer(buffer, clone);
 		
-		this.view = new DataView(this.buffer.buffer, this.buffer.byteOffset, this.buffer.byteLength);
+		this.view = new DataView(this.buffer.buffer, offset);
 		this.byteLength = this.view.byteLength;
-		this.lastBitIndex = 0;
 		this.lastBitOffset = 0;
+		this.lastBitIndex = 0;
 		this.offset = 0;
 	}
 
@@ -183,17 +183,6 @@ class BufferReader {
 	}
 
 
-	public readBuffer(length: number = this.buffer.byteLength - this.offset, increment: boolean = true, offset: number = this.offset): Uint8Array {
-		const buffer = this.buffer.slice(offset, offset + length);
-
-		if (increment && offset === this.offset) {
-			this.offset += length;
-		}
-
-		return buffer;
-	}
-
-
 	public readText(readLength?: boolean, increment?: boolean, offset?: number): string;
 	public readText(length?: number, increment?: boolean, offset?: number): string;
 	public readText(a?: number | boolean, increment: boolean = true, offset: number = this.offset): string {
@@ -219,6 +208,17 @@ class BufferReader {
 
 
 		return BufferReader.textDecoder.decode(buffer);
+	}
+
+
+	public readBuffer(bytes: number = this.buffer.byteLength - this.offset, increment: boolean = true, offset: number = this.offset): Uint8Array {
+		const buffer = this.buffer.slice(offset, offset + bytes);
+
+		if (increment && offset === this.offset) {
+			this.offset += bytes;
+		}
+
+		return buffer;
 	}
 
 

@@ -1,7 +1,4 @@
 import { Simulation } from "./core/simulation";
 
 
-const game = new Simulation();
-
-
-export { game };
+void Simulation.instance; // This is to ensure the singleton instance is created and initialized.

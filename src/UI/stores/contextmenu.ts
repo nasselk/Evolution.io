@@ -17,7 +17,7 @@ export const actions: Action[] = [
 	{
 		id: Actions.Vertices,
 		label: "Show/hide vertices of the scene",
-		icon: "../../../public/assets/engine/vertex.png",
+		icon: "/assets/toggles/vertex.png",
 		available: true,
 		callback: () => {
 			console.log("HELPEU");
@@ -26,7 +26,7 @@ export const actions: Action[] = [
 	{
 		id: Actions.Textures,
 		label: "Show/hide textures",
-		icon: "../../../public/assets/engine/texture.png",
+		icon: "/assets/toggles/texture.png",
 		available: true,
 		callback: () => {
 		}

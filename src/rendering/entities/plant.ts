@@ -19,8 +19,8 @@ export default class Plant extends Entity {
 	private sprite?: Sprite;
 
 
-	public constructor(properties: BufferReader) {
-		super(properties);
+	public constructor(id: number, properties: BufferReader) {
+		super(id, properties);
 		
 		this.init();
   	}

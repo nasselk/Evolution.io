@@ -4,7 +4,7 @@ import { mount } from "svelte";
 
 import { game } from "./game";
 
-import "./UI/interaction";
+//import "./UI/interaction";
 
 
 mount(UI, {

@@ -1,7 +1,17 @@
 <script lang="ts">
 	let style = $state("");
 
-    export function updateHighlight(target?: HTMLElement, pressed: boolean = false, active: boolean = true): string | void {	
+	let lastTarget: HTMLElement | null = null;
+
+    export function updateHighlight(pressed: boolean = false, active: boolean = true, target?: HTMLElement): string | void {		
+		if (!target) {
+			target = lastTarget;
+		}
+
+		else {
+			lastTarget = target;
+		}
+		
 		if (target) {
 			const rect = target.getBoundingClientRect();
     
@@ -29,11 +39,11 @@
         position: absolute;
         box-sizing: border-box;
         background-color: rgba(255, 165, 0, 0.25);
-        border: rgba(255, 165, 0, 0.5) solid 0.25vmin;
+        border: rgba(255, 165, 0, 0.5) solid 2px;
 		transform-origin: center center;
-        border-radius: 1.5vmin;
         transition: all 0.3s ease;
 		transform: scale(0);
+		border-radius: 15px;
 		opacity: 0;
     }
 </style>
