@@ -1,4 +1,4 @@
-import { game } from "../../game";
+import Game from "../../game";
 
 
 export const enum Toggles {
@@ -24,7 +24,7 @@ export const toggles: Toggle[] = [
 		icon: "/assets/engine/toggles/vertex.png",
 		toggled: false,
 		callback: (toggled: boolean) => {
-			game.renderer.renderVertices = toggled;
+			Game.renderer.renderVertices = toggled;
 		}
 	},
 	{
@@ -33,7 +33,7 @@ export const toggles: Toggle[] = [
 		icon: "/assets/engine/toggles/texture.png",
 		toggled: true,
 		callback: (toggled: boolean) => {
-			game.renderer.renderTextures = toggled;
+			Game.renderer.renderTextures = toggled;
 		}
 	}
 ];

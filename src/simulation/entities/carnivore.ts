@@ -1,4 +1,4 @@
-import { type ConstructorOptions, defineCustomType } from "./entity";
+import { type ConstructorOptions } from "./entity";
 
 import { type DynamicEntity } from "./dynamicEntity";
 
@@ -8,16 +8,12 @@ import Animal from "./animal";
 
 
 
-@defineCustomType("carnivore")
-
-export default class Carnivor extends Animal {
+export default class Carnivor extends Animal<"carnivore"> {
 	static override readonly list: Map<number, Animal> = new Map();
 
 
 	public constructor(options?: ConstructorOptions) {
 		super(options);
-
-		this.damages = 1;
   	}
 
 

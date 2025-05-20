@@ -1,11 +1,11 @@
-//import { error } from "../logger";
+import { ThreadEvents } from "./events";
 
 
 
 class Thread {
 	private readonly path?: URL;
 	private readonly thread: Worker | MessagePort | typeof self;
-	private listeners: Map<string, (data: any) => void> = new Map();
+	private listeners: Map<ThreadEvents, (data: any) => void> = new Map();
 
 	
 	constructor(thread: string | MessagePort | Worker | typeof self) {
@@ -32,27 +32,15 @@ class Thread {
 
 			listener?.(data);
 		});
-
-
-		/*this.thread.on("error", (err: Error): void => {
-			error("Game Server", `Worker error\n${ err.stack }`);
-		});
-
-
-		this.thread.on("exit", (code: number): void => {
-			error("Game Server", `Worker stopped with exit code ${ code }`);
-
-			process.exit(1);
-		});*/
 	}
 
 
-	public on(event: string, listener: (data: any) => void): void {
+	public on(event: ThreadEvents, listener: (data: any) => void): void {
 		this.listeners.set(event, listener);
 	}
 
 
-	public send(event: string, data?: any, transferList?: any[]): void {
+	public send(event: ThreadEvents, data?: any, transferList?: any[]): void {
 		const message = [ event, data ];
 
 		if (transferList) {
@@ -74,7 +62,6 @@ class Thread {
 			this.thread.close();
 		}
 	}
-	
 }
 
 

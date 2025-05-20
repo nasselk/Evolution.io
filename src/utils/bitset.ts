@@ -1,11 +1,23 @@
+import { createBuffer, type Buffers } from "../shared/thread/buffer";
+
+
+
 class BitSet {
 	private bits: Uint8Array;
 	public length: number;
 
-	
-	public constructor(maximum: number = 0) {
-		this.bits = new Uint8Array((maximum + 7) >> 3);
-		this.length = maximum;
+	public constructor(size?: number);
+	public constructor(buffer: Buffers, clone?: boolean);
+	public constructor(allocation: number | Buffers = 0, clone: boolean = false) {
+		if (typeof allocation === "number") {
+			this.bits = createBuffer((allocation + 7) >> 3);
+		}
+
+		else {
+			this.bits = createBuffer(allocation, clone);
+		}
+
+		this.length = this.bits.byteLength * 8;
 	}
 
 
@@ -18,14 +30,14 @@ class BitSet {
 	}
 
 
-	public forEach(callback: (value: number, index?: number) => void): void {
-    	let i = 0;
+	public forEach(callback: (value: number, index: number) => void): void {
+		let i = 0;
 
-    	for (const value of this) {
-        	callback(value, i);
-			
-        	i++;
-    	}
+		for (const value of this) {
+			callback(value, i);
+
+			i++;
+		}
 	}
 
 
@@ -49,7 +61,7 @@ class BitSet {
 
 		return this.bits[index] & (1 << bit);
 	}
-	
+
 
 	public hasAndAdd(value: number): number {
 		const index = value >> 3;
@@ -75,7 +87,7 @@ class BitSet {
 
 
 	public resize(max: number, recover: boolean = false): void {
-		const bits = new Uint8Array((max + 7) >> 3);
+		const bits = createBuffer((max + 7) >> 3);
 
 		this.length = max;
 

@@ -1,16 +1,12 @@
 import { type BufferReader } from "../../shared/thread/reader";
 
-import { getTexture } from "../../loader/texture";
-
-import { newSprite } from "../createVisuals";
-
 import { type Sprite } from "pixi.js";
 
 import { Entity } from "./entity";
 
 
 
-export default class Animal extends Entity {
+export default abstract class Animal<T extends "carnivore" | "herbivore" = any> extends Entity<T> {
 	public static override readonly list = new Map<number, Animal>();
 
 	protected sprite?: Sprite;
@@ -19,22 +15,7 @@ export default class Animal extends Entity {
 	public constructor(id: number, properties: BufferReader) {
 		super(id, properties);
   	}
-
-
-	public async init(): Promise<this> {
-		const texture = await getTexture("player", "webp");
-
-		if (this.spawned) {
-			this.sprite = newSprite(texture);
-
-			this.container.addChild(this.sprite);
-
-			this.initiated = true;
-		}
-
-		return this;
-	}
-	
+		
 
 	public override render(deltaTime: number): void {
 		const visible = super.render(deltaTime);

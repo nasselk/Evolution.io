@@ -30,10 +30,10 @@ function newContainer(settings: settings = {}): Container {
 		isRenderGroup: settings.renderGroup ?? false,
 		visible: settings.visible ?? true,
 		label: settings.label ?? "",
-		interactiveChildren: false,
+		//interactiveChildren: false,
 		cullableChildren: false,
-		interactive: false,
-		eventMode: "none",
+		//interactive: false,
+		eventMode: "static",
 		cullable: false,
 	});
     
@@ -56,11 +56,9 @@ function newSprite(texture: Texture, settings: settings = {}): Sprite {
 		visible: settings.visible ?? true,
 		tint: settings.tint ?? "white",
 		roundPixels: settings.roundPixels ?? false,
-		interactiveChildren: false,
-		cullableChildren: false,
-		interactive: false,
+		//interactive: false,
 		cullable: false,
-		eventMode: "none",
+		//eventMode: "auto",
 	});
 
     

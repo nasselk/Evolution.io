@@ -59,12 +59,13 @@
 </script>
 
 
+
 <style>
     .toolbar {
         display: flex;
         position: relative;
-        padding: 8px;
-        gap: 20px;
+        padding: var(--padding-sm);
+        gap: var(--gap-lg);
         transition: all 0.3s ease;
     }
 
@@ -79,12 +80,11 @@
         background-color: transparent;
         position: relative;
         padding: 0;
-        margin: 0;
     }
 
     .tool > img {
-        height: 40px;
-        width: 40px;
+        height: 4.5vmin;
+        width: 4.5vmin;
         transition: transform 0.3s ease;
         object-fit: contain;
         object-position: center;
@@ -94,6 +94,7 @@
         transform: scale(1.1);
     }
 </style>
+
 
 
 <div class="toolbar { classList }" id={id}>

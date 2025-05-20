@@ -4,7 +4,7 @@ import { Polygon } from "../../../utils/math/polygon";
 
 import { Vector } from "../../../utils/math/vector";
 
-import { IDAllocator } from "../../../utils/getID";
+import { IDAllocator } from "../../../utils/IDAllocator";
 
 
 

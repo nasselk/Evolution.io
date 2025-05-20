@@ -1,12 +1,18 @@
 import { interpolate, interpolateAngle } from "../../utils/math/interpolation";
 
-import { entityTypes as primitiveTypes } from "../../shared/connector";
+import { EntitiesConfig } from "../../shared/entities/properties";
 
 import { newContainer } from "../../rendering/createVisuals";
 
+import { type Entities } from "../../shared/entities/types";
+
 import { worldContainer } from "../../rendering/renderer";
 
+import { ThreadEvents } from "../../shared/thread/events";
+
 import { BufferReader } from "../../shared/thread/reader";
+
+import { currentTool, Tools } from "../../UI/stores/tool";
 
 import { getLayer } from "../../rendering/layers";
 
@@ -16,16 +22,17 @@ import { Timer } from "../../utils/timers/timer";
 
 import { Container } from "pixi.js";
 
-import { game } from "../../game";
+import Game from "../../game";
 
 
 
-type EntityTypes = keyof typeof game.classes;
-type GetEntityInstanceType<T extends EntityTypes> = InstanceType<(typeof game.classes)[T]>;
+type EntityTypes = keyof typeof Entities;
+type GetEntityInstanceType<T extends EntityTypes> = InstanceType<(typeof Game.classes)[T]>;
+
 
 
 // Global entity class being used by all entities
-abstract class Entity {
+abstract class Entity<T extends EntityTypes = EntityTypes> {
 	public static readonly list: Map<number, Entity> = new Map();
 	public static readonly container: Container = worldContainer;
 	public static dynamic: boolean;
@@ -35,7 +42,7 @@ abstract class Entity {
 	public readonly id: number;
 	public readonly position: Vector;
 	public readonly target: { readonly position: Vector, angle: number, readonly size: Vector, opacity: number };
-	protected readonly interpolation: typeof game.settings.interpolation;
+	protected readonly interpolation: typeof Game.settings.interpolation;
 	protected readonly size: Vector;
 	protected animationSpeed: number;
 	protected container: Container;
@@ -45,25 +52,17 @@ abstract class Entity {
 	protected creation: number;
 	protected spawned: boolean;
 	protected angle: number;
-	public readonly type: EntityTypes;
+	public readonly type: T;
 	protected abstract init(): void;
 	declare ["constructor"]: typeof Entity;	
 
 	protected constructor(id: number, properties: BufferReader) {
-		const x = properties.readUint16();
-		const y = properties.readUint16();
-		const angle = properties.readUint8();
-
-		this.position = new Vector(
-			BufferReader.fromPrecision(x, game.map.bounds.max.x, 16),
-			BufferReader.fromPrecision(y, game.map.bounds.max.y, 16),
-		);
-
 		this.id = id;
-		this.angle = BufferReader.fromPrecision(angle, 2 * Math.PI, 8, 0);
-		this.target = { position: this.position.clone, angle: this.angle, size: new Vector(properties.readUint16()), opacity: 1 };
-		this.interpolation = game.settings.interpolation;
-		this.type = this.constructor.type;
+		this.angle = 0;
+		this.position = new Vector();
+		this.target = { position: this.position.clone, angle: this.angle, size: new Vector(), opacity: 1 };
+		this.interpolation = Game.settings.interpolation;
+		this.type = this.constructor.type as T;
 		this.creation = performance.now();
 		this.animationSpeed = 0.1;
 		this.size = new Vector();
@@ -71,7 +70,6 @@ abstract class Entity {
 		this.visibleScale = 1;
 		this.spawned = true;
 		this.lastUpdate = 0;
-
 		
 		this.container = newContainer({
 			x: this.position.x,
@@ -82,13 +80,18 @@ abstract class Entity {
 			layer: getLayer(this.type),
 		});
 
-
 		this.constructor.container.addChild(this.container);
+		
+		this.update(properties);
+
+		this.engineInteraction();
+
+		this.position.set(this.target.position);
 	}
 
 		
-	public static create<T extends EntityTypes>(type: T, ...args: ConstructorParameters<(typeof game.classes)[T]>): InstanceType<(typeof game.classes)[T]> {
-		const constructor = game.classes[type] as any;
+	public static create<T extends EntityTypes>(type: T, ...args: ConstructorParameters<(typeof Game.classes)[T]>): InstanceType<(typeof Game.classes)[T]> {
+		const constructor = Game.classes[type] as any;
 
 		const entity = new constructor(...args);
 
@@ -112,7 +115,7 @@ abstract class Entity {
 	}
 
 
-	public static get<T extends EntityTypes | undefined>(id: number): (T extends EntityTypes ? InstanceType<typeof game.classes[T]> : Entity) | undefined {
+	public static get<T extends EntityTypes | undefined>(id: number): (T extends EntityTypes ? InstanceType<typeof Game.classes[T]> : Entity) | undefined {
 		return Entity.list.get(id) as ReturnType<typeof this.get<T>>;
 	}
 
@@ -138,9 +141,11 @@ abstract class Entity {
 		const angle = buffer.readUint8();
 		const size = buffer.readUint16();
 
-		this.target.position.x = BufferReader.fromPrecision(x, game.map.bounds.max.x, 16);
-		this.target.position.y = BufferReader.fromPrecision(y, game.map.bounds.max.y, 16);
-		this.target.angle = BufferReader.fromPrecision(angle, 2 * Math.PI, 8, 0);
+		this.target.position.set(
+			BufferReader.fromPrecision(x, Game.map.bounds.max.x, 16),
+			BufferReader.fromPrecision(y, Game.map.bounds.max.y, 16),
+		);
+		this.target.angle = BufferReader.fromPrecision(angle, 2 * Math.PI, 8);
 		this.target.size.set(size);
 
 		return this;
@@ -148,10 +153,6 @@ abstract class Entity {
 
 
 	public destroy(): void {
-		if (this === game.camera.target.entity) {
-			game.camera.target.entity = null;
-		}
-
 		for (const value of Object.values(this)) {
 			if (value instanceof Timer) {
 				value.clear();
@@ -179,7 +180,7 @@ abstract class Entity {
 		if (force || (this.size.x === 0 || this.size.y === 0) && !this.spawned) {
 			Entity.list.delete(this.id);
 
-			game.classes[this.type].list.delete(this.id);
+			Game.classes[this.type].list.delete(this.id);
 
 			this.cleanup();
 
@@ -208,18 +209,66 @@ abstract class Entity {
 
 
 	private isVisible(scale: number = this.visibleScale): boolean {
-		const globalX = game.renderer.canvas.width / 2 + (this.position.x - game.camera.position.x) * game.camera.zoom;
-		const globalY = game.renderer.canvas.height / 2 + (this.position.y - game.camera.position.y) * game.camera.zoom;
+		const position = Game.camera.toLocalPoint(this.position);
 
-		let width = this.size.x * game.camera.zoom * scale;
-		let height = this.size.y * game.camera.zoom * scale;
+		let width = this.size.x * Game.camera.zoom * scale;
+		let height = this.size.y * Game.camera.zoom * scale;
 
 		if (this.angle != 0) {
 			width *= Math.SQRT2;
 			height *= Math.SQRT2;
 		}
 
-		return !document.hidden && width > 0 && height > 0 && globalX + width / 2 > 0 && globalX - width / 2 < game.renderer.canvas.width && globalY + height / 2 > 0 && globalY - height / 2 < game.renderer.canvas.height;
+		return !document.hidden && width > 0 && height > 0 && position.x + width / 2 > 0 && position.x - width / 2 < Game.renderer.canvas.width && position.y + height / 2 > 0 && position.y - height / 2 < Game.renderer.canvas.height;
+	}
+
+
+	private engineInteraction() {
+		const dragOffset = new Vector(0, 0);
+
+		const drag = (event: PointerEvent) => {
+			const position = Game.camera.toGlobalPoint(
+				event.clientX * devicePixelRatio * Game.renderer.resolution,
+				event.clientY * devicePixelRatio * Game.renderer.resolution
+			);
+
+			position.add(dragOffset);
+
+			Game.simulation?.send(ThreadEvents.MOVE, {
+				id: this.id,
+				x: position.x,
+				y: position.y,
+			});
+		};
+
+		this.container.on("pointerdown", (event) => {
+			if (event.button === 0) {
+				switch (currentTool) {
+					case Tools.Destroy: {
+						Game.simulation?.send(ThreadEvents.DESTROY, this.id);
+
+						break;
+					}
+
+					case Tools.Move: {
+						const position = Game.camera.toGlobalPoint(
+							event.clientX * devicePixelRatio * Game.renderer.resolution,
+							event.clientY * devicePixelRatio * Game.renderer.resolution
+						);
+
+						dragOffset.set(this.position.clone.subtract(position));
+
+						window.addEventListener("pointermove", drag);
+
+						window.addEventListener("pointerup", () => {
+							window.removeEventListener("pointermove", drag);
+						}, { once: true });
+
+						break;
+					}
+				}
+			}
+		});
 	}
 
 	
@@ -231,13 +280,22 @@ abstract class Entity {
 
 
 function defineCustomType(name: EntityTypes, layer?: number) {
-	return function<T extends typeof Entity>(target: T) {
+	return function <T extends typeof Entity<EntityTypes>>(target: T) {
 		if (layer === undefined) {
 			layer = getLayer(name);
 		}
 
 		target.type = name;
-		target.dynamic = primitiveTypes[name].has("dynamic");
+
+		const properties = EntitiesConfig[name];
+
+		if (properties) {
+			target.dynamic = properties.dynamic;
+		}
+
+		else {
+			throw new Error(`Entity ${ name } not found in EntitiesConfig`);
+		}
 
 
 		if (target.container != Entity.container) {
@@ -247,7 +305,6 @@ function defineCustomType(name: EntityTypes, layer?: number) {
 		}
 	};
 }
-
 
 
 export { Entity, type EntityTypes, type GetEntityInstanceType, defineCustomType };

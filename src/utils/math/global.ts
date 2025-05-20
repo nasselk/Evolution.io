@@ -8,16 +8,16 @@ export function clamp(value: number, min: number, max: number): number {
 }
 
 
-export function getBoundingBox(rectangle: { x: number, y: number, width: number, height: number, angle: number }): { width: number, height: number } {
+export function getBoundingBox(width: number, height: number, angle: number): Vector {
 	// Calculate the absolute values of the cosine and sine of the rotation angle
-	const cos = Math.abs(Math.cos(rectangle.angle));
-	const sin = Math.abs(Math.sin(rectangle.angle));
+	const cos = Math.abs(Math.cos(angle));
+	const sin = Math.abs(Math.sin(angle));
 
 	// Calculate the width and height of the bounding box
-	return {
-		width: rectangle.width * cos + rectangle.height * sin,
-		height: rectangle.width * sin + rectangle.height * cos,
-	};
+	return new Vector(
+		width * cos + height * sin,
+		width * sin + height * cos,
+	);
 }
 
 

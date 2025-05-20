@@ -1,40 +1,49 @@
-import { interpolate } from "../utils/math/interpolation";
+import { interpolate, interpolateAngle } from "../utils/math/interpolation";
 
-import { type Entity } from "./entities/entity";
+import { getBoundingBox } from "../utils/math/global";
 
 import { Vector } from "../utils/math/vector";
 
 import { type Container } from "pixi.js";
 
+import Game from "../game";
+
 
 
 class Camera {
 	public readonly position: Vector;
-	public readonly target: { readonly position: Vector, zoom: number, entity?: Entity | null };
+	public readonly target: { readonly position: Vector, angle: number, zoom: number };
+	private readonly interpolation: typeof Game.settings.interpolation;
 	private readonly canvas: HTMLCanvasElement;
-	private readonly interpolation: any;
+	public readonly boundingBox: Vector;
+	public syncZoom: boolean;
+	public attached: boolean;
+	public angle: number;
 	public zoom: number;
 
 
-	public constructor(canvas: HTMLCanvasElement, interpolation: any) {
+	public constructor(canvas: HTMLCanvasElement, interpolation: Camera["interpolation"]) {
 		this.zoom = 1;
+		this.angle = 0;
 		this.position = new Vector();
-		this.target = { position: this.position.clone, zoom: this.zoom };
+		this.boundingBox = new Vector();
+		this.target = { position: this.position.clone, angle: this.angle, zoom: this.zoom };
 		this.interpolation = interpolation;
+		this.syncZoom = false;
+		this.attached = true;
 		this.canvas = canvas;
 	}
 
 
 	public update(scale: number, deltaTime: number): this {
-		if (this.target.entity) {
-			const entity = this.target.entity;
-
-			this.target.position.set(entity.target.position);
-		}
-
 		this.position.x = interpolate(this.position.x, this.target.position.x, this.interpolation.camera, deltaTime);
 		this.position.y = interpolate(this.position.y, this.target.position.y, this.interpolation.camera, deltaTime);
+		this.angle = interpolateAngle(this.angle, this.target.angle, this.interpolation.angle, deltaTime);
 		this.zoom = interpolate(this.zoom, this.target.zoom * scale, this.interpolation.zoom, deltaTime);
+
+		this.boundingBox.set(
+			getBoundingBox(this.canvas.width, this.canvas.height, this.angle)
+		);
 
 		return this;
 	}
@@ -51,14 +60,31 @@ class Camera {
 	}
 
 
+	public rotate(angle: number, immediate: boolean = false): this {
+		this.target.angle = angle;
+
+		if (immediate) {
+			this.angle = this.target.angle;
+		}
+
+		return this;
+	}
+
+
 	public transform(...containers: Container[]): this {
+		const center = new Vector(
+			this.canvas.width / 2,
+			this.canvas.height / 2
+		);
+
 		for (const container of containers) {
-			container.position.set(
-				this.canvas.width / 2 - this.position.x * this.zoom,
-				this.canvas.height / 2 - this.position.y * this.zoom
-			);
+			container.pivot.set(this.position.x, this.position.y);
+
+			container.position.set(center.x, center.y);
 
 			container.scale.set(this.zoom);
+
+			container.rotation = this.angle;
 		}
 
 		return this;
@@ -67,40 +93,31 @@ class Camera {
 
 	// Transforms a point from world coordinates to local screen coordinates.
 	public toLocalPoint(position: Vector): Vector
-	public toLocalPoint(x: number, y: number): Vector
+	public toLocalPoint(x: number, y?: number): Vector
 	public toLocalPoint(a: number | Vector, b?: number): Vector {
-		if (a instanceof Vector) {
-			return new Vector(
-				this.canvas.width / 2 + (a.x - this.position.x) * this.zoom,
-				this.canvas.height / 2 + (a.y - this.position.y) * this.zoom
-			);
-		}
-		else {
-			return new Vector(
-				this.canvas.width / 2 + (a - this.position.x) * this.zoom,
-				this.canvas.height / 2 + (b! - this.position.y) * this.zoom
-			);
-		}
+		const position = a instanceof Vector ? a.clone : new Vector(a, b!);
+
+		position.subtract(this.position).rotate(this.angle);
+
+		return new Vector(
+			this.canvas.width / 2 + position.x * this.zoom,
+			this.canvas.height / 2 + position.y * this.zoom
+		);
 	}
 
 
 	// Transforms a point from local screen coordinates to world coordinates.
 	public toGlobalPoint(position: Vector): Vector
-	public toGlobalPoint(x: number, y: number): Vector
+	public toGlobalPoint(x: number, y?: number): Vector
 	public toGlobalPoint(a: number | Vector, b?: number): Vector {
-		if (a instanceof Vector) {
-			return new Vector(
-				this.position.x + (a.x - this.canvas.width / 2) / this.zoom,
-				this.position.y + (a.y - this.canvas.height / 2) / this.zoom
-			);
-		}
+		const position = a instanceof Vector ? a : new Vector(a, b!);
 
-		else {
-			return new Vector(
-				this.position.x + (a - this.canvas.width / 2) / this.zoom,
-				this.position.y + (b! - this.canvas.height / 2) / this.zoom
-			);
-		}
+		const centered = new Vector(
+			(position.x - this.canvas.width / 2) / this.zoom,
+			(position.y - this.canvas.height / 2) / this.zoom
+		);
+
+		return centered.rotate(-this.angle).add(this.position);
 	}
 }
 

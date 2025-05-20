@@ -1,14 +1,14 @@
-import { type ConstructorOptions, Entity } from "./entity";
+import { type ConstructorOptions, Entity, EntityTypes } from "./entity";
 
 import { normalizeAngle } from "../../utils/math/angle";
 
 import { Vector } from "../../utils/math/vector";
 
-import { Simulation } from "../core/simulation";
+import Simulation from "../core/simulation";
 
 
 
-abstract class DynamicEntity extends Entity {
+abstract class DynamicEntity<T extends EntityTypes = EntityTypes> extends Entity<T> {
 	protected readonly forces: Set<Vector>;
 	public readonly velocity: Vector;
 	public angularVelocity: number;
@@ -19,7 +19,6 @@ abstract class DynamicEntity extends Entity {
 	protected angularFriction: number;
 	protected rotationSpeed?: number;
 	protected movingDirection?: number | null;
-	public staticInteraction?: (objects: Parameters<Parameters<typeof Simulation.instance.staticGrid.query>[1]>[0], queryID: number) => void;
 
 
 	public constructor(options?: ConstructorOptions) {
@@ -37,17 +36,17 @@ abstract class DynamicEntity extends Entity {
 	}
 
 
-	public update(deltaTime: number, now?: number): void {
-		void now;
+	public override update(deltaTime: number, now?: number): void {
+		super.update(deltaTime, now);
 
 		this.move(deltaTime);
 		this.rotate(deltaTime);
 
-		if (this.staticInteraction) {
-			Simulation.instance.staticGrid.query(this, this.staticInteraction);
-		}
+		Simulation.map.constrain(this.position);
 
-		Simulation.instance.map.constrain(this.position);
+		if (this.type != "plant") {
+			Simulation.dynamicGrid.insert(this);
+		}
 	}
 
 

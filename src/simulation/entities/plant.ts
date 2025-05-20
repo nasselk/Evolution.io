@@ -1,12 +1,10 @@
-import { type ConstructorOptions, defineCustomType, Entity } from "./entity";
-
 import { interpolate } from "../../utils/math/interpolation";
+
+import { type ConstructorOptions, Entity } from "./entity";
 
 import { randomAngle } from "../../utils/math/angle";
 
 import { Vector } from "../../utils/math/vector";
-
-import { Simulation } from "../core/simulation";
 
 import { DynamicEntity } from "./dynamicEntity";
 
@@ -14,11 +12,11 @@ import { Collider } from "../physic/collider";
 
 import { Hitboxes } from "../physic/hitboxes";
 
+import Simulation from "../core/simulation";
 
 
-@defineCustomType("plant")
 
-export default class Plant extends DynamicEntity {
+export default class Plant extends DynamicEntity<"plant"> {
 	static override readonly list: Map<number, Plant> = new Map();
 
 	public readonly collider: Collider<this>;
@@ -26,8 +24,8 @@ export default class Plant extends DynamicEntity {
 
 	public constructor(options?: ConstructorOptions, replications: number = 0) {
 		super({
-			position: Simulation.instance.spawner.randomPosition(Simulation.instance.map.shape),
-			size: Simulation.instance.spawner.randomInt(50, 150),
+			position: Simulation.spawner.randomPosition(Simulation.map.shape),
+			size: Simulation.spawner.randomInt(50, 150),
 			angle: randomAngle(),
 			mass: 1,
 			...options
@@ -39,7 +37,7 @@ export default class Plant extends DynamicEntity {
 
 		this.replicate(replications);
 
-		Simulation.instance.staticGrid.insert(this);
+		Simulation.staticGrid.insert(this);
   	}
 
 
@@ -49,12 +47,12 @@ export default class Plant extends DynamicEntity {
 		this.position.x = interpolate(this.position.x, this.root.x, 0.035, deltaTime);
 		this.position.y = interpolate(this.position.y, this.root.y, 0.035, deltaTime);
 
-		Simulation.instance.staticGrid.move(this); // Met à jour la grille statique avec la position de la plante
+		Simulation.staticGrid.move(this); // Met à jour la grille statique avec la position de la plante
 	}
 	
 
 	public override destroy(): void {
-		Simulation.instance.staticGrid.remove(this); // Supprime la plante de la grille statique
+		Simulation.staticGrid.remove(this); // Supprime la plante de la grille statique
 
 		super.destroy();
 	}
@@ -66,9 +64,9 @@ export default class Plant extends DynamicEntity {
 			let position: Vector;
 
 			// Cherche une position valide (à l'intérieur de la carte)
-			while (!position! || Simulation.instance.map.isOutside(position)) {
-				const angle = Simulation.instance.spawner.randomAngle(); // Angle aléatoire
-				const distance = Simulation.instance.spawner.randomInt(25, 350);// Distance aléatoire entre 25 et 350 unités
+			while (!position! || Simulation.map.isOutside(position)) {
+				const angle = Simulation.spawner.randomAngle(); // Angle aléatoire
+				const distance = Simulation.spawner.randomInt(25, 350);// Distance aléatoire entre 25 et 350 unités
 
 				position = new Vector(angle, distance, true).add(this.position);  // Calcule la position autour de la plante actuelle
 			}

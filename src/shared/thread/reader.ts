@@ -1,11 +1,11 @@
-import { type BufferWriter } from "./writer";
+import { createBuffer, type Buffers } from "./buffer.js";
 
-import { createBuffer } from "./buffer";
+import { BufferWriter } from "./writer.js";
 
 
 
 class BufferReader {
-	private static readonly textDecoder = new TextDecoder();
+	public static readonly textDecoder = new TextDecoder();
 
 	public readonly buffer: Uint8Array;
 	private readonly view: DataView;
@@ -15,10 +15,10 @@ class BufferReader {
 	public offset: number;
 
 
-	public constructor(buffer: ArrayBufferLike | ArrayBufferView | BufferWriter | BufferReader, clone: boolean = false, offset: number = 0) {
-		this.buffer = createBuffer(buffer, clone);
-		
-		this.view = new DataView(this.buffer.buffer, offset);
+	public constructor(buffer: Buffers, clone: boolean = false, offset: number = 0) {
+		this.buffer = createBuffer(buffer, clone, offset);
+
+		this.view = new DataView(this.buffer.buffer, this.buffer.byteOffset, this.buffer.byteLength);
 		this.byteLength = this.view.byteLength;
 		this.lastBitOffset = 0;
 		this.lastBitIndex = 0;
@@ -26,15 +26,17 @@ class BufferReader {
 	}
 
 
-	public static readTextBuffer(buffer: ArrayBuffer): string {
-		return BufferReader.textDecoder.decode(buffer);
+	public static fromPrecision(value: number, maximum: number, bits: number, signed: boolean = false, minimum: number = signed ? -maximum : 0): number {
+		if (maximum === minimum) return minimum;
+
+		const bound = BufferWriter.rangeMax(bits, signed);
+
+		return (value / bound) * (maximum - minimum) + minimum;
 	}
 
 
-	public static fromPrecision(value: number, maximum: number, bits: number, safetyOffset: number = 1000) {
-		const bound = 2 ** bits - 1;
-
-		return Math.round(value * (maximum + safetyOffset) / bound);
+	public static readTextBuffer(buffer: ArrayBuffer): string {
+		return BufferReader.textDecoder.decode(buffer);
 	}
 
 
@@ -63,7 +65,7 @@ class BufferReader {
 		if (bits === 1) return Boolean(value);
 
 		if (signed) {
-			const min = -(2 ** (bits - 1));
+			const min = BufferWriter.rangeMin(bits, signed);
 
 			value += min;
 		}
@@ -183,9 +185,18 @@ class BufferReader {
 	}
 
 
-	public readText(readLength?: boolean, increment?: boolean, offset?: number): string;
-	public readText(length?: number, increment?: boolean, offset?: number): string;
+	public readText(includeSize?: boolean, increment?: boolean, offset?: number): string;
+	public readText(bytes?: number, increment?: boolean, offset?: number): string;
 	public readText(a?: number | boolean, increment: boolean = true, offset: number = this.offset): string {
+		const buffer = this.readBuffer(a as any, increment, offset);
+
+		return BufferReader.textDecoder.decode(buffer);
+	}
+
+
+	public readBuffer(includeSize?: boolean, increment?: boolean, offset?: number): Uint8Array;
+	public readBuffer(bytes?: number, increment?: boolean, offset?: number): Uint8Array;
+	public readBuffer(a?: number | boolean, increment: boolean = true, offset: number = this.offset): Uint8Array {
 		let length: number;
 
 
@@ -206,19 +217,16 @@ class BufferReader {
 			this.offset += length;
 		}
 
-
-		return BufferReader.textDecoder.decode(buffer);
+		return buffer;
 	}
 
 
-	public readBuffer(bytes: number = this.buffer.byteLength - this.offset, increment: boolean = true, offset: number = this.offset): Uint8Array {
-		const buffer = this.buffer.slice(offset, offset + bytes);
-
-		if (increment && offset === this.offset) {
+	private advance(bytes: number = 1, offset: number = this.offset): this {
+		if (offset === this.offset) {
 			this.offset += bytes;
 		}
 
-		return buffer;
+		return this;
 	}
 
 
@@ -229,13 +237,13 @@ class BufferReader {
 	}
 
 
-	public get remainingBytes(): number {
-		return this.buffer.byteLength - this.offset;
+	public hasSpace(bytes: number = 1): boolean {
+		return this.remainingBytes >= bytes;
 	}
 
 
-	public hasSpace(byteLength: number = 1): boolean {
-		return this.remainingBytes >= byteLength;
+	public get remainingBytes(): number {
+		return this.byteLength - this.offset;
 	}
 }
 

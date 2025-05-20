@@ -1,12 +1,12 @@
-import { type DynamicEntity } from "../entities/dynamicEntity";
-
-import { dynamicTypes } from "../../shared/connector";
+import { ThreadEvents } from "../../shared/thread/events";
 
 import { nextTick } from "../../utils/timers/tick";
 
 import { Timer } from "../../utils/timers/timer";
 
-import { Simulation } from "./simulation";
+import { type Simulation } from "./simulation";
+
+import { Entity } from "../entities/entity";
 
 
 
@@ -14,7 +14,10 @@ class GameLoop {
 	private readonly simulation: Simulation;
 	private readonly minTickDelta: number;
 	private lastStatDisplay: number;
+	private uptime: number;
+	public paused: boolean;
 	private lastTick: number;
+	public speed: number;
 	private ticks: number;
 	private mspt: number;
 	public tick: number;
@@ -24,15 +27,18 @@ class GameLoop {
 		this.simulation = simulation;
 		this.minTickDelta = this.simulation.config.TPS === 0 ? 0 : 1000 / this.simulation.config.TPS;
 		this.lastTick = this.lastStatDisplay = performance.now();
+		this.paused = false;
+		this.uptime = 0;
 		this.ticks = 0;
 		this.mspt = 0;
 		this.tick = 0;
+		this.speed = 1;
 	}
 
 
 	public updateGameState(): void {
 		const now: number = performance.now();
-		const deltaTime: number = Math.min(now - this.lastTick, 1000);
+		const deltaTime: number = (now - this.lastTick) * this.speed;
 		
 
 		if (this.simulation.config.turbo) {
@@ -46,11 +52,19 @@ class GameLoop {
 
 
 		// If deltaTime is greater or equal to the server maximum tick rate then update the game state
-		if (deltaTime >= this.minTickDelta) {
+		if (deltaTime >= this.minTickDelta * this.speed) {
 			this.lastTick = now;
 
+			if (this.paused) {
+				return;
+			}
 
-			Timer.runAll(now);
+			else {
+				this.uptime += deltaTime;
+			}
+
+			
+			Timer.runAll(now, this.speed);
 
 			
 			let minID: number = Infinity;
@@ -58,23 +72,18 @@ class GameLoop {
 
 
 			// Update dynamic entities
-			for (const type of dynamicTypes) {
-				for (const entity of this.simulation.classes[type].list.values() as unknown as DynamicEntity[]) {
-					// Update the entity
-					entity.update(deltaTime / 10, now);
-					
-					// Insert into the grid for pairwise collision
-					if (entity.type != "plant") {
-						this.simulation.dynamicGrid.insert(entity);
+			for (const entity of Entity.updatables) {
+				// Update the entity
+				entity.update(deltaTime / 10, now);
 
-						// Find the min and max IDs of dynamic entities for the pairwise collision check
-						if (entity.id < minID) {
-							minID = entity.id;
-						}
+				if (entity.type != "plant") {
+					// Find the min and max IDs of dynamic entities for the pairwise collision check
+					if (entity.id < minID) {
+						minID = entity.id;
+					}
 
-						else if (entity.id > maxID) {
-							maxID = entity.id;
-						}
+					else if (entity.id > maxID) {
+						maxID = entity.id;
 					}
 				}
 			}
@@ -133,7 +142,7 @@ class GameLoop {
 
 
 		// Send the updates to the rendering thread
-		this.simulation.renderingThread.send("update", this.simulation.updatesCount);
+		this.simulation.renderingThread.send(ThreadEvents.UPDATE, this.simulation.updatesCount);
 
 		// Reset the events
 		this.simulation.sharedBuffer?.writer.reset();
@@ -149,11 +158,13 @@ class GameLoop {
 
 		const avgMSPT = (this.mspt / this.ticks).toFixed(2);
 
-		//const memoryUsage = Math.round(process.memoryUsage().rss / 1024 / 1024);
-
-		this.simulation.renderingThread.send("stats", {
+		this.simulation.renderingThread.send(ThreadEvents.STATS, {
 			TPS: avgTPS,
 			mspt: avgMSPT,
+			carnivores: this.simulation.classes.carnivore.list.size,
+			herbivores: this.simulation.classes.herbivore.list.size,
+			plants: this.simulation.classes.plant.list.size,
+			uptime: this.uptime,
 		});
 	}
 }

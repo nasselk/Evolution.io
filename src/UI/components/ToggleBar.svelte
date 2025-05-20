@@ -84,8 +84,8 @@
     .togglebar {
         display: flex;
         position: relative;
-        padding: 1vmin;
-        gap: 3vmin;
+		padding: var(--padding-sm);
+        gap: var(--gap-lg);
         transition: all 0.3s ease;
     }
 
@@ -100,12 +100,11 @@
         background-color: transparent;
         position: relative;
         padding: 0;
-        margin: 0;
     }
 
     .toggle > img {
-        height: 40px;
-        width: 40px;
+        height: 4.5vmin;
+        width: 4.5vmin;
         transition: transform 0.3s ease;
         object-fit: contain;
         object-position: center;

@@ -1,8 +1,12 @@
-import { getTypeEncoder, entityTypes as primitiveTypes } from "../../shared/connector";
+import { EntitiesConfig } from "../../shared/entities/properties";
 
 import { BufferWriter } from "../../shared/thread/writer";
 
+import { Entities } from "../../shared/entities/types";
+
 import { type DynamicEntity } from "./dynamicEntity";
+
+import { removeFromArray } from "../../utils/utils";
 
 import { HashGrid2D } from "../physic/HashGrid2D";
 
@@ -10,15 +14,16 @@ import { Vector } from "../../utils/math/vector";
 
 import { Timer } from "../../utils/timers/timer";
 
-import { Simulation } from "../core/simulation";
-
 import { Collider } from "../physic/collider";
+
+import Simulation from "../core/simulation";
 
 import { type Biome } from "../map";
 
 
 
-type EntityTypes = keyof typeof Simulation.instance.classes;
+type EntityTypes = keyof typeof Entities;
+type GetEntityInstanceType<T extends keyof typeof Entities> = InstanceType<(typeof Simulation.classes)[T]>;
 
 
 interface ConstructorOptions {
@@ -35,45 +40,51 @@ interface ConstructorOptions {
 }
 
 
-abstract class Entity {
+abstract class Entity<T extends EntityTypes = EntityTypes> {
+	public static readonly updatables: Entity[] = [];
 	public static readonly list = new Map<number, Entity | DynamicEntity>();
 	public static readonly isSubType: boolean = false;
-	public static type: keyof typeof primitiveTypes;
+	public static type: keyof typeof Entities;
+	public static updatable: boolean;
 	public static dynamic: boolean;
-
+	
 
 	public readonly id: number;
 	public readonly cellsKeys: Set<number>[];
-	public readonly type: keyof typeof primitiveTypes;
 	protected readonly creation: number;
 	public readonly position: Vector;
 	public readonly size: Vector;
+	public readonly type: T;
 	public health: number;
 	public mass: number;
 	public angle: number;
 	public queryID: number;
 	public spawned: boolean;
-	protected lastReproduction;
-	public readonly creationTick?: number;
+	protected lastReproduction: number;
+	private updateIndex?: number | null;
+	protected reproductionCooldown: number;
 	declare ["constructor"]: typeof Entity;
 	public abstract readonly collider: Collider<this>;	
-	public interaction?<T extends Entity>(entity: T, ...args: any[]): void;
+	protected staticInteraction?(objects: Parameters<Parameters<typeof Simulation.staticGrid.query>[1]>[0], queryID: number): boolean | void;
 
 
 	protected constructor(options: ConstructorOptions = {}) {
 		this.position = new Vector();
-		this.health = options.health ?? 100;
 		this.cellsKeys = new Array(HashGrid2D.gridCount).fill(new Set());
 		this.size = new Vector(options.size ?? options.width, options.size ?? options.height ?? options.width);
-		this.id = Simulation.instance.spawner.IDAllocator.allocate();
-		this.creationTick = Simulation.instance.loop.tick;
+		this.id = Simulation.spawner.IDAllocator.allocate();
+		this.type = this.constructor.type as T;
 		this.creation = performance.now();
-		this.type = this.constructor.type;
 		this.angle = options.angle ?? 0;
 		this.lastReproduction = 0;
 		this.mass = Infinity; // Entity are by default static
 		this.spawned = true;
 		this.queryID = 0;
+
+
+		// Settings :
+		this.reproductionCooldown = 10000; // 10 seconds
+		this.health = this.size.x * 2;
 
 
 		if (options.position) {
@@ -85,17 +96,19 @@ abstract class Entity {
 		}
 
 
-		// Save the entity in the main list there (in the constructor then we can create other entitiy within the constructor without id conflict)
-		Entity.list.set(this.id, this);
+		if (this.constructor.updatable) {
+			this.updatable = true;
+		}
 	}
 	
 
-	public static create<T extends EntityTypes>(type: T, ...args: ConstructorParameters<typeof Simulation.instance.classes[T]>): InstanceType<typeof Simulation.instance.classes[T]> {
-		const constructor = Simulation.instance.classes[type] as any;
+	public static create<T extends EntityTypes>(type: T, ...args: ConstructorParameters<typeof Simulation.classes[T]>): InstanceType<typeof Simulation.classes[T]> {
+		const constructor = Simulation.classes[type] as any;
 
-		const entity = new constructor(...args) as InstanceType<typeof Simulation.instance.classes[T]>;
+		const entity = new constructor(...args) as InstanceType<typeof Simulation.classes[T]>;
 
 		constructor.list.set(entity.id, entity);
+		Entity.list.set(entity.id, entity);
 
 		return entity;
 	}
@@ -108,7 +121,7 @@ abstract class Entity {
 	}
 
 
-	public static get<T extends EntityTypes | undefined>(id: number): (T extends EntityTypes ? InstanceType<typeof Simulation.instance.classes[T]> : Entity) | undefined {
+	public static get<T extends EntityTypes | undefined>(id: number): (T extends EntityTypes ? InstanceType<typeof Simulation.classes[T]> : Entity) | undefined {
 		return Entity.list.get(id) as ReturnType<typeof this.get<T>>;
 	}
 
@@ -122,21 +135,28 @@ abstract class Entity {
 	}
 
 
+	public update(deltaTime?: number, now?: number): void {
+		void deltaTime;
+		void now;
+
+		if (this.staticInteraction) {
+			Simulation.staticGrid.query(this, this.staticInteraction);
+		}
+	}
+
+
 	public destroy(): void {
+		this.updatable = false;
+
 		Entity.list.delete(this.id);
 
-		Simulation.instance.classes[this.type].list.delete(this.id);
+		Simulation.classes[this.type].list.delete(this.id);
 
 		
 		// Make sure the ID is not reused for 1 second (for client-side animations)
 		new Timer(() => {
-			Simulation.instance.spawner.IDAllocator.free(this.id);
-		}, 1000, true);
-
-
-		const buffer = new BufferWriter(2);
-
-		buffer.writeUint16(this.id);
+			Simulation.spawner.IDAllocator.free(this.id);
+		}, 1000);
 
 		
 		this.spawned = false;
@@ -167,8 +187,8 @@ abstract class Entity {
 		this.size.y = b ?? a;
 
 		// Means it's inserted in the static grid
-		if (this.cellsKeys[Simulation.instance.staticGrid.id].size > 0) {
-			Simulation.instance.staticGrid.move(this, this.collider.size.x, this.collider.size.y);
+		if (this.cellsKeys[Simulation.staticGrid.id].size > 0) {
+			Simulation.staticGrid.move(this, this.collider.size.x, this.collider.size.y);
 		}
 	}
 
@@ -177,18 +197,18 @@ abstract class Entity {
 		const buffer = writer ?? new BufferWriter(10 + additionalBytes);
 
 
-		const type = getTypeEncoder(this.type);
+		const type = Entities[this.type];
 
 		buffer.writeUint8(type);
 		buffer.writeUint16(this.id);
 
-		const x = BufferWriter.toPrecision(this.position.x, Simulation.instance.map.bounds.max.x, 16);
-		const y = BufferWriter.toPrecision(this.position.y, Simulation.instance.map.bounds.max.y, 16);
+		const x = BufferWriter.toPrecision(this.position.x, Simulation.map.bounds.max.x, 16);
+		const y = BufferWriter.toPrecision(this.position.y, Simulation.map.bounds.max.y, 16);
 
 		buffer.writeUint16(x);
 		buffer.writeUint16(y);
 
-		const angle = BufferWriter.toPrecision(this.angle, 2 * Math.PI, 8, 0);
+		const angle = BufferWriter.toPrecision(this.angle, 2 * Math.PI, 8);
 		buffer.writeUint8(angle);
 
 		buffer.writeUint16(this.size.x);
@@ -196,19 +216,48 @@ abstract class Entity {
 
 		return buffer;
 	}
+
+
+	set updatable(value: boolean) {
+		if (value) {
+			if (this.updateIndex === undefined || this.updateIndex === null) {
+				this.updateIndex = Entity.updatables.push(this) - 1;
+			}
+		}
+
+		else {
+			if (this.updateIndex !== undefined && this.updateIndex !== null) {
+				const element = removeFromArray(Entity.updatables, this, this.updateIndex);
+
+				if (element) {
+					element.updateIndex = this.updateIndex;
+				}
+
+				this.updateIndex = null;
+			}
+		}
+	}
 }
 
 
 
-function defineCustomType(name: EntityTypes, extent?: keyof typeof primitiveTypes) {
-	return function<T extends typeof Entity>(target: T): void {
-		const type = (extent || name) as keyof typeof primitiveTypes;
+function defineCustomType(name: EntityTypes) {
+	return function <T extends typeof Entity<EntityTypes>>(target: T): void {
+		target.type = name;
+		
+		const properties = EntitiesConfig[name];
+		
+		if (properties) {
+			target.updatable = properties.updatable;
+			target.dynamic = properties.dynamic;
+		}
 
-		target.type = type;
-		target.dynamic = primitiveTypes[type].has("dynamic");
+		else {
+			throw new Error(`Entity ${ name } not found in EntitiesConfig`);
+		}
 	};
 }
 
 
 
-export { Entity, type ConstructorOptions, type EntityTypes, defineCustomType };
+export { Entity, type ConstructorOptions, type EntityTypes, type GetEntityInstanceType, defineCustomType };

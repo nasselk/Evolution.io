@@ -1,14 +1,14 @@
-import { newGraphics } from "./rendering/createVisuals";
-
 import { Container, type Graphics } from "pixi.js";
 
-import { type Camera } from "./rendering/camera";
+import { Polygon } from "../utils/math/polygon";
 
-import { Polygon } from "./utils/math/polygon";
+import { Vector } from "../utils/math/vector";
 
-import { Vector } from "./utils/math/vector";
+import { newGraphics } from "./createVisuals";
 
-import map from "./map.json";
+import { type Camera } from "./camera";
+
+import map from "../map.json";
 
 
 
@@ -36,8 +36,6 @@ class GameMap {
 		};
 
 		this.init();
-
-		this.render();
 
 		container.addChild(this.grid);
 	}
@@ -124,15 +122,25 @@ class GameMap {
 	}
 	
 
-
-	public renderGrid(camera: Camera, canvas: HTMLCanvasElement, cellSize: number, thickness: number, clear: boolean = false, crossSize: number = 0): void {
+	public renderGrid(camera: Camera, cellSize: number, thickness: number, clear: boolean = false, crosses: boolean = false, color: string = "A4A4A4"): void {
 		if (clear) {
 			this.grid.clear();
 		}
 
-		// Compute the visible world dimensions
-		const viewWidth = canvas.width / camera.zoom;
-		const viewHeight = canvas.height / camera.zoom;
+
+		let alpha = 1;
+
+		const thicknessZoomed = thickness * camera.zoom;
+
+		if (thicknessZoomed < 2) {
+			alpha = (thicknessZoomed / 2) * 0.9;
+		}
+
+
+		const crossSize = crosses ? thickness * 12.5 : 0;
+
+		const viewWidth = camera.boundingBox.x / camera.zoom;
+		const viewHeight = camera.boundingBox.y / camera.zoom;
 
 		// Expand the view dimensions by the stroke width
 		const extendedWidth = viewWidth + thickness / 2 + crossSize / 2;
@@ -141,6 +149,7 @@ class GameMap {
 		// World coordinates for the top-left of the view (shifted to include margin)
 		const worldX = camera.position.x - viewWidth / 2 - thickness / 2 - crossSize / 2;
 		const worldY = camera.position.y - viewHeight / 2 - thickness / 2 - crossSize / 2;
+
 
 		// Compute offsets so grid lines align with multiples of cellSize
 		let offsetX = worldX % cellSize;
@@ -151,26 +160,29 @@ class GameMap {
 		const nbCellX = Math.floor((extendedWidth - offsetX) / cellSize);
 		const nbCellY = Math.floor((extendedHeight - offsetY) / cellSize);
 
-		// Draw vertical lines
-		for (let i = 0; i <= nbCellX; i++) {
-			const x = worldX - offsetX + i * cellSize;
-			this.grid.moveTo(x, worldY);
-			this.grid.lineTo(x, worldY + extendedHeight);
+
+		if (alpha > 0.2) {
+			// Draw vertical lines
+			for (let i = 0; i <= nbCellX; i++) {
+				const x = worldX - offsetX + i * cellSize;
+				this.grid.moveTo(x, worldY);
+				this.grid.lineTo(x, worldY + extendedHeight);
+			}
+
+			// Draw horizontal lines
+			for (let i = 0; i <= nbCellY; i++) {
+				const y = worldY - offsetY + i * cellSize;
+				this.grid.moveTo(worldX, y);
+				this.grid.lineTo(worldX + extendedWidth, y);
+			}
+
+
+			this.grid.stroke({ width: thickness, color: color, alpha: alpha });
 		}
-
-		// Draw horizontal lines
-		for (let i = 0; i <= nbCellY; i++) {
-			const y = worldY - offsetY + i * cellSize;
-			this.grid.moveTo(worldX, y);
-			this.grid.lineTo(worldX + extendedWidth, y);
-		}
-
-
-		this.grid.stroke({ width: thickness, color: "#A4A4A4" });
 
 
 		// Draw crosses
-		if (crossSize) {
+		if (crosses) {
 			for (let i = 0; i <= nbCellX; i++) {
 				for (let j = 0; j <= nbCellY; j++) {
 					const x = worldX - offsetX + i * cellSize;
@@ -187,12 +199,8 @@ class GameMap {
 			}
 
 
-			this.grid.stroke({ width: thickness * 2.25, color: "#A4A4A4" });
+			this.grid.stroke({ width: thickness * 2.25, color: color });
 		}
-	}
-
-	private render(): void {
-		
 	}
 }
 

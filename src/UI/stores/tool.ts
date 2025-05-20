@@ -1,7 +1,10 @@
-import { writable } from "svelte/store";
-import { game } from "../../game";
 import { Vector } from "../../utils/math/vector";
+
 import { type Entity } from "../../rendering/entities/entity";
+
+import { writable } from "svelte/store";
+
+import Game from "../../game";
 
 
 
@@ -54,38 +57,61 @@ activeTool.subscribe((tool) => {
 });
 
 
-function selectEntity(entity: Entity | null): void {
-	selectedEntity = entity;
-}
 
 
-// Camera gestures
 let draggingCamera = false;
+let rotatingCamera = false;
 
 document.querySelector<HTMLCanvasElement>("#canvas")?.addEventListener("pointerdown", (event: PointerEvent) => {
-	if (currentTool === Tools.Camera && event.button === 0) {
-		draggingCamera = true;
+	if (currentTool === Tools.Camera) {
+		switch (event.button) {
+			case 0:
+				draggingCamera = true;
+
+				break;
+
+			case 2:
+				rotatingCamera = true;
+
+				break;
+		}
 	}
 });
 
 document.querySelector<HTMLCanvasElement>("#canvas")?.addEventListener("pointerup", (event: PointerEvent) => {
-	if (event.button === 0) {
-		draggingCamera = false;
+	switch (event.button) {
+		case 0:
+			draggingCamera = false;
+
+			break;
+
+		case 2:
+			rotatingCamera = false;
+
+			break;
 	}
 });
 
 window.addEventListener("pointermove", (event: PointerEvent) => {
-	if (draggingCamera && currentTool === Tools.Camera && event.buttons === 1) {
-		const movement = new Vector(
-			event.movementX / game.camera.zoom,
-			event.movementY / game.camera.zoom
-		);
+	if (currentTool === Tools.Camera && event.buttons > 0) {
+		if (draggingCamera) {
+			const delta = new Vector(event.movementX, event.movementY)
+				.scale(Game.renderer.resolution / Game.camera.zoom)
+				.rotate(-Game.camera.angle);
 
-		game.camera.target.position.subtract(movement);
+			Game.camera.target.position.subtract(delta);
+		}
+
+		else if (rotatingCamera) {
+			const rotationSensitivity = 0.05;
+
+			Game.camera.rotate(Game.camera.angle + event.movementY * rotationSensitivity);
+		}
 	}
 
 	else {
 		draggingCamera = false;
+		rotatingCamera = false;
 	}
 });
 
@@ -93,11 +119,16 @@ document.querySelector<HTMLCanvasElement>("#canvas")?.addEventListener("wheel", 
 	if (currentTool === Tools.Camera) {
 		const delta = event.deltaY / 1000;
 
-		if (game.camera.target.zoom - delta > 0.05) {
-			game.camera.target.zoom -= delta;
+		if (Game.camera.target.zoom - delta > 0.05) {
+			Game.camera.target.zoom -= delta;
 		}
 	}
 });
+
+
+function selectEntity(entity: Entity | null): void {
+	selectedEntity = entity;
+}
 
 
 

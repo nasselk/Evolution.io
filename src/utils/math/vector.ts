@@ -158,10 +158,10 @@ class Vector {
 
 
 	public angleWith(vector: Vector): number {
-		const dot = this.dot(vector);
-		const cross = this.cross(vector);
+		const dx = vector.x - this.x;
+		const dy = vector.y - this.y;
 
-		return Math.atan2(cross, dot);
+		return Math.atan2(dy, dx);
 	}
 
 

@@ -108,8 +108,8 @@ class RenderingLoop {
 		this.game.camera.transform(this.worldContainer);
 
 
-		this.game.map.renderGrid(this.game.camera, this.canvas, 500 / 5, 2, true);
-		this.game.map.renderGrid(this.game.camera, this.canvas, 500, 6, false, 75);
+		this.game.map.renderGrid(this.game.camera, 500 / 5, 2, true);
+		this.game.map.renderGrid(this.game.camera, 500, 6, false, true);
 
 
 		for (const entity of this.game.entities.values()) {

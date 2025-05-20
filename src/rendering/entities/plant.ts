@@ -2,17 +2,15 @@ import { type BufferReader } from "../../shared/thread/reader";
 
 import { newContainer, newSprite } from "../createVisuals";
 
-import { Entity, defineCustomType } from "./entity";
-
 import { getTexture } from "../../loader/texture";
 
 import { type Sprite } from "pixi.js";
 
+import { Entity } from "./entity";
 
 
-@defineCustomType("plant")
 
-export default class Plant extends Entity {
+export default class Plant extends Entity<"plant"> {
 	public static override readonly list = new Map<number, Plant>();
 	public static override readonly container = newContainer();
 

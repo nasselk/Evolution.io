@@ -1,12 +1,10 @@
-import { type ConstructorOptions, defineCustomType } from "./entity";
+import { type ConstructorOptions } from "./entity";
 
 import Animal from "./animal";
 
 
 
-@defineCustomType("herbivore")
-
-export default class Herbivor extends Animal {
+export default class Herbivor extends Animal<"herbivore"> {
 	static override readonly list: Map<number, Animal> = new Map();
 
 

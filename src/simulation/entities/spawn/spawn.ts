@@ -1,4 +1,4 @@
-import { Simulation } from "../../core/simulation";
+import Simulation from "../../core/simulation";
 
 import { type GameMap } from "../../map";
 
@@ -8,14 +8,14 @@ import { Entity } from "../entity";
 
 
 
-function spawnEntities(spawner: Spawner, config: Simulation["config"], map: GameMap): void {
+function spawnEntities(spawner: Spawner, config: typeof Simulation.config, map: GameMap): void {
 	// Plant
-	const spotsThreshold = 0.0015;
+	const spotsThreshold = 0.015;
 
 	const plants = config.entities.plant * Math.pow(map.scale, 2);
 
 	for (let i: number = 0; i < plants * spotsThreshold; i++) {
-		const count = Simulation.instance.classes.plant.list.size;
+		const count = Simulation.classes.plant.list.size;
 		
 		const replications = Math.max(Math.min((1 - spotsThreshold) / spotsThreshold, plants - count) - 1, 0);
 

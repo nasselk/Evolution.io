@@ -1,16 +1,22 @@
+import { defineCustomType, Entity } from "./rendering/entities/entity";
+
 import { SharedBuffer } from "./shared/thread/sharedBuffer";
 
 import Simulation from "./simulation/index?worker&inline";
 
 import * as classes from "./rendering/entities/manager";
 
-import { Entity } from "./rendering/entities/entity";
+import { updateSimulationData } from "./UI/stores/HUD";
+
+import { ThreadEvents } from "./shared/thread/events";
 
 import { RenderingLoop } from "./rendering/renderer";
 
-import { getTypeDecoder } from "./shared/connector";
+import { Entities } from "./shared/entities/types";
 
 import { getRandomInt } from "./utils/math/point";
+
+import { IDAllocator } from "./utils/IDAllocator";
 
 import { Thread } from "./shared/thread/thread";
 
@@ -22,7 +28,7 @@ import { Timer } from "./utils/timers/timer";
 
 import { Camera } from "./rendering/camera";
 
-import { IDAllocator } from "./utils/getID";
+import { GameMap } from "./rendering/map";
 
 import { BitSet } from "./utils/bitset";
 
@@ -34,11 +40,11 @@ import { isMobile } from "pixi.js";
 
 import config from "./config.json";
 
-import { GameMap } from "./map";
-
 
 
 class Game {
+	private static _instance?: Game;
+
 	public readonly camera: Camera;
 	public readonly config: typeof config;
 	public readonly classes: typeof classes;
@@ -47,14 +53,14 @@ class Game {
 	public readonly IDAllocator: IDAllocator;
 	public readonly renderer: RenderingLoop;
 	private readonly updateIDs: BitSet;
-	public sharedBuffer?: SharedBuffer;
+	private sharedBuffer?: SharedBuffer;
 	public readonly isMobile: boolean;
 	public readonly map: GameMap;
 	public readonly UI: GameUI;
-	private simulation?: Thread;
+	public simulation?: Thread;
 
 
-	public constructor() {
+	private constructor() {
 		this.classes = classes;
 		this.isMobile = isMobile.any;
 		this.UI = new GameUI(this.isMobile);
@@ -67,15 +73,20 @@ class Game {
 		this.settings = settings;
 		this.config = config;
 
-
-		this.init();
-
-
 		new Timer(() => {
 			this.UI.FPS.text = `${ Math.round(this.renderer.frames) } FPS`;
 
 			this.renderer.frames = 0;
-		}, 1000, false, true);
+		}, 1000, true);
+	}
+
+
+	public static get instance(): Game {
+		if (!this._instance) {
+			this._instance = new Game();
+		}
+
+		return this._instance;
 	}
 
 
@@ -89,6 +100,9 @@ class Game {
 		const loads = [
 			loadAssets()
 		];
+
+
+		this.initConstructors();
 
 
 		// Retrieve settings saved in localStorage
@@ -115,6 +129,28 @@ class Game {
 	}
 
 
+	private initConstructors(): void {
+		for (const [ name, constructor ] of Object.entries(this.classes)) {
+			const decorate = defineCustomType(name as keyof typeof classes);
+
+			decorate(constructor);
+		}
+	}
+
+
+	private threadListeners(): void {
+		this.simulation?.on(ThreadEvents.UPDATE, this.update.bind(this));
+
+		this.simulation?.on(ThreadEvents.STATS, (stats: any) => {
+			this.UI.TPS.text = `${stats.TPS} TPS`;
+
+			this.UI.mspt.text = `${stats.mspt} mspt`;
+
+			updateSimulationData(stats.uptime, stats.carnivores, stats.herbivores, stats.plants);
+		});
+	}
+
+
 	public async update(count: number): Promise<void> {
 		if (this.sharedBuffer) {
 			this.sharedBuffer.lockAsync();
@@ -128,11 +164,9 @@ class Game {
 				const rawType = this.sharedBuffer.reader.readUint8();
 				const id = this.sharedBuffer.reader.readUint16();
 
-				const type = getTypeDecoder(rawType);
-
+				const type = Entities[rawType] as keyof typeof Entities;
 
 				const entity = Entity.get(id);
-
 
 				if (entity) {
 					entity.update(this.sharedBuffer.reader);
@@ -162,36 +196,46 @@ class Game {
 
 
 	public startSimulation(): void {
-		this.sharedBuffer = game.createBuffer();
+		this.sharedBuffer = this.createBuffer();
 		this.updateIDs.resize(this.sharedBuffer.byteLength);
 
 		const thread = new Simulation();
 
 		this.simulation = new Thread(thread);
 
-		this.simulation.send("init", {
-			buffer: game.sharedBuffer?.buffer,
-			entities: game.config.entities,
+		this.simulation.send(ThreadEvents.INIT, {
+			buffer: this.sharedBuffer?.buffer,
+			entities: this.config.entities,
 		});
 
-		this.simulation.on("update", game.update.bind(this));
-
-		this.simulation.on("stats", function(stats: any) {
-			game.UI.TPS.text = `${ stats.TPS } TPS`;
-
-			game.UI.mspt.text = `${ stats.mspt } mspt`;
-		});
-
+		this.threadListeners();
 
 		document.querySelector<HTMLDivElement>("#menu")!.style.display = "none";
-		document.querySelector<HTMLDivElement>("#gameUI")!.style.display = "grid";
+		document.querySelector<HTMLDivElement>("#HUD")!.style.display = "grid";
+	}
+
+
+	public setSimulationState(paused: boolean): void {
+		this.simulation?.send(ThreadEvents.PAUSE, paused);
 	}
 
 
 	public stopSimulation(): void {
 		this.simulation?.terminate();
-	}	
 
+		for (const entity of Entity.list.values()) {
+			entity.destroy();
+		}
+
+		document.querySelector<HTMLDivElement>("#menu")!.style.display = "grid";
+		document.querySelector<HTMLDivElement>("#HUD")!.style.display = "none";
+	}
+
+
+	public setSimulationSpeed(speed: number): void {
+		this.simulation?.send(ThreadEvents.SPEED, speed);
+	}
+	
 
 	public createBuffer(): SharedBuffer {
 		return new SharedBuffer(10 * (this.config.entities.plant + this.config.entities.herbivore + this.config.entities.carnivore));
@@ -205,8 +249,7 @@ class Game {
 }
 
 
-const game = new Game();
 
+export { Game };
 
-
-export { Game, game };
+export default Game.instance;

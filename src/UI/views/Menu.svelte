@@ -203,7 +203,7 @@
 
 <script lang="ts">
     import Grid from "../components/GridLayout.svelte";
-    import { game } from "../../game";
+    import Game from "../../game";
     
     // For syncing range and number inputs
     const syncInputs = (event) => {
@@ -269,7 +269,7 @@
                     </label>
                 </div>
                 
-                <button type="button" id="startButton" onclick={game.startSimulation.bind(game)}>START SIMULATION</button>
+                <button type="button" id="startButton" onclick={Game.startSimulation.bind(Game)}>START SIMULATION</button>
             </div>
         </div>
     {/snippet}

@@ -1,14 +1,14 @@
 import { type BufferReader } from "../../shared/thread/reader";
 
-import { defineCustomType } from "./entity";
+import { getTexture } from "../../loader/texture";
+
+import { newSprite } from "../createVisuals";
 
 import Animal from "./animal";
 
 
 
-@defineCustomType("carnivore")
-
-export default class Carnivore extends Animal {
+export default class Carnivore extends Animal<"carnivore"> {
 	public static override readonly list = new Map<number, Carnivore>();
 
 
@@ -20,10 +20,14 @@ export default class Carnivore extends Animal {
 
 
 	public override async init(): Promise<this> {
-		await super.init();
+		const texture = await getTexture("carnivore", "png");
 
-		if (this.spawned && this.sprite) {
-			this.sprite.tint = "red";
+		if (this.spawned) {
+			this.sprite = newSprite(texture);
+
+			this.container.addChild(this.sprite);
+
+			this.initiated = true;
 		}
 
 		return this;

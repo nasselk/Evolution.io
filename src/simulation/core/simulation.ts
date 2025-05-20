@@ -1,8 +1,10 @@
-import { type DynamicEntity } from "../entities/dynamicEntity";
+import { defineCustomType, Entity, type EntityTypes } from "../entities/entity";
 
 import { SharedBuffer } from "../../shared/thread/sharedBuffer";
 
-import { Entity, type EntityTypes } from "../entities/entity";
+import { type DynamicEntity } from "../entities/dynamicEntity";
+
+import { ThreadEvents } from "../../shared/thread/events";
 
 import { getRandomInt } from "../../utils/math/point";
 
@@ -46,7 +48,7 @@ class Simulation {
 	public constructor() {
 		this.config = config;
 		this.map = new GameMap();
-		this.classes = classes satisfies Record<EntityTypes, typeof Entity>;
+		this.classes = classes satisfies Record<EntityTypes, typeof Entity<EntityTypes>>;
 		this.dynamicGrid = new HashGrid2D(150, 150, this.map.bounds.max.x, this.map.bounds.max.y, false);
 		this.staticGrid = new HashGrid2D(500, 500, this.map.bounds.max.x, this.map.bounds.max.y, true, this.classes);
 		this.renderingThread = new Thread(self);
@@ -62,9 +64,9 @@ class Simulation {
 		this.spawner = new Spawner(this.config.seed);
 
 
-		this.renderingThread.on("init", (data) => {
-			this.init(data);
-		});
+		this.initConstructors();
+
+		this.threadListeners();
 	}
 
 
@@ -74,6 +76,36 @@ class Simulation {
 		}
 
 		return this._instance;
+	}
+
+
+	private threadListeners(): void {
+		this.renderingThread.on(ThreadEvents.INIT, (data) => {
+			this.init(data);
+		});
+
+		this.renderingThread.on(ThreadEvents.PAUSE, (paused: boolean) => {
+			this.loop.paused = paused;
+		});
+
+		this.renderingThread.on(ThreadEvents.SPEED, (speed: number) => {
+			this.loop.speed = speed;
+		});
+
+		this.renderingThread.on(ThreadEvents.MOVE, (data) => {
+			const entity = Entity.get(data.id);
+
+			entity?.position.set(
+				data.x,
+				data.y
+			);
+		});
+
+		this.renderingThread.on(ThreadEvents.DESTROY, (id: number) => {
+			const entity = Entity.get(id);
+
+			entity?.destroy();
+		});
 	}
 
 
@@ -93,8 +125,19 @@ class Simulation {
 		// Start the game loop
 		this.loop.updateGameState();
 	}
+
+
+	private initConstructors(): void {
+		for (const [ name, constructor ] of Object.entries(this.classes)) {
+			const decorate = defineCustomType(name as keyof typeof classes);
+
+			decorate(constructor);
+		}
+	}
 }
 
 
 
 export { Simulation };
+
+export default Simulation.instance;

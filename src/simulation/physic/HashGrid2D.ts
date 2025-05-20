@@ -53,10 +53,10 @@ class HashGrid2D<T extends Entity, Types extends Record<string, Constructor<T>> 
 
 	private getPairID(a: number, b: number): number {
 		if (a > b) {
-			[a, b] = [b, a];
+			[ a, b ] = [ b, a ];
 		}
 
-		return (b * (b + 1) >> 1) + a;
+		return (b * (b + 1) / 2) + a;
 	}
 
 
