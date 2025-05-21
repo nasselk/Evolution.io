@@ -1,14 +1,14 @@
 import { autoDetectRenderer, BitmapText, Container, Graphics, Sprite, type Point, type Renderer } from "pixi.js";
 
-import { newContainer } from "../createVisuals";
-
 import { Timer } from "../../utils/timers/timer";
+
+import { newContainer } from "../createVisuals";
 
 import { Vector } from "../../math/vector";
 
-import Stats from "stats.js";
+import { type Game } from "../../game";
 
-import { Game } from "../../game";
+import Stats from "stats.js";
 
 
 

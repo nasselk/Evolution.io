@@ -1,12 +1,12 @@
-import { c2cResolution, c2cDetection } from "./collisions/c2c.js";
+import { c2cResolution, c2cDetection } from "./collisions/c2c";
 
-import { DynamicEntity } from "../entities/dynamicEntity.js";
+import { DynamicEntity } from "../entities/dynamicEntity";
 
-import { type Entity } from "../entities/entity.js";
+import { type Entity } from "../entities/entity";
 
-import { Vector } from "../../math/vector.js";
+import { Vector } from "../../math/vector";
 
-import { Hitboxes } from "./hitboxes.js";
+import { Hitboxes } from "./hitboxes";
 
 
 

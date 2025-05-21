@@ -5,6 +5,18 @@
 		"default": {
 			"width": 15000,
 			"height": 15000
+		},
+		"carnivores": {
+			"x": 6000,
+			"y": 6000,
+			"width": 5000,
+			"height": 5000
+		},
+		"herbivores": {
+			"x": 9000,
+			"y": 9000,
+			"width": 5000,
+			"height": 5000
 		}
 	},
 	"colors": {

@@ -1,6 +1,6 @@
-import { BufferReader } from "./reader.js";
+import { BufferReader } from "./reader";
 
-import { BufferWriter } from "./writer.js";
+import { BufferWriter } from "./writer";
 
 
 export type Buffers = ArrayBufferLike | ArrayBufferView | BufferWriter | BufferReader;

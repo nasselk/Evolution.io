@@ -136,6 +136,8 @@ class Game {
 
 			//this.UI.mspt.text = `${stats.mspt} mspt`;
 
+			console.log(stats);
+
 			updateSimulationData(stats.uptime, stats.carnivores, stats.herbivores, stats.plants);
 		});
 	}
@@ -228,7 +230,7 @@ class Game {
 	
 
 	public createBuffer(): SharedBuffer {
-		return new SharedBuffer(10 * (this.config.entities.plant + this.config.entities.herbivore + this.config.entities.carnivore));
+		return new SharedBuffer(100 * 10 * (this.config.entities.plant + this.config.entities.herbivore + this.config.entities.carnivore));
 	}
 
 

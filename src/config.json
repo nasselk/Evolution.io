@@ -6,8 +6,8 @@
 	"TPS": 60,
 	"seed": 0,
 	"entities": {
-		"herbivore": 2500,
-		"carnivore": 2500,
+		"herbivore": 5000,
+		"carnivore": 2000,
 		"plant": 3000
 	}
 }

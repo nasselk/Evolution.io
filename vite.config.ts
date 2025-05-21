@@ -25,7 +25,7 @@ export default {
 	},
 
 	build: {
-		outDir: "../build",
+		outDir: "./build",
 		emptyOutDir: true,
 
 		rollupOptions: {

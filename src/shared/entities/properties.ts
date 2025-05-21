@@ -1,4 +1,4 @@
-import { Entities } from "./types.js";
+import { Entities } from "./types";
 
 
 

@@ -1,6 +1,6 @@
-import { type EntityTypes, type Entity } from "./entities/entity.js";
+import { type EntityTypes, type Entity } from "../entities/entity";
 
-import { error } from "../utils/logger.js";
+import { error } from "../../utils/logger";
 
 
 
@@ -8,16 +8,15 @@ const layers = {
 	default: [
 		"map",
 		"plant",
-		"leaf",
 		"herbivore",
 		"carnivore",
 	]
 };
 
 
-
 type RecievedLayers = { [key: string]: RecievedLayers } | string[];
 type ProcessedLayers = Map<string, number[] | ProcessedLayers>;
+
 
 function processLayers(attributes: RecievedLayers, counter: { value: number } = { value: 0 }): ProcessedLayers {
 	const map: ProcessedLayers = new Map();

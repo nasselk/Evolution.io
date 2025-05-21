@@ -58,8 +58,9 @@
                         grid: { color: "rgba(255, 255, 255, 0.1)" },
                         ticks: { 
 							color: "rgba(255, 255, 255, 0.7)",
-							stepSize: 5,
+							stepSize: 5
 						},
+						min: 0,
                     }
                 }
             }

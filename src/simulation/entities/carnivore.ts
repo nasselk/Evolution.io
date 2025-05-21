@@ -1,27 +1,68 @@
-import { type ConstructorOptions } from "./entity";
+import { Entity, type ConstructorOptions } from "./entity";
 
-import { type DynamicEntity } from "./dynamicEntity";
+import Simulation from "../core/simulation";
 
-import Herbivor from "./herbivore";
+import Animal, { AnimalState } from "./animal";
 
-import Animal from "./animal";
+import { getRandomInt } from "../../math/point";
 
 
 
-export default class Carnivor extends Animal<"carnivore"> {
+export default class Carnivore extends Animal<"carnivore"> {
 	static override readonly list: Map<number, Animal> = new Map();
 
 
 	public constructor(options?: ConstructorOptions) {
-		super(options);
+		super({
+			position: Simulation.spawner.randomPosition(Simulation.map.biomes.carnivores),
+			...options
+		});
+
+		// Genetic variation for movement speed
+		const speedGeneticFactor = 0.7 + Simulation.spawner.random() * 0.6;
+		this.moveSpeed = (0.65 / Math.sqrt(this.mass)) * speedGeneticFactor;
   	}
 
 
-	public override dynamicInteraction(entity: DynamicEntity): void {
-		super.dynamicInteraction(entity);
+	public override staticInteraction(objects: Parameters<Parameters<typeof Simulation.staticGrid.query>[1]>[0], queryID: number): void | boolean {
+		for (const plant of objects.plant) {
+			if (plant.queryID != queryID) {
+				this.collider.collide(plant.collider);
 
-		if (entity instanceof Herbivor) {
-			this.bite(entity);
+				plant.queryID = queryID;
+			}
+		}
+	}
+
+
+	public override findTarget(entity: Animal): void {
+		if (this.state === AnimalState.SEARCHING || this.state === AnimalState.HUNTING) {
+			const distance = this.position.distanceWith(entity.position);
+
+			if (distance <= this.viewDistance) {
+				const targetDistance = this.target?.position.distanceWith(this.position) ?? Infinity;
+
+				const switchProbability = Math.random();
+
+				if (distance < targetDistance && switchProbability < 0.25) {
+					this.target = entity;
+
+					this.state = AnimalState.HUNTING;
+				}
+			}	
+		}
+	}
+
+
+	public override destroy(): void {
+		super.destroy();
+
+		const percentage = Math.random();
+
+		if (percentage < 0.65) {
+			Entity.create("plant", {
+				position: this.position.clone,
+			}, Math.floor(this.size.x / 25) * getRandomInt(1, 3));
 		}
 	}
 }

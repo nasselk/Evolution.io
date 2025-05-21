@@ -1,0 +1,9 @@
+# For development :
+
+- Run `npm run dev` to start the development server.
+- Open your browser and navigate to `http://localhost:80` to see the application in action.
+
+
+# For production :
+
+- Run `npm run build` to build the application for production.

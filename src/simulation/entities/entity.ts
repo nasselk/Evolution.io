@@ -60,12 +60,14 @@ abstract class Entity<T extends EntityTypes = EntityTypes> {
 	public angle: number;
 	public queryID: number;
 	public spawned: boolean;
+	protected predator?: Entity | null;
 	protected lastReproduction: number;
 	private updateIndex?: number | null;
 	protected reproductionCooldown: number;
 	declare ["constructor"]: typeof Entity;
 	public abstract readonly collider: Collider<this>;	
 	protected staticInteraction?(objects: Parameters<Parameters<typeof Simulation.staticGrid.query>[1]>[0], queryID: number): boolean | void;
+	public biteReaction?(entity: Entity): void;
 
 
 	protected constructor(options: ConstructorOptions = {}) {
@@ -76,7 +78,7 @@ abstract class Entity<T extends EntityTypes = EntityTypes> {
 		this.type = this.constructor.type as T;
 		this.creation = performance.now();
 		this.angle = options.angle ?? 0;
-		this.lastReproduction = 0;
+		this.lastReproduction = this.creation + 30000; // 30 seconds cooldown
 		this.mass = Infinity; // Entity are by default static
 		this.spawned = true;
 		this.queryID = 0;
@@ -84,7 +86,7 @@ abstract class Entity<T extends EntityTypes = EntityTypes> {
 
 		// Settings :
 		this.reproductionCooldown = 10000; // 10 seconds
-		this.health = this.size.x * 2;
+		this.health = this.size.x * 3;
 
 
 		if (options.position) {
@@ -171,7 +173,7 @@ abstract class Entity<T extends EntityTypes = EntityTypes> {
 				this[key].clear();
 			}
 
-			delete this[key];
+			//delete this[key];
 		}
 	}
 

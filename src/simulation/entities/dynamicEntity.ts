@@ -50,8 +50,10 @@ abstract class DynamicEntity<T extends EntityTypes = EntityTypes> extends Entity
 	}
 
 
-	public dynamicInteraction(entity: DynamicEntity): void {
-		this.collider.collide(entity.collider);
+	public dynamicInteraction(entity: DynamicEntity): boolean | void {
+		const intersects = this.collider.collide(entity.collider);
+
+		return intersects;
 	}
 
 

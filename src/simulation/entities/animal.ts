@@ -2,8 +2,6 @@ import { getAngleDistance, randomAngle } from "../../math/angle";
 
 import { Entity, type ConstructorOptions } from "./entity";
 
-import { Vector } from "../../math/vector";
-
 import { Timer } from "../../utils/timers/timer";
 
 import { DynamicEntity } from "./dynamicEntity";
@@ -13,6 +11,8 @@ import { Collider } from "../physic/collider";
 import { Hitboxes } from "../physic/hitboxes";
 
 import Simulation from "../core/simulation";
+
+import { Vector } from "../../math/vector";
 
 
 
@@ -39,7 +39,8 @@ export default class Animal<T extends "carnivore" | "herbivore" = any> extends D
 	protected biteRadius: number;
 	protected state: AnimalState;
 	protected target?: Entity | null;
-	private viewDistance: number;
+	protected viewDistance: number;
+	public findTarget?(entity: Entity): void;
 
 
 	public constructor(options?: ConstructorOptions) {
@@ -58,9 +59,6 @@ export default class Animal<T extends "carnivore" | "herbivore" = any> extends D
 		// Settings :
 		this.damages = 5 + (this.size.x / 15) * (Simulation.spawner.random() * 2 + 3);
 		
-		// Genetic variation for movement speed
-		const speedGeneticFactor = 0.7 + Simulation.spawner.random() * 0.6;
-		this.moveSpeed = (0.65 / Math.sqrt(this.mass)) * speedGeneticFactor;
 
 		// genetic variation for rotation speed
 		const rotationGeneticFactor = 0.8 + Simulation.spawner.random() * 0.4;
@@ -75,62 +73,40 @@ export default class Animal<T extends "carnivore" | "herbivore" = any> extends D
   	}
 
 
-	public override update(deltaTime: number): void {
+	public override update(deltaTime: number, now: number): void {
 		super.update(deltaTime);
 
-		if (this.energy <= 100 && this.state != AnimalState.SEARCHING && !this.target) {
-			this.state = AnimalState.SEARCHING;
+		const energyThreshold = this.type === "herbivore" ? 50 : 85;
+
+		if (this.state != AnimalState.ESCAPING && (this.state != AnimalState.HUNTING || this.energy > energyThreshold)) {
+			if (this.energy <= energyThreshold) {
+				this.state = AnimalState.SEARCHING;
+			}
+
+			else if (this.lastReproduction + this.reproductionCooldown <= now && Math.random() < 0.55) {
+				this.state = AnimalState.REPRODUCING;
+			}
 		}
+
+		this.useEnergy(deltaTime);
 	}
 
 
-	public override staticInteraction = (objects: Parameters<Parameters<typeof Simulation.staticGrid.query>[1]>[0], queryID: number): void | boolean => {
-		for (const plant of objects.plant) {
-			if (plant.queryID != queryID) {
-				const overlapping = this.collider.collide(plant.collider);
+	private useEnergy(deltaTime: number): void {
+		this.energy -= this.moveSpeed * deltaTime * (this.type === "herbivore" ? 0.1 : 0.2);
 
-				if (overlapping && this.type === "herbivore") {
-					this.bite(plant);
-				}
-
-				plant.queryID = queryID;
-			}
+		if (this.energy <= 0) {
+			this.destroy();
 		}
-	};
+	}
 
 
 	public override dynamicInteraction(entity: DynamicEntity): void {
-		super.dynamicInteraction(entity);
+		const intersects = super.dynamicInteraction(entity) as boolean;
 
-		this.findTarget(entity);
-	}
-
-
-	private findTarget(entity: Entity): void {
-		const distance = this.position.distanceWith(entity.position);
-
-		if (distance <= this.viewDistance && entity instanceof Animal) {
-			if (this.type === "carnivore" && entity.type === "herbivore" && this.state === AnimalState.SEARCHING) {
-				const tDistance = this.target?.position.distanceWith(this.position) ?? Infinity;
-
-
-				if (distance < tDistance) {
-					this.target = entity;
-
-					this.state = AnimalState.HUNTING;
-				}
-			}
-
-			else if (entity.type === "carnivore" && this.type === "herbivore" && entity.state === AnimalState.SEARCHING) {
-				const tDistance = entity.target?.position.distanceWith(entity.position) ?? Infinity;
-
-				if (distance < tDistance) {
-					entity.target = this;
-
-					entity.state = AnimalState.HUNTING;
-				}
-			}
-		}	
+		if (entity instanceof Animal) {
+			this.animalInteraction(entity, intersects);
+		}
 	}
 
 
@@ -138,7 +114,24 @@ export default class Animal<T extends "carnivore" | "herbivore" = any> extends D
 		let timeout = Math.random() * 1000 + 1000;
 
 
-		if (this.target) {
+		if (this.predator) {
+			if (!this.predator.spawned || this.position.distanceWith(this.predator.position) > this.viewDistance * 2) {
+				this.predator = null;
+
+				this.state = AnimalState.IDLE;
+			}
+
+			else {
+				this.movingDirection = this.position.angleWith(this.predator.position) + Math.PI + Math.random() * Math.PI / 5;
+
+				this.targetAngle = this.movingDirection;
+
+				timeout = 50 + Math.random() * 250;
+			}
+
+		}
+
+		else if (this.target) {
 			if (!this.target.spawned || this.position.distanceWith(this.target.position) > this.viewDistance) {
 				this.target = null;
 
@@ -150,7 +143,7 @@ export default class Animal<T extends "carnivore" | "herbivore" = any> extends D
 
 				this.targetAngle = this.movingDirection;
 
-				timeout = 100;
+				timeout = 50 + Math.random() * 250;
 			}			
 		}
 
@@ -160,11 +153,45 @@ export default class Animal<T extends "carnivore" | "herbivore" = any> extends D
 			this.targetAngle = this.movingDirection;
 		}
 
+
 		this.timeout = new Timer(this.animate.bind(this), timeout);
 	}
 
 
-	public bite(entity: Entity): boolean { // Returns wether the entity is dead or not
+	private animalInteraction(entity: Animal, intersects: boolean): void {
+		if (this.type === "carnivore" && entity.type === "herbivore") {
+			this.attack(entity, intersects);
+		}
+
+		else if (this.type === "herbivore" && entity.type === "carnivore") {
+			entity.attack(this, intersects);
+		}
+
+		this.findPartener(entity, intersects);
+	}
+
+
+	private findPartener(entity: Animal, intersects: boolean): void {
+		if (this.type === entity.type && this.state === AnimalState.REPRODUCING && entity.state === AnimalState.REPRODUCING) {
+			this.target = entity;
+
+			if (intersects) {
+				this.replicate(entity);
+			}
+		}
+	}
+
+	
+	private attack(entity: Animal, intersects: boolean): void {
+		const destroyed = this.bite(entity, intersects);
+
+		if (!destroyed) {
+			this.findTarget?.(entity);
+		}
+	}
+
+
+	public bite(entity: Entity, overlapping: boolean): boolean { // Returns wether the entity is dead or not
 		const now = performance.now();
 
 		if (this.lastBite + this.biteCooldown / Simulation.loop.speed <= now) {
@@ -172,24 +199,49 @@ export default class Animal<T extends "carnivore" | "herbivore" = any> extends D
 
 			const angleDistance = getAngleDistance(this.angle, angle);
 
-			if (Math.abs(angleDistance) <= this.biteRadius) {
+			if (overlapping && Math.abs(angleDistance) <= this.biteRadius) {
 				if (entity.type === "plant") {
 					entity.size.scale(0.8);
+
+					this.energy += 5;
+				}
+
+				else if (entity.type === "herbivore") {
+					this.energy += 3;
 				}
 
 				entity.health -= this.damages;
 
+				this.lastBite = now;
+
 				if (entity.health <= 0) {
 					entity.destroy();
+
+					if (entity.type === "herbivore") {
+						this.energy += entity.mass;
+					}
 
 					return true;
 				}
 
-				this.lastBite = now;
+				else {
+					entity.biteReaction?.(this);
+				}
 			}
 		}
 		
 		return false;
+	}
+
+
+	protected isVisible(entity: Entity): boolean {
+		const distance = this.position.distanceWith(entity.position);
+
+		const angle = this.position.angleWith(entity.position);
+
+		const angleDistance = getAngleDistance(this.angle, angle);
+
+		return distance <= this.viewDistance && Math.abs(angleDistance) <= this.biteRadius;
 	}
 
 
@@ -217,3 +269,7 @@ export default class Animal<T extends "carnivore" | "herbivore" = any> extends D
 		}		
 	}
 }
+
+
+
+export { AnimalState };

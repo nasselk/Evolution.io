@@ -6,19 +6,19 @@ import { newContainer } from "../../rendering/createVisuals";
 
 import { type Entities } from "../../shared/entities/types";
 
-import { worldContainer } from "../core/renderer";
+import { currentTool, Tools } from "../../UI/stores/tool";
 
 import { ThreadEvents } from "../../shared/thread/events";
 
 import { BufferReader } from "../../shared/thread/reader";
 
-import { currentTool, Tools } from "../../UI/stores/tool";
+import { getLayer } from "../../rendering/core/layers";
 
-import { getLayer } from "../../rendering/layers";
-
-import { Vector } from "../../math/vector";
+import { worldContainer } from "../core/renderer";
 
 import { Timer } from "../../utils/timers/timer";
+
+import { Vector } from "../../math/vector";
 
 import { Container } from "pixi.js";
 

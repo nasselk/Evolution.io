@@ -1,6 +1,7 @@
 import { Sprite, Container, Texture, Graphics } from "pixi.js";
 
 
+
 interface settings {
 	x?: number;
 	y?: number;
