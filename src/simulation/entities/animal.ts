@@ -13,6 +13,7 @@ import { Hitboxes } from "../physic/hitboxes";
 import Simulation from "../core/simulation";
 
 import { Vector } from "../../math/vector";
+import { getRandomInt } from "../../math/point";
 
 
 
@@ -248,7 +249,7 @@ export default class Animal<T extends "carnivore" | "herbivore" = any> extends D
 	public replicate(pair: Animal): void {
 		const now = performance.now();
 
-		if (this.lastReproduction + this.reproductionCooldown <= now) {
+		if (this.lastReproduction + this.reproductionCooldown <= now && pair.lastReproduction + pair.reproductionCooldown <= now) {
 			// center position between the two animals
 			const distance = this.position.distanceWith(pair.position) / 2;
 
@@ -266,7 +267,23 @@ export default class Animal<T extends "carnivore" | "herbivore" = any> extends D
 			});
 
 			this.lastReproduction = now;
+			pair.lastReproduction = now;
 		}		
+	}
+
+
+	public override destroy(): void {
+		super.destroy();
+
+		if (this.type != "herbivore" || this.energy > 0) {
+			const percentage = Math.random();
+
+			if (percentage < 0.65) {
+				Entity.create("plant", {
+					position: this.position.clone,
+				}, Math.floor(this.size.x / 40) * getRandomInt(1, 3));
+			}
+		}
 	}
 }
 

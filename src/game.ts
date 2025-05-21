@@ -132,10 +132,6 @@ class Game {
 		this.simulation?.on(ThreadEvents.UPDATE, this.update.bind(this));
 
 		this.simulation?.on(ThreadEvents.STATS, (stats: any) => {
-			//this.UI.TPS.text = `${stats.TPS} TPS`;
-
-			//this.UI.mspt.text = `${stats.mspt} mspt`;
-
 			console.log(stats);
 
 			updateSimulationData(stats.uptime, stats.carnivores, stats.herbivores, stats.plants);
@@ -198,6 +194,8 @@ class Game {
 		this.simulation.send(ThreadEvents.INIT, {
 			buffer: this.sharedBuffer?.buffer,
 			entities: this.config.entities,
+			map: this.map.shape.dimensions,
+			turbo: this.config.turbo,
 		});
 
 		this.threadListeners();

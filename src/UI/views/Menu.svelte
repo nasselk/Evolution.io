@@ -211,6 +211,30 @@
         const targetId = input.type === "range" ? input.id + "Value" : input.id.replace("Value", "");
         const target = document.getElementById(targetId);
         if (target) target.value = input.value;
+
+		if (input.id.includes("herbivore")) {
+			Game.config.entities.herbivore = parseInt(input.value);
+		}
+
+		else if (input.id.includes("carnivore")) {
+			Game.config.entities.carnivore = parseInt(input.value);
+		}
+
+		else if (input.id.includes("plant")) {
+			Game.config.entities.plant = parseInt(input.value);
+		}
+
+		else if (input.id.includes("mapWidth")) {
+			Game.map.shape.dimensions.x = parseInt(input.value);
+		}
+
+		else if (input.id.includes("mapHeight")) {
+			Game.map.shape.dimensions.y = parseInt(input.value);
+		}
+
+		else if (input.id.includes("turbo")) {
+			Game.config.turbo = input.checked;
+		}
     }
 </script>
 
@@ -226,35 +250,20 @@
                     <div class="paramTitle">Population</div>
                     <label title="herbivore">
                         <span>Herbivores</span>
-                        <input type="range" id="herbivoreRange" min="0" max="2000" value="500" step="100" oninput={syncInputs}>
-                        <input type="number" id="herbivoreRangeValue" min="0" max="2000" value="500" oninput={syncInputs}>
+                        <input type="range" id="herbivoreRange" min="0" max="10000" value="5000" step="100" oninput={syncInputs}>
+                        <input type="number" id="herbivoreRangeValue" min="0" max="20000" value="5000" oninput={syncInputs}>
                     </label>
                     
                     <label title="carnivore">
                         <span>Carnivores</span>
-                        <input type="range" id="carnivoreRange" min="0" max="2000" value="500" step="100" oninput={syncInputs}>
-                        <input type="number" id="carnivoreRangeValue" min="0" max="2000" value="500" oninput={syncInputs}>
+                        <input type="range" id="carnivoreRange" min="0" max="10000" value="2000" step="100" oninput={syncInputs}>
+                        <input type="number" id="carnivoreRangeValue" min="0" max="20000" value="2000" oninput={syncInputs}>
                     </label>
                     
                     <label title="plant">
                         <span>Plants</span>
-                        <input type="range" id="plantRange" min="0" max="5000" value="2000" step="100" oninput={syncInputs}>
-                        <input type="number" id="plantRangeValue" min="0" max="5000" value="2000" oninput={syncInputs}>
-                    </label>
-                </div>
-                
-                <div class="paramGroup">
-                    <div class="paramTitle">Environment</div>
-                    <label title="map.width">
-                        <span>Map width</span>
-                        <input type="range" id="mapWidthRange" min="1000" max="10000" value="5000" step="1000" oninput={syncInputs}>
-                        <input type="number" id="mapWidthRangeValue" min="1000" max="10000" value="5000" oninput={syncInputs}>
-                    </label>
-
-                    <label title="map.height">
-                        <span>Map height</span>
-                        <input type="range" id="mapHeightRange" min="1000" max="10000" value="5000" step="1000" oninput={syncInputs}>
-                        <input type="number" id="mapHeightRangeValue" min="1000" max="10000" value="5000" oninput={syncInputs}>
+                        <input type="range" id="plantRange" min="0" max="5000" value="3000" step="100" oninput={syncInputs}>
+                        <input type="number" id="plantRangeValue" min="0" max="20000" value="3000" oninput={syncInputs}>
                     </label>
                 </div>
                 

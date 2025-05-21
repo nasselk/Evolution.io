@@ -10,7 +10,7 @@ import { Entity } from "../entity";
 
 function spawnEntities(spawner: Spawner, config: typeof Simulation.config, map: GameMap): void {
 	// Plant
-	const spotsThreshold = 0.015;
+	const spotsThreshold = 0.0125;
 
 	const plants = config.entities.plant * Math.pow(map.scale, 2);
 

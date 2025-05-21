@@ -7,3 +7,5 @@
 # For production :
 
 - Run `npm run build` to build the application for production.
+- Run `npm run start` to start the production server.
+- Open your browser and navigate to `http://localhost:80` to see the application in action.

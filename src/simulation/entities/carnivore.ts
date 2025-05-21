@@ -1,10 +1,8 @@
-import { Entity, type ConstructorOptions } from "./entity";
+import { type ConstructorOptions } from "./entity";
 
 import Simulation from "../core/simulation";
 
 import Animal, { AnimalState } from "./animal";
-
-import { getRandomInt } from "../../math/point";
 
 
 
@@ -50,19 +48,6 @@ export default class Carnivore extends Animal<"carnivore"> {
 					this.state = AnimalState.HUNTING;
 				}
 			}	
-		}
-	}
-
-
-	public override destroy(): void {
-		super.destroy();
-
-		const percentage = Math.random();
-
-		if (percentage < 0.65) {
-			Entity.create("plant", {
-				position: this.position.clone,
-			}, Math.floor(this.size.x / 25) * getRandomInt(1, 3));
 		}
 	}
 }

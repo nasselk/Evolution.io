@@ -132,4 +132,4 @@ class Biome extends Polygon {
 
 
 
-export { GameMap, type Biome };
+export { GameMap, map, type Biome };
