@@ -1,8 +1,8 @@
-import { getAngleDistance, randomAngle } from "../../utils/math/angle";
+import { getAngleDistance, randomAngle } from "../../math/angle";
 
 import { Entity, type ConstructorOptions } from "./entity";
 
-import { Vector } from "../../utils/math/vector";
+import { Vector } from "../../math/vector";
 
 import { Timer } from "../../utils/timers/timer";
 

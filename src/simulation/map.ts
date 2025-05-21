@@ -1,8 +1,8 @@
 import { type Entity } from "./entities/entity";
 
-import { Polygon } from "../utils/math/polygon";
+import { Polygon } from "../math/polygon";
 
-import { Vector } from "../utils/math/vector";
+import { Vector } from "../math/vector";
 
 import map from "../map.json";
 

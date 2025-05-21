@@ -46,11 +46,13 @@ class HashGrid2D<T extends Entity, Types extends Record<string, Constructor<T>> 
 	}
 
 
+	// Unique numeric hash by cell position
 	private getCellHash(x: number, y: number): number {
 		return x * (this.maxKeyY + 1) + y;
 	}
 
 
+	// Unique bijective numeric hash by pair of IDs
 	private getPairID(a: number, b: number): number {
 		if (a > b) {
 			[ a, b ] = [ b, a ];
@@ -60,6 +62,7 @@ class HashGrid2D<T extends Entity, Types extends Record<string, Constructor<T>> 
 	}
 
 
+	// Get the cell by its key and create it if need
 	private getCell(key: number): TypedCell<T, NonNullable<Types>> | UntypedCell<T> {
 		let cell = this.cells[key];
 
@@ -80,12 +83,14 @@ class HashGrid2D<T extends Entity, Types extends Record<string, Constructor<T>> 
 
 
 	public insert(object: T, rangeX: number = object.size.x, rangeY: number = object.size.y, type: string = object.type): void {
+		// Find the bounds
 		const minX: number = Math.max(Math.floor((object.position.x - rangeX / 2) / this.cellWidth), 0);
 		const minY: number = Math.max(Math.floor((object.position.y - rangeY / 2) / this.cellHeight), 0);
 		const maxX: number = Math.min(Math.floor((object.position.x + rangeX / 2) / this.cellWidth), this.maxKeyX);
 		const maxY: number = Math.min(Math.floor((object.position.y + rangeY / 2) / this.cellHeight), this.maxKeyY);
 
 
+		// Create the cells keys set if needed
 		let cellsKeys: Set<number> | undefined;
 
 		if (this.removableObjects) {
@@ -99,9 +104,10 @@ class HashGrid2D<T extends Entity, Types extends Record<string, Constructor<T>> 
 		}
 
 
+		// Loop over all cells
 		for (let x = minX; x <= maxX; x++) {
 			for (let y = minY; y <= maxY; y++) {
-				const key: number = this.getCellHash(x, y);
+				const key: number = this.getCellHash(x, y); // Compute the hash
 
 				const cell = this.getCell(key);
 
@@ -120,6 +126,7 @@ class HashGrid2D<T extends Entity, Types extends Record<string, Constructor<T>> 
 	public remove(object: T, type: string = object.type): void {
 		const cellsKeys: Set<number> = object.cellsKeys[this.id];
 
+		// Loop over all cells it's within
 		for (const key of cellsKeys) {
 			const cell = this.cells[key];
 
@@ -190,7 +197,11 @@ class HashGrid2D<T extends Entity, Types extends Record<string, Constructor<T>> 
 	}
 
 
+	// Run the callback for all cell this entity overlaps
+	// Callback remove the need of an intermediate insertion array which  reduces performances
+	// Make sure to use the queryID to avoid double checking the same entity during the same query
 	public query(object: T, callback: QueryCallback<T, Types>, rangeX: number = object.size.x, rangeY: number = object.size.y, ...params: any[]): boolean {
+		// Find the bounds
 		const minX: number = Math.max(Math.floor((object.position.x - rangeX / 2) / this.cellWidth), 0);
 		const minY: number = Math.max(Math.floor((object.position.y - rangeY / 2) / this.cellHeight), 0);
 		const maxX: number = Math.min(Math.floor((object.position.x + rangeX / 2) / this.cellWidth), this.maxKeyX);
@@ -206,13 +217,14 @@ class HashGrid2D<T extends Entity, Types extends Record<string, Constructor<T>> 
 		}
 
 
+		// Loop over all cells it overlaps
 		for (let x = minX; x <= maxX; x++) {
 			for (let y = minY; y <= maxY; y++) {
 				const key: number = this.getCellHash(x, y);
 				const cell = this.cells[key];
 
 				if (cell) {
-					const exit = callback.call(object, cell.objects as any, this.queryID, ...params);
+					const exit = callback.call(object, cell.objects as any, this.queryID, ...params); // Run the callback
 
 					if (exit) {
 						return true;
@@ -268,6 +280,7 @@ class HashGrid2D<T extends Entity, Types extends Record<string, Constructor<T>> 
 	}
 
 
+	// Empty the grid
 	public clear(clean?: Map<number, T>): void {
 		this.cells.fill(null);
 

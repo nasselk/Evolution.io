@@ -13,9 +13,10 @@ class IDAllocator {
 	}
 
 
+	// Allocate a positive numeric ID
 	public allocate(): number {
 		if (this.freePositiveIDs.length > 0) {
-			return this.freePositiveIDs.pop()!;
+			return this.freePositiveIDs.pop()!; // Retrieve from the pool
 		}
 
 		else {
@@ -24,9 +25,10 @@ class IDAllocator {
 	}
 
 
+	// Allocate a negative numeric ID
 	public allocateNegative(): number {
 		if (this.freeNegativeIDs.length > 0) {
-			return this.freeNegativeIDs.pop()!;
+			return this.freeNegativeIDs.pop()!; // Retrieve from the pool
 		}
 
 		else {
@@ -35,6 +37,7 @@ class IDAllocator {
 	}
 
 
+	// Free a set of numeric IDs
 	public free(...ids: number[]): void {
 		for (const id of ids) {
 			if (id > 0) {

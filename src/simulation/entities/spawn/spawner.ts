@@ -1,8 +1,8 @@
-import { getRandomTrianglePoint, triangleArea } from "../../../utils/math/global";
+import { getRandomTrianglePoint, triangleArea } from "../../../math/global";
 
-import { Polygon } from "../../../utils/math/polygon";
+import { Polygon } from "../../../math/polygon";
 
-import { Vector } from "../../../utils/math/vector";
+import { Vector } from "../../../math/vector";
 
 import { IDAllocator } from "../../../utils/IDAllocator";
 

@@ -1,4 +1,4 @@
-import { Vector } from "../../utils/math/vector";
+import { Vector } from "../../math/vector";
 
 import { type Entity } from "../../rendering/entities/entity";
 
@@ -31,19 +31,19 @@ const tools: Tool[] = [
 	{
 		id: Tools.Camera,
 		label: "Move the camera",
-		icon: "/assets/engine/tools/move.png",
+		icon: "/assets/engine/tools/move.webp",
 		cursor: "move"
 	},
 	{
 		id: Tools.Move,
 		label: "Move an object in the scene",
-		icon: "/assets/engine/tools/target.png",
+		icon: "/assets/engine/tools/target.webp",
 		cursor: "move"
 	},
 	{
 		id: Tools.Destroy,
 		label: "Delete an object in the scene",
-		icon: "/assets/engine/tools/delete.png",
+		icon: "/assets/engine/tools/delete.webp",
 		cursor: "crosshair"
 	},
 ];

@@ -1,4 +1,4 @@
-import { type Vector } from "../../../utils/math/vector.js";
+import { type Vector } from "../../../math/vector.js";
 
 import { type Collider } from "../collider.js";
 

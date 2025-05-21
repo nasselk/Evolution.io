@@ -10,7 +10,8 @@ channel.port1.addEventListener("message", function (event: MessageEvent) {
 	const action = ticks.get(event.data);
 
 	if (action) {
-		action();
+		action(); // Execute the callback
+
 		ticks.delete(event.data);
 	}
 });
@@ -21,5 +22,7 @@ export function nextTick(callback: () => void) {
 
 	ticks.set(id, callback);
 
-	channel.port2.postMessage(id);
+	channel.port2.postMessage(id); // Send a message to the other port
 }
+
+// This is a workaround for precise timers

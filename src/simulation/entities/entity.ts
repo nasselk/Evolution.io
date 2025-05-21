@@ -10,7 +10,7 @@ import { removeFromArray } from "../../utils/utils";
 
 import { HashGrid2D } from "../physic/HashGrid2D";
 
-import { Vector } from "../../utils/math/vector";
+import { Vector } from "../../math/vector";
 
 import { Timer } from "../../utils/timers/timer";
 

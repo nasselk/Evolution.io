@@ -21,6 +21,7 @@ class BitSet {
 	}
 
 
+	// Iterable methods
 	public *[Symbol.iterator](): IterableIterator<number> {
 		for (let i = 0; i < this.length; i++) {
 			if (this.has(i)) {

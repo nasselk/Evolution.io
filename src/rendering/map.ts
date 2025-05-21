@@ -1,12 +1,12 @@
 import { Container, type Graphics } from "pixi.js";
 
-import { Polygon } from "../utils/math/polygon";
-
-import { Vector } from "../utils/math/vector";
-
 import { newGraphics } from "./createVisuals";
 
-import { type Camera } from "./camera";
+import { type Camera } from "./core/camera";
+
+import { Polygon } from "../math/polygon";
+
+import { Vector } from "../math/vector";
 
 import map from "../map.json";
 

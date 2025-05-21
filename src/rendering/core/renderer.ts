@@ -1,14 +1,14 @@
 import { autoDetectRenderer, BitmapText, Container, Graphics, Sprite, type Point, type Renderer } from "pixi.js";
 
-import { newContainer } from "./createVisuals";
+import { newContainer } from "../createVisuals";
 
-import { Vector } from "../utils/math/vector";
+import { Timer } from "../../utils/timers/timer";
 
-import { Timer } from "../utils/timers/timer";
+import { Vector } from "../../math/vector";
 
-import type Stats from "stats.js";
+import Stats from "stats.js";
 
-import { Game } from "../game";
+import { Game } from "../../game";
 
 
 
@@ -30,13 +30,13 @@ class RenderingLoop {
 	public frames: number;
 	public scale: number;
 	public stats: {
-		frames?: Stats,
-		memory?: Stats,
-		ms?: Stats,
+		readonly frames: Stats,
+		readonly memory: Stats,
+		readonly ms: Stats,
 	};
 
 
-	public constructor(game: Game, UIContainer: Container) {
+	public constructor(game: Game) {
 		this.canvas = document.querySelector("#canvas")!;
 		this.stage = newContainer({ renderGroup: true });
 		this.worldContainer = worldContainer;
@@ -47,18 +47,22 @@ class RenderingLoop {
 		this.resolution = 1;
 		this.game = game;
 		this.frames = 0;
-		this.stats = {};
+		this.stats = {
+			frames: new Stats(),
+			memory: new Stats(),
+			ms: new Stats(),
+		};
 		this.scale = 1;
 
 
-		this.stage.addChild(this.worldContainer, UIContainer, this.vertices);
+		this.stage.addChild(this.worldContainer, this.vertices);
 	}
 
 
 	public async init(settings: any): Promise<void> {
 		this.resolution = settings.resolution ?? 1;
 
-
+		// Init pixijs renderer
 		this.renderer = await autoDetectRenderer({
 			powerPreference: "high-performance",
 			backgroundColor: settings.backgroundColor ?? "black",
@@ -74,56 +78,79 @@ class RenderingLoop {
 
 		this.resize();
 
+
+		// Init stats pannels
+		this.stats.frames.showPanel(0);
+		this.stats.ms.showPanel(1);
+		this.stats.memory.showPanel(2);
+		
+		document.body.appendChild(this.stats.frames.dom);
+		document.body.appendChild(this.stats.memory.dom);
+		document.body.appendChild(this.stats.ms.dom);
+		
+		this.stats.ms.dom.style.left = "0px";
+		this.stats.ms.dom.style.left = "80px";
+		this.stats.memory.dom.style.left = "160px";
+
+		
 		// Start rendering
 		requestAnimationFrame(this.render.bind(this));
 	}
 
 
 	public render(now: number): void {
-		this.stats.frames?.begin();
-		this.stats.ms?.begin();
+		// Stats monitoring performances
+		this.stats.frames.begin();
+		this.stats.ms.begin();
 
 
 		requestAnimationFrame(this.render.bind(this));
 
 
-		// Run timers registered in "precise" mode
+		// Run timers registered in eventLoop mode
 		Timer.runAll(now);
 
 
+		// Dont run the frame when document is hidden to avoid jumpy animations
 		if (document.hidden) {
 			return;
 		}
 		
 
+		// Delta time used for consistant animations (interpolation..)
 		const deltaTime: number = Math.min(100, now - this.lastFrame) / 10;
 
 		this.lastFrame = now;
-
 		this.frames++;
 
 
-		this.game.camera.update(this.scale, deltaTime);
+		// Update the camera and apply its transformations to the scene
+		this.game.camera.update(this.scale, deltaTime).transform(this.worldContainer);
 
-		this.game.camera.transform(this.worldContainer);
 
-
+		// Render the background grid
 		this.game.map.renderGrid(this.game.camera, 500 / 5, 2, true);
 		this.game.map.renderGrid(this.game.camera, 500, 6, false, true);
 
-
+		
+		// Render all entities
 		for (const entity of this.game.entities.values()) {
 			entity.render(deltaTime);
 		}
+		
 
+		// Render debug vertices for textures if the feature is enabled
 		this.debug(this.worldContainer);
 
+
+		// Call pixijs internal renderer
 		this.renderer?.render(this.stage);
 
 
-		this.stats.frames?.end();
-		this.stats.ms?.end();
-		this.stats.memory?.update();
+		// Update the performance stats
+		this.stats.frames.end();
+		this.stats.ms.end();
+		this.stats.memory.update();
 	}
 
 
@@ -216,18 +243,18 @@ class RenderingLoop {
 
 
 	public resize(): void {
-		// Resize canvas
-		this.renderer?.resize(document.documentElement.clientWidth * devicePixelRatio * this.resolution, document.documentElement.clientHeight * devicePixelRatio * this.resolution);
+		// Resize the canvas resolution
+		this.renderer?.resize(
+			document.documentElement.clientWidth * devicePixelRatio * this.resolution,
+			document.documentElement.clientHeight * devicePixelRatio * this.resolution
+		);
 
+		// Resize the canvas display size
+		this.canvas.style.width = `${ document.documentElement.clientWidth }px`;
+		this.canvas.style.height = `${ document.documentElement.clientHeight }px`;
 
-		this.canvas.style.width = `${document.documentElement.clientWidth}px`;
-		this.canvas.style.height = `${document.documentElement.clientHeight}px`;
-
-
-		// Resize the scale
+		// Set the new scale
 		this.scale = Math.min(this.canvas.width, this.canvas.height) / 1080;
-
-		this.game.UI.render(this.scale, this.canvas);
 	}
 }
 

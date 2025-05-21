@@ -41,17 +41,18 @@ class GameLoop {
 		const deltaTime: number = (now - this.lastTick) * this.speed;
 		
 
+		// Next tick (trick with message port) fires way faster than setTimeout, but uses more CPU
 		if (this.simulation.config.turbo) {
 			nextTick(this.updateGameState.bind(this));
 		}
 
 		else {
-			// 1ms because setTimeout is inaccurate
+			// 1ms because javascript timers are inaccurate
 			setTimeout(this.updateGameState.bind(this), 1);
 		}
 
 
-		// If deltaTime is greater or equal to the server maximum tick rate then update the game state
+		// Run the logic only if the delta time is greater than the tick delta
 		if (deltaTime >= this.minTickDelta * this.speed) {
 			this.lastTick = now;
 
@@ -64,9 +65,11 @@ class GameLoop {
 			}
 
 			
+			// Run all timers register in "eventLoop" mode
 			Timer.runAll(now, this.speed);
 
 			
+			// Calculate maxID and minID to optimize the bitset size for the pairwise collision check
 			let minID: number = Infinity;
 			let maxID: number = -Infinity;
 
@@ -89,13 +92,13 @@ class GameLoop {
 			}
 
 
-			// Do the pairwise interactions check
+			// Do the pairs interactions check
 			this.simulation.dynamicGrid.pairwiseCombination(function (entity1, entity2) {
 				entity1.dynamicInteraction(entity2);
 			}, minID, maxID, true);
 
 
-			this.processOutboundMessages();
+			this.processOutboundData();
 
 			this.simulation.dynamicGrid.clear();
 	
@@ -123,32 +126,27 @@ class GameLoop {
 	}
 
 
-	private processOutboundMessages(): void {
+	private processOutboundData(): void {
+		// Lock the shared buffer to write to it (atomics)
 		this.simulation.sharedBuffer?.lock();
-
 		
-		// Add entities updates
-		for (const entity of this.simulation.entities.values()) {
-			if (this.simulation.sharedBuffer) {
-				entity.packProperties(this.simulation.sharedBuffer.writer);
+		// Write the world state to the shared buffer
+		// Just write each updatable entity to the shared buffer
+		for (const entity of Entity.updatables) {
+			entity.packProperties(this.simulation.sharedBuffer!.writer);
 
-				this.simulation.updatesCount++;
-			}
-
-			else {
-				console.warn("Shared buffer is not initialized. Cannot add world update.");
-			}
+			this.simulation.updatesCount++;
 		}
-
 
 		// Send the updates to the rendering thread
 		this.simulation.renderingThread.send(ThreadEvents.UPDATE, this.simulation.updatesCount);
 
+
 		// Reset the events
 		this.simulation.sharedBuffer?.writer.reset();
 		this.simulation.updatesCount = 0;
-		
 
+		// Unlock the shared buffer to read from it (atomics)
 		this.simulation.sharedBuffer?.unlock();
 	}
 

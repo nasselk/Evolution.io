@@ -1,4 +1,4 @@
-import { Sprite, Container, AnimatedSprite, Texture, Graphics } from "pixi.js";
+import { Sprite, Container, Texture, Graphics } from "pixi.js";
 
 
 interface settings {
@@ -70,43 +70,6 @@ function newSprite(texture: Texture, settings: settings = {}): Sprite {
 }
 
 
-
-function newAnimatedSprite(sprites: Texture[], speed = 0.5, settings: settings = {}): AnimatedSprite {
-	const sprite = new AnimatedSprite(Array.isArray(sprites) && sprites.length > 0 ? sprites : [ Texture.EMPTY ]);
-
-	sprite.anchor.set(0.5, 0.5);
-
-	sprite.x = settings.x || 0;
-
-	sprite.y = settings.y || 0;
-
-	sprite.width = settings.width || 0;
-
-	sprite.height = settings.height || 0;
-
-	sprite.rotation = settings.angle || 0;
-
-	sprite.zIndex = settings.layer || 0;
-
-	sprite.alpha = settings.alpha || 1;
-
-	sprite.visible = settings.visible || true;
-
-	sprite.animationSpeed = speed;
-
-	sprite.eventMode = "none";
-
-	sprite.interactiveChildren = false;
-
-
-	sprite.play();
-
-
-	return sprite;
-}
-
-
-
 function newGraphics(settings: settings = {}): Graphics {
 	const graphics = new Graphics({
 		x: settings.x ?? 0,
@@ -133,4 +96,4 @@ function newGraphics(settings: settings = {}): Graphics {
 
 
 
-export { newContainer, newSprite, newAnimatedSprite, newGraphics };
+export { newContainer, newSprite, newGraphics };

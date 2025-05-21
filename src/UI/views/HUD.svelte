@@ -32,14 +32,6 @@
 
 
 
-<style>
-	:global(#HUD) {
-		display: none;
-	}
-</style>
-
-
-
 <Grid id="HUD" padding=var(--padding-lg) gap=var(--gap-lg)>
 	{#snippet middle_right()}
 		<Window class="editorBox" title="Carnivores" width=325px height=200px padding=var(--padding-sm) resizable={false} moveable={false}>

@@ -1,3 +1,4 @@
+// Efficiently remove elemnent from a generic array by swaping it with the last element
 export function removeFromArray<T>(array: T[], item?: T, index?: number): T | void {
 	if (index !== undefined) {
 		const last = array.pop();

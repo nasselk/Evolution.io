@@ -10,31 +10,30 @@
 		"node": ">=18.0.0 <19.0.0 || >=20.0.0 <21.0.0 || >=22.0.0"
 	},
 	"scripts": {
-		"init:dev": "npm install && npm run dev",
-		"serve": "vite preview --host",
-		"dev": "vite",
-		"build": "node build.js"
+		"init:dev": "npm install && npm run build",
+		"dev": "vite dev",
+		"build": "vite build",
+		"preview": "vite preview --host"
 	},
 	"dependencies": {
 		"chart.js": "^4.4.9",
-		"pixi.js": "^8.8.1",
-		"svelte": "^5.28.2"
+		"pixi.js": "^8.9.2",
+		"svelte": "^5.32.1"
 	},
 	"devDependencies": {
 		"@eslint/js": "^9.18.0",
 		"@rollup/plugin-strip": "^3.0.4",
 		"@sveltejs/vite-plugin-svelte": "^5.0.3",
-		"@types/node": "^22.13.10",
 		"@types/stats.js": "^0.17.3",
 		"@typescript-eslint/eslint-plugin": "^8.20.0",
 		"@typescript-eslint/parser": "^8.20.0",
 		"eslint": "^9.18.0",
 		"globals": "^16.0.0",
-		"javascript-obfuscator": "^4.1.1",
 		"stats.js": "^0.17.0",
 		"typescript": "^5.8.2",
 		"vite": "^6.2.0",
 		"vite-plugin-compression": "^0.5.1",
-		"vite-plugin-html": "^3.2.2"
+		"vite-plugin-html": "^3.2.2",
+		"lightningcss": "^1.30.1"
 	}
 }

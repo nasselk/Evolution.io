@@ -1,8 +1,8 @@
 import { type ConstructorOptions, Entity, EntityTypes } from "./entity";
 
-import { normalizeAngle } from "../../utils/math/angle";
+import { normalizeAngle } from "../../math/angle";
 
-import { Vector } from "../../utils/math/vector";
+import { Vector } from "../../math/vector";
 
 import Simulation from "../core/simulation";
 

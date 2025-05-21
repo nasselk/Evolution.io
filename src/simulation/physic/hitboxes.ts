@@ -1,8 +1,5 @@
 const enum Hitboxes {
 	CIRCLE,
-	RECTANGLE,
-	LINE,
-	PLANE,
 }
 
 

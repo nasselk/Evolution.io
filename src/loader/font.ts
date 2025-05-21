@@ -17,7 +17,7 @@ async function loadBitmapFont(url: string, settings: BitmapFontInstallOptions, f
 		}
 
 		if (fallbacks.length > 0) {
-			warn("CLIENT", `Texture ${ url } not found`);
+			warn("RENDERER", `Texture ${ url } not found`);
 
 			const fallback = fallbacks.shift()!;
 

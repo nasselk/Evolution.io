@@ -1,12 +1,12 @@
-import { interpolate, interpolateAngle } from "../utils/math/interpolation";
+import { interpolate, interpolateAngle } from "../../math/interpolation";
 
-import { getBoundingBox } from "../utils/math/global";
+import { getBoundingBox } from "../../math/global";
 
-import { Vector } from "../utils/math/vector";
+import { Vector } from "../../math/vector";
 
 import { type Container } from "pixi.js";
 
-import Game from "../game";
+import Game from "../../game";
 
 
 
@@ -36,11 +36,13 @@ class Camera {
 
 
 	public update(scale: number, deltaTime: number): this {
+		// Interpolate position, angle and zoom for smooth movements
 		this.position.x = interpolate(this.position.x, this.target.position.x, this.interpolation.camera, deltaTime);
 		this.position.y = interpolate(this.position.y, this.target.position.y, this.interpolation.camera, deltaTime);
 		this.angle = interpolateAngle(this.angle, this.target.angle, this.interpolation.angle, deltaTime);
 		this.zoom = interpolate(this.zoom, this.target.zoom * scale, this.interpolation.zoom, deltaTime);
 
+		// Calculate the axis-aligned bounding box for culling
 		this.boundingBox.set(
 			getBoundingBox(this.canvas.width, this.canvas.height, this.angle)
 		);
@@ -49,6 +51,7 @@ class Camera {
 	}
 
 
+	// Move the camera to a certain position
 	public move(x: number, y: number, immediate: boolean = false): this {
 		this.target.position.set(x, y);
 
@@ -60,6 +63,7 @@ class Camera {
 	}
 
 
+	// Rotate the camera to a certain angle
 	public rotate(angle: number, immediate: boolean = false): this {
 		this.target.angle = angle;
 
@@ -71,6 +75,7 @@ class Camera {
 	}
 
 
+	// Apply camera transforms to containers
 	public transform(...containers: Container[]): this {
 		const center = new Vector(
 			this.canvas.width / 2,

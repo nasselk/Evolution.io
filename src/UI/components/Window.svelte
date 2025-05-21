@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { Vector } from "../../utils/math/vector";
-
   	import ResizableBox from "./ResizableBox.svelte";
+
+	import { Vector } from "../../math/vector";
 
 
   	const {

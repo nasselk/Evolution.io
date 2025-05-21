@@ -1,6 +1,6 @@
 <script lang="ts">
-    import { clamp } from "../../utils/math/global";
-	import { Vector } from "../../utils/math/vector";
+	import { Vector } from "../../math/vector";
+    import { clamp } from "../../math/global";
 
 
   	const {

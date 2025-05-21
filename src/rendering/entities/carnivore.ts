@@ -20,12 +20,13 @@ export default class Carnivore extends Animal<"carnivore"> {
 
 
 	public override async init(): Promise<this> {
-		const texture = await getTexture("carnivore", "png");
+		// Load the texture in async
+		const texture = await getTexture("carnivore");
 
 		if (this.spawned) {
-			this.sprite = newSprite(texture);
+			this.texture = newSprite(texture);
 
-			this.container.addChild(this.sprite);
+			this.container.addChild(this.texture);
 
 			this.initiated = true;
 		}

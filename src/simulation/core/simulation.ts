@@ -6,8 +6,6 @@ import { type DynamicEntity } from "../entities/dynamicEntity";
 
 import { ThreadEvents } from "../../shared/thread/events";
 
-import { getRandomInt } from "../../utils/math/point";
-
 import { Spawner } from "../entities/spawn/spawner";
 
 import { Thread } from "../../shared/thread/thread";
@@ -15,6 +13,8 @@ import { Thread } from "../../shared/thread/thread";
 import { HashGrid2D } from "../physic/HashGrid2D";
 
 import { spawn } from "../entities/spawn/spawn";
+
+import { getRandomInt } from "../../math/point";
 
 import * as classes from "../entities/manager";
 
@@ -56,20 +56,17 @@ class Simulation {
 		this.entities = Entity.list;
 		this.updatesCount = 0;
 		
-
 		if (!this.config.seed) {
-			this.config.seed = getRandomInt(0, 2 ** 32);
+			this.config.seed = getRandomInt(0, 2 ** 32); // Generate a random seed
 		}
 		
 		this.spawner = new Spawner(this.config.seed);
 
-
 		this.initConstructors();
-
-		this.threadListeners();
 	}
 
 
+	// Singleton instance
 	public static get instance(): Simulation {
 		if (!this._instance) {
 			this._instance = new Simulation();
@@ -79,7 +76,8 @@ class Simulation {
 	}
 
 
-	private threadListeners(): void {
+	public threadListeners(): void {
+		// Events from the rendering thread
 		this.renderingThread.on(ThreadEvents.INIT, (data) => {
 			this.init(data);
 		});
@@ -110,6 +108,7 @@ class Simulation {
 
 
 	public init(data: any): void {
+		// Recieve the shared memory buffer from the main thread and the config
 		this.sharedBuffer = new SharedBuffer(data.buffer);
 
 		this.config.entities = data.entities;
@@ -118,8 +117,8 @@ class Simulation {
 		spawn(this.spawner, this.config, this.map);
 
 
-		log("Game Server", "Server successfully started in version", config.gameVersion, "!");
-		log("Game Server", "Seed:", this.config.seed);
+		log("SIMULATION", "Simulation successfully started in version !");
+		log("SIMULATION", "Seed:", this.config.seed);
 		
 		
 		// Start the game loop
@@ -127,6 +126,7 @@ class Simulation {
 	}
 
 
+	// Register all classes types custom properties (dynamic, updatable, ...)
 	private initConstructors(): void {
 		for (const [ name, constructor ] of Object.entries(this.classes)) {
 			const decorate = defineCustomType(name as keyof typeof classes);

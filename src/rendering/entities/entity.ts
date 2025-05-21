@@ -1,4 +1,4 @@
-import { interpolate, interpolateAngle } from "../../utils/math/interpolation";
+import { interpolate, interpolateAngle } from "../../math/interpolation";
 
 import { EntitiesConfig } from "../../shared/entities/properties";
 
@@ -6,7 +6,7 @@ import { newContainer } from "../../rendering/createVisuals";
 
 import { type Entities } from "../../shared/entities/types";
 
-import { worldContainer } from "../../rendering/renderer";
+import { worldContainer } from "../core/renderer";
 
 import { ThreadEvents } from "../../shared/thread/events";
 
@@ -16,7 +16,7 @@ import { currentTool, Tools } from "../../UI/stores/tool";
 
 import { getLayer } from "../../rendering/layers";
 
-import { Vector } from "../../utils/math/vector";
+import { Vector } from "../../math/vector";
 
 import { Timer } from "../../utils/timers/timer";
 
@@ -55,6 +55,7 @@ abstract class Entity<T extends EntityTypes = EntityTypes> {
 	public readonly type: T;
 	protected abstract init(): void;
 	declare ["constructor"]: typeof Entity;	
+
 
 	protected constructor(id: number, properties: BufferReader) {
 		this.id = id;
@@ -99,7 +100,8 @@ abstract class Entity<T extends EntityTypes = EntityTypes> {
 		Entity.get(entity.id)?.cleanup(); // Cleanup if entity with this id already exists
 
 
-		Entity.list.set(entity.id, entity);
+		// Save a reference in maps
+		Entity.list.set(entity.id, entity); 
 
 		entity.constructor.list.set(entity.id, entity);
 

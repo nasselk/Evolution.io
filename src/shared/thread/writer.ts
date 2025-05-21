@@ -1,6 +1,6 @@
-import { createBuffer, type Buffers } from "./buffer.js";
+import { createBuffer, type Buffers } from "./buffer";
 
-import { clamp } from "../../utils/math/global.js";
+import { clamp } from "../../math/global";
 
 
 
@@ -127,117 +127,117 @@ class BufferWriter {
 	}
 
 
-	public writeUint8(value: number, offset: number = this.offset): this {
+	public writeUint8(value: number, offset: number = this.offset, increment?: boolean): this {
 		this.ensureCapacity(1, offset);
 
 		this.view.setUint8(offset, value);
 
-		this.advance(1, offset);
+		this.advance(1, offset, increment);
 
 		return this;
 	}
 
 
-	public writeInt8(value: number, offset: number = this.offset): this {
+	public writeInt8(value: number, offset: number = this.offset, increment?: boolean): this {
 		this.ensureCapacity(1, offset);
 
 		this.view.setInt8(offset, value);
 
-		this.advance(1, offset);
+		this.advance(1, offset, increment);
 
 		return this;
 	}
 
 
-	public writeUint16(value: number, offset: number = this.offset): this {
+	public writeUint16(value: number, offset: number = this.offset, increment?: boolean): this {
 		this.ensureCapacity(2, offset);
 
 		this.view.setUint16(offset, value, true);
 
-		this.advance(2, offset);
+		this.advance(2, offset, increment);
 
 		return this;
 	}
 
 
-	public writeInt16(value: number, offset: number = this.offset): this {
+	public writeInt16(value: number, offset: number = this.offset, increment?: boolean): this {
 		this.ensureCapacity(2, offset);
 
 		this.view.setInt16(offset, value, true);
 
-		this.advance(2, offset);
+		this.advance(2, offset, increment);
 
 		return this;
 	}
 
 
-	public writeUint32(value: number, offset: number = this.offset): this {
+	public writeUint32(value: number, offset: number = this.offset, increment?: boolean): this {
 		this.ensureCapacity(4, offset);
 
 		this.view.setUint32(offset, value, true);
 
-		this.advance(4, offset);
+		this.advance(4, offset, increment);
 
 		return this;
 	}
 
 
-	public writeInt32(value: number, offset: number = this.offset): this {
+	public writeInt32(value: number, offset: number = this.offset, increment?: boolean): this {
 		this.ensureCapacity(4, offset);
 
 		this.view.setInt32(offset, value, true);
 
-		this.advance(4, offset);
+		this.advance(4, offset, increment);
 
 		return this;
 	}
 
 
-	public writeFloat32(value: number, offset: number = this.offset): this {
+	public writeFloat32(value: number, offset: number = this.offset, increment?: boolean): this {
 		this.ensureCapacity(4, offset);
 
 		this.view.setFloat32(offset, value, true);
 
-		this.advance(4, offset);
+		this.advance(4, offset, increment);
 
 		return this;
 	}
 
 
-	public writeInt64(value: bigint, offset: number = this.offset): this {
+	public writeInt64(value: bigint, offset: number = this.offset, increment?: boolean): this {
 		this.ensureCapacity(8, offset);
 
 		this.view.setBigInt64(offset, value, true);
 
-		this.advance(8, offset);
+		this.advance(8, offset, increment);
 
 		return this;
 	}
 
 
-	public writeUint64(value: bigint, offset: number = this.offset): this {
+	public writeUint64(value: bigint, offset: number = this.offset, increment?: boolean): this {
 		this.ensureCapacity(8, offset);
 
 		this.view.setBigUint64(offset, value, true);
 
-		this.advance(8, offset);
+		this.advance(8, offset, increment);
 
 		return this;
 	}
 
 
-	public writeDouble64(value: number, offset: number = this.offset): this {
+	public writeDouble64(value: number, offset: number = this.offset, increment?: boolean): this {
 		this.ensureCapacity(8, offset);
 
 		this.view.setFloat64(offset, value, true);
 
-		this.advance(8, offset);
+		this.advance(8, offset, increment);
 
 		return this;
 	}
 
 
-	public writeBuffer(buffer: ArrayLike<number>, includeSize: boolean = false, offset: number = this.offset): this {
+	public writeBuffer(buffer: ArrayLike<number>, includeSize: boolean = false, offset: number = this.offset, increment?: boolean): this {
 		if (includeSize) {
 			this.writeUint16(buffer.length, offset);
 
@@ -248,7 +248,7 @@ class BufferWriter {
 
 		this.buffer.set(buffer, offset);
 
-		this.advance(buffer.length, offset);
+		this.advance(buffer.length, offset, increment);
 
 		return this;
 	}
@@ -264,7 +264,7 @@ class BufferWriter {
 	public expand(bytes: number = 1): number {
 		const buffer = this.buffer;
 
-		this.buffer = createBuffer(this.byteLength + bytes, false, 0);
+		this.buffer = createBuffer(this.byteLength + bytes);
 		this.view = new DataView(this.buffer.buffer);
 		this.byteLength = this.buffer.byteLength;
 
@@ -298,8 +298,8 @@ class BufferWriter {
 	}
 
 
-	private advance(bytes: number = 1, offset: number = this.offset): this {
-		if (offset === this.offset) {
+	private advance(bytes: number = 1, offset: number = this.offset, increment: boolean = offset === this.offset): this {
+		if (increment && offset === this.offset) {
 			this.offset += bytes;
 		}
 

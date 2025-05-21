@@ -1,10 +1,10 @@
-import { interpolate } from "../../utils/math/interpolation";
+import { interpolate } from "../../math/interpolation";
 
 import { type ConstructorOptions, Entity } from "./entity";
 
-import { randomAngle } from "../../utils/math/angle";
+import { randomAngle } from "../../math/angle";
 
-import { Vector } from "../../utils/math/vector";
+import { Vector } from "../../math/vector";
 
 import { DynamicEntity } from "./dynamicEntity";
 

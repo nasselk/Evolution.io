@@ -2,6 +2,8 @@ import { defineCustomType, Entity } from "./rendering/entities/entity";
 
 import { SharedBuffer } from "./shared/thread/sharedBuffer";
 
+import { RenderingLoop } from "./rendering/core/renderer";
+
 import Simulation from "./simulation/index?worker&inline";
 
 import * as classes from "./rendering/entities/manager";
@@ -10,13 +12,11 @@ import { updateSimulationData } from "./UI/stores/HUD";
 
 import { ThreadEvents } from "./shared/thread/events";
 
-import { RenderingLoop } from "./rendering/renderer";
-
 import { Entities } from "./shared/entities/types";
 
-import { getRandomInt } from "./utils/math/point";
-
 import { IDAllocator } from "./utils/IDAllocator";
+
+import { Camera } from "./rendering/core/camera";
 
 import { Thread } from "./shared/thread/thread";
 
@@ -26,15 +26,13 @@ import { loadAssets } from "./loader/global";
 
 import { Timer } from "./utils/timers/timer";
 
-import { Camera } from "./rendering/camera";
+import { getRandomInt } from "./math/point";
 
 import { GameMap } from "./rendering/map";
 
 import { BitSet } from "./utils/bitset";
 
 import settings from "./settings.json";
-
-import { GameUI } from "./UI/gameUI";
 
 import { isMobile } from "pixi.js";
 
@@ -56,15 +54,13 @@ class Game {
 	private sharedBuffer?: SharedBuffer;
 	public readonly isMobile: boolean;
 	public readonly map: GameMap;
-	public readonly UI: GameUI;
 	public simulation?: Thread;
 
 
 	private constructor() {
 		this.classes = classes;
 		this.isMobile = isMobile.any;
-		this.UI = new GameUI(this.isMobile);
-		this.renderer = new RenderingLoop(this, this.UI.container);
+		this.renderer = new RenderingLoop(this);
 		this.camera = new Camera(this.renderer.canvas, settings.interpolation);
 		this.map = new GameMap(this.renderer.worldContainer);
 		this.IDAllocator = new IDAllocator();
@@ -74,8 +70,6 @@ class Game {
 		this.config = config;
 
 		new Timer(() => {
-			this.UI.FPS.text = `${ Math.round(this.renderer.frames) } FPS`;
-
 			this.renderer.frames = 0;
 		}, 1000, true);
 	}
@@ -91,9 +85,9 @@ class Game {
 
 
 	public async init(): Promise<void> {
-		credit("CLIENT");
+		credit("RENDERER");
 
-		log("CLIENT", "Successfully initiated the game");
+		log("RENDERER", "Successfully initiated the app");
 
 
 		// Load necessary content (elements in loads need to be loaded before connecting to the server)
@@ -111,10 +105,6 @@ class Game {
 
 		// Initialize the renderer
 		this.renderer.init(this.settings.rendering);
-
-
-		// Initialize the HUD
-		this.UI.init(this.renderer.scale, this.renderer.canvas);
 
 
 		// Set the camera position to a random point on the map
@@ -142,9 +132,9 @@ class Game {
 		this.simulation?.on(ThreadEvents.UPDATE, this.update.bind(this));
 
 		this.simulation?.on(ThreadEvents.STATS, (stats: any) => {
-			this.UI.TPS.text = `${stats.TPS} TPS`;
+			//this.UI.TPS.text = `${stats.TPS} TPS`;
 
-			this.UI.mspt.text = `${stats.mspt} mspt`;
+			//this.UI.mspt.text = `${stats.mspt} mspt`;
 
 			updateSimulationData(stats.uptime, stats.carnivores, stats.herbivores, stats.plants);
 		});

@@ -6,18 +6,11 @@
 		"backgroundColor": "#242424"
 	},
 
-	"audio": {
-		"volume": 1
-	},
 
 	"interpolation": {
 		"moves": 0.1,
 		"angle": 0.05,
 		"camera": 0.1,
 		"zoom": 0.05
-	},
-
-	"binds": {
-		
 	}
 }

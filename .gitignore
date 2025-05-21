@@ -1,8 +1,4 @@
 .*
 !.gitignore
-**/production/
 **/node_modules/
-**/package-lock.json
-**/bun.lockb
-**/logs/*
 **/tsconfig.tsbuildinfo

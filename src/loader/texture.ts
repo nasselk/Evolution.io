@@ -26,7 +26,7 @@ async function getTexture(url: string, format?: textureFormats, fallbacks: strin
 			}
 
 			if (fallbacks.length > 0) {
-				warn("CLIENT", `Texture ${url} not found`);
+				warn("RENDERER", `Texture ${url} not found`);
 
 				const fallback = fallbacks.shift()!;
 
@@ -52,7 +52,7 @@ async function getTextures<T extends readonly string[]>(...urls: T): Promise<{ [
 
 
 
-function formatTextureURL(url: string, format: textureFormats = "png"): string {
+function formatTextureURL(url: string, format: textureFormats = "webp"): string {
 	if (!url.startsWith("./assets")) {
 		url = "./assets/" + url;
 	}

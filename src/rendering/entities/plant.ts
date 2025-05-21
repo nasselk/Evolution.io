@@ -14,7 +14,7 @@ export default class Plant extends Entity<"plant"> {
 	public static override readonly list = new Map<number, Plant>();
 	public static override readonly container = newContainer();
 
-	private sprite?: Sprite;
+	private texture?: Sprite;
 
 
 	public constructor(id: number, properties: BufferReader) {
@@ -25,12 +25,14 @@ export default class Plant extends Entity<"plant"> {
 
 
 	public async init(): Promise<this> {
-		const texture = await getTexture("plant", "png");
+		// Load the texture in async
+		const texture = await getTexture("plant");
 
 		if (this.spawned) {
-			this.sprite = newSprite(texture);
+			// Then create the sprite and add it to the container
+			this.texture = newSprite(texture);
 
-			this.container.addChild(this.sprite);
+			this.container.addChild(this.texture);
 
 			this.initiated = true;
 		}
@@ -43,7 +45,7 @@ export default class Plant extends Entity<"plant"> {
 		const visible = super.render(deltaTime);
 
 		if (visible) {
-			this.sprite!.setSize(this.size.x, this.size.y);
+			this.texture!.setSize(this.size.x, this.size.y);
 
 			this.container.position.set(this.position.x, this.position.y);
 			
