@@ -275,7 +275,7 @@ export default class Animal<T extends "carnivore" | "herbivore" = any> extends D
 	public override destroy(): void {
 		super.destroy();
 
-		if (this.type != "herbivore" || this.energy > 0) {
+		if (this.type != "herbivore" || this.energy <= 0) {
 			const percentage = Math.random();
 
 			if (percentage < 0.65) {
