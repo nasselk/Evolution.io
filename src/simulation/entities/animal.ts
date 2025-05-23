@@ -278,7 +278,7 @@ export default class Animal<T extends "carnivore" | "herbivore" = any> extends D
 		if (this.type != "herbivore" || this.energy <= 0) {
 			const percentage = Math.random();
 
-			if (percentage < 0.65) {
+			if (percentage < 0.45) {
 				Entity.create("plant", {
 					position: this.position.clone,
 				}, Math.floor(this.size.x / 40) * getRandomInt(1, 3));

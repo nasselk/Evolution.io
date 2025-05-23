@@ -47,7 +47,7 @@ export default class Plant extends DynamicEntity<"plant"> {
 		this.position.x = interpolate(this.position.x, this.root.x, 0.035, deltaTime);
 		this.position.y = interpolate(this.position.y, this.root.y, 0.035, deltaTime);
 
-		//Simulation.staticGrid.move(this); // Met à jour la grille statique avec la position de la plante
+		Simulation.staticGrid.move(this); // Met à jour la grille statique avec la position de la plante
 	}
 	
 

@@ -41,7 +41,6 @@ class Simulation {
 	public readonly spawner: Spawner;
 	public readonly loop: GameLoop;
 	public readonly map: GameMap;
-	public updatesCount: number;
 	public FOVThread?: Thread;
 
 	
@@ -54,7 +53,6 @@ class Simulation {
 		this.renderingThread = new Thread(self);
 		this.loop = new GameLoop(this);
 		this.entities = Entity.list;
-		this.updatesCount = 0;
 		
 		if (!this.config.seed) {
 			this.config.seed = getRandomInt(0, 2 ** 32); // Generate a random seed

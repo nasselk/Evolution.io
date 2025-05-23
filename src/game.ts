@@ -139,14 +139,15 @@ class Game {
 	}
 
 
-	public async update(count: number): Promise<void> {
+	public async update(): Promise<void> {
 		if (this.sharedBuffer) {
 			this.sharedBuffer.lockAsync();
 
 			this.sharedBuffer.reader.reset();
 
 			this.updateIDs.clear();
-
+			
+			const count = this.sharedBuffer.reader.readUint16();
 
 			for (let i = 0; i < count; i++) {
 				const rawType = this.sharedBuffer.reader.readUint8();

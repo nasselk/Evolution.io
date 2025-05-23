@@ -53,7 +53,7 @@ class GameLoop {
 
 
 		// Run the logic only if the delta time is greater than the tick delta
-		if (deltaTime >= this.minTickDelta * this.speed) {
+		if (deltaTime >= this.minTickDelta) {
 			this.lastTick = now;
 
 			if (this.paused) {
@@ -129,22 +129,28 @@ class GameLoop {
 	private processOutboundData(): void {
 		// Lock the shared buffer to write to it (atomics)
 		this.simulation.sharedBuffer?.lock();
-		
+
+
+		let updatesCount: number = 0;
+
+		this.simulation.sharedBuffer!.writer.writeUint16(updatesCount);
+
 		// Write the world state to the shared buffer
 		// Just write each updatable entity to the shared buffer
 		for (const entity of Entity.updatables) {
 			entity.packProperties(this.simulation.sharedBuffer!.writer);
 
-			this.simulation.updatesCount++;
+			updatesCount++;
 		}
 
-		// Send the updates to the rendering thread
-		this.simulation.renderingThread.send(ThreadEvents.UPDATE, this.simulation.updatesCount);
+		// Write the number of updates to the shared buffer
+		this.simulation.sharedBuffer!.writer.writeUint16(updatesCount, 0);
 
+		// Send the updates to the rendering thread
+		this.simulation.renderingThread.send(ThreadEvents.UPDATE);
 
 		// Reset the events
 		this.simulation.sharedBuffer?.writer.reset();
-		this.simulation.updatesCount = 0;
 
 		// Unlock the shared buffer to read from it (atomics)
 		this.simulation.sharedBuffer?.unlock();

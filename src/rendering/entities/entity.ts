@@ -97,7 +97,7 @@ abstract class Entity<T extends EntityTypes = EntityTypes> {
 		const entity = new constructor(...args);
 
 
-		Entity.get(entity.id)?.cleanup(); // Cleanup if entity with this id already exists
+		Entity.get(entity.id)?.destroy(true); // Cleanup if entity with this id already exists
 
 
 		// Save a reference in maps
@@ -154,7 +154,7 @@ abstract class Entity<T extends EntityTypes = EntityTypes> {
 	}
 
 
-	public destroy(): void {
+	public destroy(immediate: boolean = false): void {
 		for (const value of Object.values(this)) {
 			if (value instanceof Timer) {
 				value.clear();
@@ -162,7 +162,7 @@ abstract class Entity<T extends EntityTypes = EntityTypes> {
 		}
 
 
-		if (this.isVisible()) {
+		if (!immediate && this.isVisible()) {
 			this.target.size.x = 0;
 			this.target.size.y = 0;
 
