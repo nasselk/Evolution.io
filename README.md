@@ -12,7 +12,7 @@ Key features
 How to run
 
 # First
-- Run `npm run init` to install dependencies and auto build
+- Run `npm run install` to install dependencies and auto build
 
 # For development
 - Run `npm run dev` to start the development server.
