@@ -5,15 +5,14 @@
 	font-style: normal;
 }
 
-
 /* Few global rules to give a native feel to the app */
 * {
 	touch-action: none;
 	-webkit-touch-callout: none;
 }
 
-
-html, body {
+html,
+body {
 	top: 0px;
 	left: 0px;
 	margin: 0px;
@@ -30,7 +29,6 @@ html, body {
 	-webkit-tap-highlight-color: transparent;
 	user-select: none;
 }
-
 
 img {
 	-webkit-touch-callout: none;
@@ -49,8 +47,6 @@ img {
 	-o-user-drag: none;
 }
 
-
-
 button,
 div {
 	font-family: "Baloo2";
@@ -59,11 +55,9 @@ div {
 	text-shadow: 0 0.25vmin 1vmin rgba(0, 0, 0, 1);
 }
 
-
 canvas {
 	position: fixed;
 }
-
 
 #HUD {
 	display: none;

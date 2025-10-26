@@ -38,8 +38,6 @@ import { isMobile } from "pixi.js";
 
 import config from "./config.json";
 
-
-
 class Game {
 	private static _instance?: Game;
 
@@ -56,7 +54,6 @@ class Game {
 	public readonly map: GameMap;
 	public simulation?: Thread;
 
-
 	private constructor() {
 		this.classes = classes;
 		this.isMobile = isMobile.any;
@@ -69,11 +66,14 @@ class Game {
 		this.settings = settings;
 		this.config = config;
 
-		new Timer(() => {
-			this.renderer.frames = 0;
-		}, 1000, true);
+		new Timer(
+			() => {
+				this.renderer.frames = 0;
+			},
+			1000,
+			true,
+		);
 	}
-
 
 	public static get instance(): Game {
 		if (!this._instance) {
@@ -83,50 +83,35 @@ class Game {
 		return this._instance;
 	}
 
-
 	public async init(): Promise<void> {
 		credit("RENDERER");
 
 		log("RENDERER", "Successfully initiated the app");
 
-
 		// Load necessary content (elements in loads need to be loaded before connecting to the server)
-		const loads = [
-			loadAssets()
-		];
-
+		const loads = [loadAssets()];
 
 		this.initConstructors();
-
 
 		// Retrieve settings saved in localStorage
 		this.retrieveSettings();
 
-
 		// Initialize the renderer
 		this.renderer.init(this.settings.rendering);
 
-
 		// Set the camera position to a random point on the map
-		this.camera.move(
-			getRandomInt(this.map.bounds.min.x, this.map.bounds.max.x),
-			getRandomInt(this.map.bounds.min.y, this.map.bounds.max.y),
-			true
-		);
-
+		this.camera.move(getRandomInt(this.map.bounds.min.x, this.map.bounds.max.x), getRandomInt(this.map.bounds.min.y, this.map.bounds.max.y), true);
 
 		await Promise.all(loads);
 	}
 
-
 	private initConstructors(): void {
-		for (const [ name, constructor ] of Object.entries(this.classes)) {
+		for (const [name, constructor] of Object.entries(this.classes)) {
 			const decorate = defineCustomType(name as keyof typeof classes);
 
 			decorate(constructor);
 		}
 	}
-
 
 	private threadListeners(): void {
 		this.simulation?.on(ThreadEvents.UPDATE, this.update.bind(this));
@@ -138,7 +123,6 @@ class Game {
 		});
 	}
 
-
 	public async update(): Promise<void> {
 		if (this.sharedBuffer) {
 			this.sharedBuffer.lockAsync();
@@ -146,7 +130,7 @@ class Game {
 			this.sharedBuffer.reader.reset();
 
 			this.updateIDs.clear();
-			
+
 			const count = this.sharedBuffer.reader.readUint16();
 
 			for (let i = 0; i < count; i++) {
@@ -159,9 +143,7 @@ class Game {
 
 				if (entity) {
 					entity.update(this.sharedBuffer.reader);
-				}
-
-				else {
+				} else {
 					Entity.create(type, id, this.sharedBuffer.reader);
 				}
 
@@ -171,9 +153,7 @@ class Game {
 				this.sharedBuffer.reader.lastBitIndex = 0;
 			}
 
-
 			this.sharedBuffer.unlock();
-
 
 			for (const entity of Entity.list.values()) {
 				if (!this.updateIDs.has(entity.id)) {
@@ -182,7 +162,6 @@ class Game {
 			}
 		}
 	}
-
 
 	public startSimulation(): void {
 		this.sharedBuffer = this.createBuffer();
@@ -205,11 +184,9 @@ class Game {
 		document.querySelector<HTMLDivElement>("#HUD")!.style.display = "grid";
 	}
 
-
 	public setSimulationState(paused: boolean): void {
 		this.simulation?.send(ThreadEvents.PAUSE, paused);
 	}
-
 
 	public stopSimulation(): void {
 		this.simulation?.terminate();
@@ -222,24 +199,17 @@ class Game {
 		document.querySelector<HTMLDivElement>("#HUD")!.style.display = "none";
 	}
 
-
 	public setSimulationSpeed(speed: number): void {
 		this.simulation?.send(ThreadEvents.SPEED, speed);
 	}
-	
 
 	public createBuffer(): SharedBuffer {
 		return new SharedBuffer(100 * 10 * (this.config.entities.plant + this.config.entities.herbivore + this.config.entities.carnivore));
 	}
 
-
 	// Apply settings saved in localStorage
-	private retrieveSettings(): void {
-
-	}
+	private retrieveSettings(): void {}
 }
-
-
 
 export { Game };
 

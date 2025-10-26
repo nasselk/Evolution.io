@@ -4,23 +4,19 @@ import Simulation from "../core/simulation";
 
 import Animal, { AnimalState } from "./animal";
 
-
-
 export default class Herbivore extends Animal<"herbivore"> {
 	static override readonly list: Map<number, Animal> = new Map();
-
 
 	public constructor(options?: ConstructorOptions) {
 		super({
 			position: Simulation.spawner.randomPosition(Simulation.map.biomes.herbivores),
-			...options
+			...options,
 		});
 
 		// Genetic variation for movement speed
 		const speedGeneticFactor = 0.7 + Simulation.spawner.random() * 0.6;
 		this.moveSpeed = (0.85 / Math.sqrt(this.mass)) * speedGeneticFactor;
 	}
-
 
 	public override staticInteraction(objects: Parameters<Parameters<typeof Simulation.staticGrid.query>[1]>[0], queryID: number): void | boolean {
 		for (const plant of objects.plant) {
@@ -35,7 +31,6 @@ export default class Herbivore extends Animal<"herbivore"> {
 			}
 		}
 	}
-
 
 	public override findTarget(entity: Entity): void {
 		if (this.state === AnimalState.SEARCHING || this.state === AnimalState.HUNTING) {
@@ -55,10 +50,9 @@ export default class Herbivore extends Animal<"herbivore"> {
 		}
 	}
 
-
 	public override biteReaction(entity: Entity): void {
 		switch (entity.type) {
-			case "carnivore": 
+			case "carnivore":
 				this.predator = entity;
 
 				this.state = AnimalState.ESCAPING;

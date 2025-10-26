@@ -31,7 +31,6 @@ export function getOppositeAngle(angle: number): number {
 	return (angle + Math.PI) % (2 * Math.PI);
 }
 
-
 // Conversion
 export function degreesToRadians(degrees: number): number {
 	const radians = degrees * (Math.PI / 180);
@@ -44,7 +43,6 @@ export function radiansToDegrees(radians: number): number {
 
 	return degrees;
 }
-
 
 // Return the closest angle to the reference angle
 export function closestAngle(reference: number, ...angles: number[]): number {

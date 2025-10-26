@@ -26,8 +26,6 @@ import { GameLoop } from "./loop";
 
 import { GameMap } from "../map";
 
-
-
 class Simulation {
 	private static _instance: Simulation;
 
@@ -43,7 +41,6 @@ class Simulation {
 	public readonly map: GameMap;
 	public FOVThread?: Thread;
 
-	
 	public constructor() {
 		this.config = config;
 		this.map = new GameMap();
@@ -53,16 +50,15 @@ class Simulation {
 		this.renderingThread = new Thread(self);
 		this.loop = new GameLoop(this);
 		this.entities = Entity.list;
-		
+
 		if (!this.config.seed) {
 			this.config.seed = getRandomInt(0, 2 ** 32); // Generate a random seed
 		}
-		
+
 		this.spawner = new Spawner(this.config.seed);
 
 		this.initConstructors();
 	}
-
 
 	// Singleton instance
 	public static get instance(): Simulation {
@@ -72,7 +68,6 @@ class Simulation {
 
 		return this._instance;
 	}
-
 
 	public threadListeners(): void {
 		// Events from the rendering thread
@@ -91,10 +86,7 @@ class Simulation {
 		this.renderingThread.on(ThreadEvents.MOVE, (data) => {
 			const entity = Entity.get(data.id);
 
-			entity?.position.set(
-				data.x,
-				data.y
-			);
+			entity?.position.set(data.x, data.y);
 		});
 
 		this.renderingThread.on(ThreadEvents.DESTROY, (id: number) => {
@@ -104,37 +96,30 @@ class Simulation {
 		});
 	}
 
-
 	public init(data: any): void {
 		// Recieve the shared memory buffer from the main thread and the config
 		this.sharedBuffer = new SharedBuffer(data.buffer);
 
 		this.config.entities = data.entities;
 
-
 		spawn(this.spawner, this.config, this.map);
-
 
 		log("SIMULATION", "Simulation successfully started in version !");
 		log("SIMULATION", "Seed:", this.config.seed);
-		
-		
+
 		// Start the game loop
 		this.loop.updateGameState();
 	}
 
-
 	// Register all classes types custom properties (dynamic, updatable, ...)
 	private initConstructors(): void {
-		for (const [ name, constructor ] of Object.entries(this.classes)) {
+		for (const [name, constructor] of Object.entries(this.classes)) {
 			const decorate = defineCustomType(name as keyof typeof classes);
 
 			decorate(constructor);
 		}
 	}
 }
-
-
 
 export { Simulation };
 

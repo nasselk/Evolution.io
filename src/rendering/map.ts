@@ -10,19 +10,15 @@ import { Vector } from "../math/vector";
 
 import map from "../map.json";
 
-
-
 class GameMap {
 	private static readonly offset: number = map.offset; // Offset to avoid uint16 overflow
 
-
-	public readonly bounds: { min: Vector, max: Vector };
+	public readonly bounds: { min: Vector; max: Vector };
 	public readonly biomes: Record<keyof typeof map.biomes, Biome>;
 	public readonly colors: typeof map.colors;
 	public readonly grid: Graphics;
 	private readonly scale: number;
 	public readonly shape: Polygon;
-
 
 	public constructor(container: Container) {
 		this.scale = map.scale;
@@ -32,14 +28,13 @@ class GameMap {
 		this.grid = newGraphics();
 		this.bounds = {
 			min: new Vector(GameMap.offset, GameMap.offset),
-			max: new Vector(GameMap.offset, GameMap.offset)
+			max: new Vector(GameMap.offset, GameMap.offset),
 		};
 
 		this.init();
 
 		container.addChild(this.grid);
 	}
-
 
 	private generateBiomes(data: any): this["biomes"] {
 		const biomes = {} as this["biomes"];
@@ -50,9 +45,7 @@ class GameMap {
 				const shape = new Polygon(biome.x ?? biome.width / 2, biome.y ?? biome.height / 2, biome.width, biome.height, GameMap.offset, this.scale);
 
 				biomes[name as keyof typeof map.biomes] = new Biome(name as keyof typeof map.biomes, shape, biome.color);
-			}
-
-			else {
+			} else {
 				const shape = new Polygon(biome.shape, GameMap.offset, this.scale);
 
 				biomes[name as keyof typeof map.biomes] = new Biome(name as keyof typeof map.biomes, shape, biome.color);
@@ -62,56 +55,40 @@ class GameMap {
 		return biomes;
 	}
 
-
 	private generateShape(): Polygon {
 		return Polygon.union(...Object.values(this.biomes));
 	}
-
 
 	private init(): void {
 		// Bounds
 		for (const point of this.shape) {
 			if (point.x > this.bounds.max.x) {
 				this.bounds.max.x = point.x;
-			}
-
-			else if (point.x < this.bounds.min.x) {
+			} else if (point.x < this.bounds.min.x) {
 				this.bounds.min.x = point.x;
 			}
 
-
 			if (point.y > this.bounds.max.y) {
 				this.bounds.max.y = point.y;
-			}
-
-			else if (point.y < this.bounds.min.y) {
+			} else if (point.y < this.bounds.min.y) {
 				this.bounds.min.y = point.y;
 			}
 		}
 	}
 
-
-
 	public constrain(position: Vector): void {
 		if (position.x < this.bounds.min.x) {
 			position.x = this.bounds.min.x;
-		}
-	
-		else if (position.x > this.bounds.max.x) {
+		} else if (position.x > this.bounds.max.x) {
 			position.x = this.bounds.max.x;
 		}
-	
-	
+
 		if (position.y < this.bounds.min.y) {
 			position.y = this.bounds.min.y;
-		}
-	
-		else if (position.y > this.bounds.max.y) {
+		} else if (position.y > this.bounds.max.y) {
 			position.y = this.bounds.max.y;
 		}
 	}
-
-
 
 	public getBiome(entity: any): Biome | void {
 		for (const biome of Object.values(this.biomes)) {
@@ -120,13 +97,11 @@ class GameMap {
 			}
 		}
 	}
-	
 
 	public renderGrid(camera: Camera, cellSize: number, thickness: number, clear: boolean = false, crosses: boolean = false, color: string = "A4A4A4"): void {
 		if (clear) {
 			this.grid.clear();
 		}
-
 
 		let alpha = 1;
 
@@ -135,7 +110,6 @@ class GameMap {
 		if (thicknessZoomed < 2) {
 			alpha = (thicknessZoomed / 2) * 0.9;
 		}
-
 
 		const crossSize = crosses ? thickness * 12.5 : 0;
 
@@ -150,7 +124,6 @@ class GameMap {
 		const worldX = camera.position.x - viewWidth / 2 - thickness / 2 - crossSize / 2;
 		const worldY = camera.position.y - viewHeight / 2 - thickness / 2 - crossSize / 2;
 
-
 		// Compute offsets so grid lines align with multiples of cellSize
 		let offsetX = worldX % cellSize;
 		let offsetY = worldY % cellSize;
@@ -159,7 +132,6 @@ class GameMap {
 
 		const nbCellX = Math.floor((extendedWidth - offsetX) / cellSize);
 		const nbCellY = Math.floor((extendedHeight - offsetY) / cellSize);
-
 
 		if (alpha > 0.2) {
 			// Draw vertical lines
@@ -176,10 +148,8 @@ class GameMap {
 				this.grid.lineTo(worldX + extendedWidth, y);
 			}
 
-
 			this.grid.stroke({ width: thickness, color: color, alpha: alpha });
 		}
-
 
 		// Draw crosses
 		if (crosses) {
@@ -198,13 +168,10 @@ class GameMap {
 				}
 			}
 
-
 			this.grid.stroke({ width: thickness * 2.25, color: color });
 		}
 	}
 }
-
-
 
 class Biome extends Polygon {
 	private static index = 0;
@@ -221,7 +188,5 @@ class Biome extends Polygon {
 		this.name = name;
 	}
 }
-
-
 
 export { GameMap, type Biome };

@@ -1,15 +1,9 @@
 import { Assets, BitmapFont } from "pixi.js";
 
-
-
 async function loadAssets(): Promise<void[]> {
 	const loadPromises: Promise<void>[] = [];
 
-
-	Assets.addBundle("fonts", [
-		{ alias: "Baloo2", src: "./assets/fonts/Baloo2.woff2" },
-	]);
-
+	Assets.addBundle("fonts", [{ alias: "Baloo2", src: "./assets/fonts/Baloo2.woff2" }]);
 
 	const fontsPromise = Assets.loadBundle("fonts").then((): void => {
 		BitmapFont.install({
@@ -24,18 +18,14 @@ async function loadAssets(): Promise<void[]> {
 					angle: Math.PI / 6,
 					blur: 2,
 					distance: 3,
-				}
-			}
+				},
+			},
 		});
 	});
 
-
 	loadPromises.push(fontsPromise);
-
 
 	return Promise.all(loadPromises);
 }
-
-
 
 export { loadAssets };

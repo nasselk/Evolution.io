@@ -2,8 +2,6 @@ import { createBuffer, type Buffers } from "./buffer";
 
 import { BufferWriter } from "./writer";
 
-
-
 class BufferReader {
 	public static readonly textDecoder = new TextDecoder();
 
@@ -13,7 +11,6 @@ class BufferReader {
 	public lastBitOffset: number;
 	public lastBitIndex: number;
 	public offset: number;
-
 
 	public constructor(buffer: Buffers, clone: boolean = false, offset: number = 0) {
 		this.buffer = createBuffer(buffer, clone, offset);
@@ -25,24 +22,20 @@ class BufferReader {
 		this.offset = 0;
 	}
 
-
 	public static fromPrecision(value: number, maximum: number, bits: number, signed: boolean = false, minimum: number = signed ? -maximum : 0): number {
 		if (maximum === minimum) return minimum;
-	
+
 		const bound = BufferWriter.rangeMax(bits, signed);
 
 		return (value / bound) * (maximum - minimum) + minimum;
 	}
 
-
 	public static readTextBuffer(buffer: ArrayBuffer): string {
 		return BufferReader.textDecoder.decode(buffer);
 	}
 
-
 	public readBits(bits: number = 1, signed: boolean = false, increment: boolean = true): boolean | number {
 		let value: number = 0;
-		
 
 		for (let i: number = 0; i < bits; i++) {
 			if (this.lastBitIndex === 0) {
@@ -61,7 +54,6 @@ class BufferReader {
 			}
 		}
 
-
 		if (bits === 1) return Boolean(value);
 
 		if (signed) {
@@ -70,10 +62,8 @@ class BufferReader {
 			value += min;
 		}
 
-
 		return value;
 	}
-
 
 	public readUint8(increment: boolean = true, offset: number = this.offset): number {
 		const value = this.view.getUint8(offset);
@@ -83,7 +73,6 @@ class BufferReader {
 		return value;
 	}
 
-
 	public readInt8(increment: boolean = true, offset: number = this.offset): number {
 		const value = this.view.getInt8(offset);
 
@@ -91,7 +80,6 @@ class BufferReader {
 
 		return value;
 	}
-
 
 	public readUint16(increment: boolean = true, offset: number = this.offset): number {
 		const value = this.view.getUint16(offset, true);
@@ -101,7 +89,6 @@ class BufferReader {
 		return value;
 	}
 
-
 	public readInt16(increment: boolean = true, offset: number = this.offset): number {
 		const value = this.view.getInt16(offset, true);
 
@@ -109,7 +96,6 @@ class BufferReader {
 
 		return value;
 	}
-
 
 	public readUint32(increment: boolean = true, offset: number = this.offset): number {
 		const value = this.view.getUint32(offset, true);
@@ -119,7 +105,6 @@ class BufferReader {
 		return value;
 	}
 
-
 	public readInt32(increment: boolean = true, offset: number = this.offset): number {
 		const value = this.view.getInt32(offset, true);
 
@@ -127,7 +112,6 @@ class BufferReader {
 
 		return value;
 	}
-
 
 	public readFloat32(increment: boolean = true, offset: number = this.offset): number {
 		const value = this.view.getFloat32(offset, true);
@@ -137,7 +121,6 @@ class BufferReader {
 		return value;
 	}
 
-
 	public readUint64(increment: boolean = true, offset: number = this.offset): bigint {
 		const value = this.view.getBigUint64(offset, true);
 
@@ -145,7 +128,6 @@ class BufferReader {
 
 		return value;
 	}
-
 
 	public readInt64(increment: boolean = true, offset: number = this.offset): bigint {
 		const value = this.view.getBigInt64(offset, true);
@@ -155,7 +137,6 @@ class BufferReader {
 		return value;
 	}
 
-
 	public readFloat64(increment: boolean = true, offset: number = this.offset): number {
 		const value = this.view.getFloat64(offset, true);
 
@@ -163,7 +144,6 @@ class BufferReader {
 
 		return value;
 	}
-
 
 	public readText(includeSize?: boolean, increment?: boolean, offset?: number): string;
 	public readText(bytes?: number, increment?: boolean, offset?: number): string;
@@ -173,31 +153,25 @@ class BufferReader {
 		return BufferReader.textDecoder.decode(buffer);
 	}
 
-
 	public readBuffer(includeSize?: boolean, increment?: boolean, offset?: number): Uint8Array;
 	public readBuffer(bytes?: number, increment?: boolean, offset?: number): Uint8Array;
 	public readBuffer(a?: number | boolean, increment: boolean = true, offset: number = this.offset): Uint8Array {
 		let length: number;
 
-		
 		if (a === true) {
 			length = this.readUint16(increment, offset);
 
 			offset += 2;
-		}
-
-		else {
+		} else {
 			length = a || this.buffer.byteLength - this.offset;
 		}
-		
-		
+
 		const buffer = this.buffer.slice(offset, offset + length);
 
 		this.advance(length, offset, increment);
 
 		return buffer;
 	}
-
 
 	private advance(bytes: number = 1, offset: number = this.offset, increment: boolean = offset === this.offset): this {
 		if (increment && offset === this.offset) {
@@ -206,7 +180,6 @@ class BufferReader {
 
 		return this;
 	}
-	
 
 	public reset(offset: number = 0): void {
 		this.offset = offset;
@@ -214,17 +187,13 @@ class BufferReader {
 		this.lastBitOffset = 0;
 	}
 
-
 	public hasSpace(bytes: number = 1): boolean {
 		return this.remainingBytes >= bytes;
 	}
-
 
 	public get remainingBytes(): number {
 		return this.byteLength - this.offset;
 	}
 }
-
-
 
 export { BufferReader };

@@ -1,33 +1,30 @@
 <script lang="ts">
-	import Controls from "../components/SimulationControls.svelte";
-	import Chart from "../components/SimulationChart.svelte";
-    import Grid from "../components/GridLayout.svelte";
-    import Window from "../components/Window.svelte";
+import Controls from "../components/SimulationControls.svelte";
+import Chart from "../components/SimulationChart.svelte";
+import Grid from "../components/GridLayout.svelte";
+import Window from "../components/Window.svelte";
 
-	import { registerHandler } from "../stores/HUD";
-	import { onMount } from "svelte";
+import { registerHandler } from "../stores/HUD";
+import { onMount } from "svelte";
 
+let controls: Controls;
+let carnivoreChart: Chart;
+let herbivoreChart: Chart;
+let plantChart: Chart;
 
-	let controls: Controls;
-	let carnivoreChart: Chart;
-    let herbivoreChart: Chart;
-    let plantChart: Chart;
+onMount(() => {
+	registerHandler({
+		callback: update,
+	});
+});
 
+function update(uptime: number, carnivores: number, herbivores: number, plants: number): void {
+	carnivoreChart.updateData(carnivores);
+	herbivoreChart.updateData(herbivores);
+	plantChart.updateData(plants);
 
-    onMount(() => {
-		registerHandler({
-        	callback: update
-    	});
-    });
-	
-
-	function update(uptime: number, carnivores: number, herbivores: number, plants: number): void {   
-		carnivoreChart.updateData(carnivores);
-		herbivoreChart.updateData(herbivores);
-		plantChart.updateData(plants);
-
-		controls.update(uptime);
-	}
+	controls.update(uptime);
+}
 </script>
 
 

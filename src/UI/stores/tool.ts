@@ -6,11 +6,8 @@ import { writable } from "svelte/store";
 
 import Game from "../../game";
 
-
-
 let currentTool: Tools | null = null;
 let selectedEntity: Entity | null = null;
-
 
 interface Tool {
 	readonly id: Tools;
@@ -19,45 +16,38 @@ interface Tool {
 	readonly cursor: string;
 }
 
-
 const enum Tools {
 	Camera,
 	Move,
 	Destroy,
 }
 
-
 const tools: Tool[] = [
 	{
 		id: Tools.Camera,
 		label: "Move the camera",
 		icon: "/assets/engine/tools/move.webp",
-		cursor: "move"
+		cursor: "move",
 	},
 	{
 		id: Tools.Move,
 		label: "Move an object in the scene",
 		icon: "/assets/engine/tools/target.webp",
-		cursor: "move"
+		cursor: "move",
 	},
 	{
 		id: Tools.Destroy,
 		label: "Delete an object in the scene",
 		icon: "/assets/engine/tools/delete.webp",
-		cursor: "crosshair"
+		cursor: "crosshair",
 	},
 ];
-
-
 
 const activeTool = writable<Tool | null>(null);
 
 activeTool.subscribe((tool) => {
 	currentTool = tool?.id ?? null;
 });
-
-
-
 
 let draggingCamera = false;
 let rotatingCamera = false;
@@ -95,21 +85,15 @@ document.querySelector<HTMLCanvasElement>("#canvas")?.addEventListener("pointeru
 window.addEventListener("pointermove", (event: PointerEvent) => {
 	if (currentTool === Tools.Camera && event.buttons > 0) {
 		if (draggingCamera) {
-			const delta = new Vector(event.movementX, event.movementY)
-				.scale(Game.renderer.resolution / Game.camera.zoom)
-				.rotate(-Game.camera.angle);
+			const delta = new Vector(event.movementX, event.movementY).scale(Game.renderer.resolution / Game.camera.zoom).rotate(-Game.camera.angle);
 
 			Game.camera.target.position.subtract(delta);
-		}
-
-		else if (rotatingCamera) {
+		} else if (rotatingCamera) {
 			const rotationSensitivity = 0.05;
 
 			Game.camera.rotate(Game.camera.angle + event.movementY * rotationSensitivity);
 		}
-	}
-
-	else {
+	} else {
 		draggingCamera = false;
 		rotatingCamera = false;
 	}
@@ -125,11 +109,8 @@ document.querySelector<HTMLCanvasElement>("#canvas")?.addEventListener("wheel", 
 	}
 });
 
-
 function selectEntity(entity: Entity | null): void {
 	selectedEntity = entity;
 }
-
-
 
 export { currentTool, selectedEntity, selectEntity, activeTool, tools, Tools, type Tool };

@@ -1,67 +1,58 @@
 <script lang="ts">
-    import Game from "../../game";
+import Game from "../../game";
 
+const state = $state({
+	paused: false,
+	time: "00:00",
+	speed: 1,
+});
 
-	const state = $state({
-		paused: false,
-		time: "00:00",
-		speed: 1,
-	});
+const { reset } = $props();
 
+function formatTime(uptime: number): string {
+	const minutes = Math.floor(uptime / 60000);
+	const seconds = Math.floor((uptime % 60000) / 1000);
 
-	const { reset } = $props();
+	return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
 
+function switchSimulationState(): void {
+	state.paused = !state.paused;
 
-	function formatTime(uptime: number): string {
-		const minutes = Math.floor(uptime / 60000);
-		const seconds = Math.floor((uptime % 60000) / 1000);
+	Game.setSimulationState(state.paused);
+}
 
-		return `${ String(minutes).padStart(2, "0") }:${ String(seconds).padStart(2, "0") }`;
+function stopSimulation(): void {
+	Game.stopSimulation();
+
+	reset();
+
+	state.time = "00:00";
+	state.paused = false;
+	state.speed = 1;
+}
+
+function accelerate(): void {
+	if (state.speed < 10) {
+		state.speed += 1;
+
+		Game.setSimulationSpeed(state.speed);
 	}
+}
 
+function decelerate(): void {
+	if (state.speed > 1) {
+		state.speed -= 1;
 
-	function switchSimulationState(): void {
-		state.paused = !state.paused;
-
-		Game.setSimulationState(state.paused);
+		Game.setSimulationSpeed(state.speed);
 	}
+}
 
-
-	function stopSimulation(): void {
-		Game.stopSimulation();
-
-		reset();
-
-		state.time = "00:00";
-		state.paused = false;
-		state.speed = 1;
-	}
-
-
-
-	function accelerate(): void {
-		if (state.speed < 10) {
-			state.speed += 1;
-			
-			Game.setSimulationSpeed(state.speed);
-		}
-	}
-	
-
-	function decelerate(): void {
-		if (state.speed > 1) {
-			state.speed -= 1;
-
-			Game.setSimulationSpeed(state.speed);
-		}
-	}
-
-
-	export function update(uptime: number, paused: boolean = state.paused, speed: number = state.speed): void {
-		state.time = formatTime(uptime);
-		state.paused = paused;
-		state.speed = speed;
-	}
+export function update(uptime: number, paused: boolean = state.paused, speed: number = state.speed): void {
+	state.time = formatTime(uptime);
+	state.paused = paused;
+	state.speed = speed;
+}
 </script>
 
 

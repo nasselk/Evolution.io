@@ -1,10 +1,8 @@
 type TimerCallback<T extends any[] = any[]> = (...args: T) => void;
 
-
 class Timer<T extends any[] = any[]> {
 	private static readonly list: Set<Timer> = new Set();
 
-	
 	private readonly callback: TimerCallback;
 	private readonly precise: boolean;
 	private readonly interval: boolean;
@@ -15,7 +13,6 @@ class Timer<T extends any[] = any[]> {
 	private paused: boolean;
 	private pausedAt?: number;
 	private activeTime: number;
-
 
 	public constructor(callback: TimerCallback, delay: number, interval: boolean = false, eventLoop: boolean = true, ...params: T) {
 		this.start = performance.now();
@@ -29,41 +26,33 @@ class Timer<T extends any[] = any[]> {
 
 		if (this.precise) {
 			Timer.list.add(this);
-		}
-
-		else {
+		} else {
 			if (this.interval) {
 				this.timer = setInterval(this.callback, delay, ...this.params);
-			}
-
-			else {
+			} else {
 				this.timer = setTimeout(this.callback, delay);
 			}
 		}
 	}
 
-
-	public static runAll(now: number = performance.now(), timeScale: number = 1): void { // Run it at each frame/tick manually
+	public static runAll(now: number = performance.now(), timeScale: number = 1): void {
+		// Run it at each frame/tick manually
 		for (const timeout of Timer.list) {
 			if (now - timeout.start >= timeout.delay / timeScale) {
 				timeout.callback(...timeout.params);
 
 				if (!timeout.interval) {
 					Timer.list.delete(timeout);
-				}
-
-				else {
+				} else {
 					timeout.start = now;
 				}
 			}
 		}
 	}
 
-
 	public static clear(): void {
 		Timer.list.clear();
 	}
-
 
 	public pause(): void {
 		if (!this.paused) {
@@ -80,7 +69,6 @@ class Timer<T extends any[] = any[]> {
 		}
 	}
 
-
 	public resume(): void {
 		if (this.paused && this.pausedAt) {
 			this.paused = false;
@@ -88,35 +76,27 @@ class Timer<T extends any[] = any[]> {
 
 			if (!this.precise) {
 				const remaining = Math.max(0, this.delay - this.elapsedTime);
-				
+
 				if (this.interval) {
 					this.timer = setInterval(this.callback, this.delay, ...this.params);
-				} 
-				
-				else {
+				} else {
 					this.timer = setTimeout(this.callback, remaining, ...this.params);
 				}
 			}
 		}
 	}
 
-
 	public clear(): void {
 		if (this.precise) {
 			Timer.list.delete(this);
-		}
-
-		else {
+		} else {
 			if (this.interval) {
 				clearInterval(this.timer);
-			}
-
-			else {
+			} else {
 				clearTimeout(this.timer);
 			}
 		}
 	}
-
 
 	private get elapsedTime(): number {
 		if (this.paused && this.pausedAt) {
@@ -126,17 +106,13 @@ class Timer<T extends any[] = any[]> {
 		return performance.now() - this.start + this.activeTime;
 	}
 
-
 	public get remainingTime(): number {
 		return this.delay - this.elapsedTime;
 	}
-
 
 	public get active(): boolean {
 		return !this.paused && this.precise ? Timer.list.has(this) : this.timer !== undefined;
 	}
 }
-
-
 
 export { Timer };

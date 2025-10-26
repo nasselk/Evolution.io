@@ -1,69 +1,57 @@
 <script lang="ts">
-    import Grid from "../components/GridLayout.svelte";
-    import ToolBar from "../components/ToolBar.svelte";
-	import ToggleBar from "../components/ToggleBar.svelte";
-	import Window from "../components/Window.svelte";
+import Grid from "../components/GridLayout.svelte";
+import ToolBar from "../components/ToolBar.svelte";
+import ToggleBar from "../components/ToggleBar.svelte";
+import Window from "../components/Window.svelte";
 
-    import { Timer } from "../../utils/timers/timer";
-	import { toggles } from "../stores/toggle";
-	import { tools } from "../stores/tool";
+import { Timer } from "../../utils/timers/timer";
+import { toggles } from "../stores/toggle";
+import { tools } from "../stores/tool";
 
+let fadeTimeout: Timer | null = null;
+let isEditorVisible = true;
 
+function setEditorVisibility(visible: boolean = true) {
+	fadeTimeout?.clear();
 
-	let fadeTimeout: Timer | null = null;
-	let isEditorVisible = true;
+	const editor = document.querySelector<HTMLDivElement>("#editor");
+	const menu = document.querySelector<HTMLDivElement>("#editorMenu");
+	const toolbar = document.querySelector<HTMLDivElement>("#editorTools");
+	const togglebar = document.querySelector<HTMLDivElement>("#editorToggles");
+	const actionbar = document.querySelector<HTMLDivElement>("#editorActions");
 
-
-	function setEditorVisibility(visible: boolean = true) {
-		fadeTimeout?.clear();
-
-
-		const editor = document.querySelector<HTMLDivElement>("#editor");
-		const menu = document.querySelector<HTMLDivElement>("#editorMenu");
-		const toolbar = document.querySelector<HTMLDivElement>("#editorTools");
-		const togglebar = document.querySelector<HTMLDivElement>("#editorToggles");
-		const actionbar = document.querySelector<HTMLDivElement>("#editorActions");
-
-
-		if (visible) {
-			editor?.style.setProperty("display", "grid");
-		}
-
-		else {
-			fadeTimeout = new Timer(() => {
-				editor?.style.setProperty("display", "none");
-			}, 300);
-		}
-
-
-		// Force a reflow to ensure the transition is applied
-		void editor?.getBoundingClientRect();
-
-
-		if (visible) {
-			menu?.classList.remove("hidden");
-			toolbar?.classList.remove("hidden");
-			togglebar?.classList.remove("hidden");
-			actionbar?.classList.remove("hidden");
-		}
-
-		else {
-			menu?.classList.add("hidden");
-			toolbar?.classList.add("hidden");
-			togglebar?.classList.add("hidden");
-			actionbar?.classList.add("hidden");
-		}
-
-		isEditorVisible = visible;
+	if (visible) {
+		editor?.style.setProperty("display", "grid");
+	} else {
+		fadeTimeout = new Timer(() => {
+			editor?.style.setProperty("display", "none");
+		}, 300);
 	}
-	
-	
-	window.addEventListener("keydown", (event) => {
-		// When using clicks on ctrl, it should hide/show the editor menu
-		if (event.key === "Control") {
-			setEditorVisibility(!isEditorVisible);
-		}
-	});
+
+	// Force a reflow to ensure the transition is applied
+	void editor?.getBoundingClientRect();
+
+	if (visible) {
+		menu?.classList.remove("hidden");
+		toolbar?.classList.remove("hidden");
+		togglebar?.classList.remove("hidden");
+		actionbar?.classList.remove("hidden");
+	} else {
+		menu?.classList.add("hidden");
+		toolbar?.classList.add("hidden");
+		togglebar?.classList.add("hidden");
+		actionbar?.classList.add("hidden");
+	}
+
+	isEditorVisible = visible;
+}
+
+window.addEventListener("keydown", (event) => {
+	// When using clicks on ctrl, it should hide/show the editor menu
+	if (event.key === "Control") {
+		setEditorVisibility(!isEditorVisible);
+	}
+});
 </script>
 
 

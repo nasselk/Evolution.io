@@ -8,8 +8,6 @@ import { Vector } from "../../math/vector";
 
 import { Hitboxes } from "./hitboxes";
 
-
-
 class Collider<T extends Entity = Entity> {
 	public readonly entity: T;
 	public readonly position: Vector;
@@ -18,7 +16,6 @@ class Collider<T extends Entity = Entity> {
 	public forceChecks: boolean;
 	public restitution: number;
 	private type: Hitboxes;
-
 
 	public constructor(type: Hitboxes, entity: T, position?: Vector, size?: Vector, restitution: number = 0.5) {
 		this.velocity = entity instanceof DynamicEntity ? entity.velocity : Vector.null;
@@ -30,16 +27,14 @@ class Collider<T extends Entity = Entity> {
 		this.type = type;
 	}
 
-
 	// Make two colliders interact
 	public collide(collider: Collider): boolean {
 		if (this.type === Hitboxes.CIRCLE && collider.type === Hitboxes.CIRCLE) {
 			return c2cResolution(this, collider);
 		}
 
-		throw new Error(`Not implemented collision resolution for ${ this.type } and ${ collider.type }`);
+		throw new Error(`Not implemented collision resolution for ${this.type} and ${collider.type}`);
 	}
-
 
 	// Detect if two colliders intersect
 	public intersects(collider: Collider, offset?: number): boolean {
@@ -47,20 +42,16 @@ class Collider<T extends Entity = Entity> {
 			return c2cDetection(this, collider, offset) != undefined;
 		}
 
-		throw new Error(`Not implemented collision detection for ${ this.type } and ${ collider.type }`);
+		throw new Error(`Not implemented collision detection for ${this.type} and ${collider.type}`);
 	}
-
 
 	public set shape(shape: Hitboxes) {
 		this.type = shape;
 	}
 
-
 	public get canInteract(): boolean {
 		return true;
 	}
 }
-
-
 
 export { Collider };

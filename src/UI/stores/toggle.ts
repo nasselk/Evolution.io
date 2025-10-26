@@ -1,11 +1,9 @@
 import Game from "../../game";
 
-
 export const enum Toggles {
 	Vertices,
 	Textures,
 }
-
 
 export interface Toggle {
 	readonly id: Toggles;
@@ -16,7 +14,6 @@ export interface Toggle {
 	callback?: (toggled: boolean) => void;
 }
 
-
 export const toggles: Toggle[] = [
 	{
 		id: Toggles.Vertices,
@@ -25,7 +22,7 @@ export const toggles: Toggle[] = [
 		toggled: false,
 		callback: (toggled: boolean) => {
 			Game.renderer.renderVertices = toggled;
-		}
+		},
 	},
 	{
 		id: Toggles.Textures,
@@ -34,6 +31,6 @@ export const toggles: Toggle[] = [
 		toggled: true,
 		callback: (toggled: boolean) => {
 			Game.renderer.renderTextures = toggled;
-		}
-	}
+		},
+	},
 ];

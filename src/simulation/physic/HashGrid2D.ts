@@ -4,19 +4,14 @@ import { BitSet } from "../../utils/bitset";
 
 import { Entity } from "../entities/entity";
 
-
-
 type Constructor<T> = new (...args: any) => T;
 
-type QueryCallback<T, Types> = (objects: Types extends undefined ? T[] : { [K in keyof Types]: Types[K] extends new (...args: any[]) => infer R ? R[] : never }, queryID: number, ...params: any[]) => boolean | void
+type QueryCallback<T, Types> = (objects: Types extends undefined ? T[] : { [K in keyof Types]: Types[K] extends new (...args: any[]) => infer R ? R[] : never }, queryID: number, ...params: any[]) => boolean | void;
 
 type PairwiseCallback<T> = (entity1: T, entity2: T) => void;
 
-
-
 class HashGrid2D<T extends Entity, Types extends Record<string, Constructor<T>> | undefined = undefined> {
 	public static gridCount: number = 0;
-
 
 	public readonly id: number;
 	private readonly cellWidth: number;
@@ -29,7 +24,6 @@ class HashGrid2D<T extends Entity, Types extends Record<string, Constructor<T>> 
 	private readonly typed: boolean;
 	private readonly types?: Types;
 	private queryID: number;
-
 
 	public constructor(cellWidth: number, cellHeight: number = cellWidth, maximumX: number, maximumY: number, removableObjects: boolean = true, types?: Types) {
 		this.id = HashGrid2D.gridCount++;
@@ -45,22 +39,19 @@ class HashGrid2D<T extends Entity, Types extends Record<string, Constructor<T>> 
 		this.queryID = 0;
 	}
 
-
 	// Unique numeric hash by cell position
 	private getCellHash(x: number, y: number): number {
 		return x * (this.maxKeyY + 1) + y;
 	}
 
-
 	// Unique bijective numeric hash by pair of IDs
 	private getPairID(a: number, b: number): number {
 		if (a > b) {
-			[ a, b ] = [ b, a ];
+			[a, b] = [b, a];
 		}
 
-		return (b * (b + 1) / 2) + a;
+		return (b * (b + 1)) / 2 + a;
 	}
-
 
 	// Get the cell by its key and create it if need
 	private getCell(key: number): TypedCell<T, NonNullable<Types>> | UntypedCell<T> {
@@ -69,9 +60,7 @@ class HashGrid2D<T extends Entity, Types extends Record<string, Constructor<T>> 
 		if (!cell) {
 			if (this.typed) {
 				cell = new TypedCell<T, NonNullable<Types>>(key, this.types!);
-			}
-
-			else {
+			} else {
 				cell = new UntypedCell<T>(key);
 			}
 
@@ -81,14 +70,12 @@ class HashGrid2D<T extends Entity, Types extends Record<string, Constructor<T>> 
 		return cell;
 	}
 
-
 	public insert(object: T, rangeX: number = object.size.x, rangeY: number = object.size.y, type: string = object.type): void {
 		// Find the bounds
 		const minX: number = Math.max(Math.floor((object.position.x - rangeX / 2) / this.cellWidth), 0);
 		const minY: number = Math.max(Math.floor((object.position.y - rangeY / 2) / this.cellHeight), 0);
 		const maxX: number = Math.min(Math.floor((object.position.x + rangeX / 2) / this.cellWidth), this.maxKeyX);
 		const maxY: number = Math.min(Math.floor((object.position.y + rangeY / 2) / this.cellHeight), this.maxKeyY);
-
 
 		// Create the cells keys set if needed
 		let cellsKeys: Set<number> | undefined;
@@ -103,7 +90,6 @@ class HashGrid2D<T extends Entity, Types extends Record<string, Constructor<T>> 
 			}
 		}
 
-
 		// Loop over all cells
 		for (let x = minX; x <= maxX; x++) {
 			for (let y = minY; y <= maxY; y++) {
@@ -113,15 +99,12 @@ class HashGrid2D<T extends Entity, Types extends Record<string, Constructor<T>> 
 
 				if (cell.typed) {
 					cell.insert(object, type, cellsKeys);
-				}
-
-				else {
+				} else {
 					cell.insert(object, cellsKeys);
 				}
 			}
 		}
 	}
-
 
 	public remove(object: T, type: string = object.type): void {
 		const cellsKeys: Set<number> = object.cellsKeys[this.id];
@@ -133,9 +116,7 @@ class HashGrid2D<T extends Entity, Types extends Record<string, Constructor<T>> 
 			if (cell) {
 				if (cell.typed) {
 					cell.remove(object, type, cellsKeys);
-				}
-
-				else {
+				} else {
 					cell.remove(object, cellsKeys);
 				}
 
@@ -146,17 +127,14 @@ class HashGrid2D<T extends Entity, Types extends Record<string, Constructor<T>> 
 		}
 	}
 
-
 	public move(object: T, rangeX: number = object.size.x, rangeY: number = object.size.y, type: string = object.type): void {
 		const minX: number = Math.max(Math.floor((object.position.x - rangeX / 2) / this.cellWidth), 0);
 		const minY: number = Math.max(Math.floor((object.position.y - rangeY / 2) / this.cellHeight), 0);
 		const maxX: number = Math.min(Math.floor((object.position.x + rangeX / 2) / this.cellWidth), this.maxKeyX);
 		const maxY: number = Math.min(Math.floor((object.position.y + rangeY / 2) / this.cellHeight), this.maxKeyY);
 
-
 		const cellsKeys: Set<number> = object.cellsKeys[this.id];
 		const rightKeys: Set<number> = new Set();
-
 
 		for (let x = minX; x <= maxX; x++) {
 			for (let y = minY; y <= maxY; y++) {
@@ -167,9 +145,7 @@ class HashGrid2D<T extends Entity, Types extends Record<string, Constructor<T>> 
 
 					if (cell.typed) {
 						cell.insert(object, type, cellsKeys);
-					}
-
-					else {
+					} else {
 						cell.insert(object, cellsKeys);
 					}
 				}
@@ -178,7 +154,6 @@ class HashGrid2D<T extends Entity, Types extends Record<string, Constructor<T>> 
 			}
 		}
 
-
 		for (const key of cellsKeys) {
 			if (!rightKeys.has(key)) {
 				const cell = this.cells[key];
@@ -186,16 +161,13 @@ class HashGrid2D<T extends Entity, Types extends Record<string, Constructor<T>> 
 				if (cell) {
 					if (cell.typed) {
 						cell.remove(object, type, cellsKeys);
-					}
-
-					else {
+					} else {
 						cell.remove(object, cellsKeys);
 					}
 				}
 			}
 		}
 	}
-
 
 	// Run the callback for all cell this entity overlaps
 	// Callback remove the need of an intermediate insertion array which  reduces performances
@@ -207,15 +179,11 @@ class HashGrid2D<T extends Entity, Types extends Record<string, Constructor<T>> 
 		const maxX: number = Math.min(Math.floor((object.position.x + rangeX / 2) / this.cellWidth), this.maxKeyX);
 		const maxY: number = Math.min(Math.floor((object.position.y + rangeY / 2) / this.cellHeight), this.maxKeyY);
 
-
 		if (this.queryID === Number.MAX_SAFE_INTEGER - 1) {
 			this.queryID = 0;
-		}
-
-		else {
+		} else {
 			this.queryID++;
 		}
-
 
 		// Loop over all cells it overlaps
 		for (let x = minX; x <= maxX; x++) {
@@ -236,29 +204,22 @@ class HashGrid2D<T extends Entity, Types extends Record<string, Constructor<T>> 
 		return false;
 	}
 
-
 	public pairwiseCombination(callback: PairwiseCallback<T>, minID: number = 0, maxID: number, restrictive: boolean = true): void {
 		if (this.typed) {
 			throw new Error("Cannot use pairwiseCombination with typed HashGrid2D");
-		}
-
-		else {
+		} else {
 			if (restrictive) {
 				if (maxID - minID > this.checkedPairs.length) {
 					const maxPairID: number = this.getPairID(maxID - minID + 50, maxID - minID + 50);
 
 					this.checkedPairs.resize(maxPairID);
-				}
-
-				else {
+				} else {
 					this.checkedPairs.clear();
 				}
 			}
 
-
 			for (const cell of this.cells) {
 				if (cell && !cell.typed) {
-
 					for (let i = 0; i < cell.count; i++) {
 						const entity1: T = cell.objects[i];
 
@@ -279,7 +240,6 @@ class HashGrid2D<T extends Entity, Types extends Record<string, Constructor<T>> 
 		}
 	}
 
-
 	// Empty the grid
 	public clear(clean?: Map<number, T>): void {
 		this.cells.fill(null);
@@ -292,18 +252,14 @@ class HashGrid2D<T extends Entity, Types extends Record<string, Constructor<T>> 
 	}
 }
 
-
-
 abstract class BaseCell {
 	private readonly key: number;
 	public count: number;
-
 
 	public constructor(key: number) {
 		this.key = key;
 		this.count = 0;
 	}
-
 
 	public add(cellsKeys?: Set<number>): void {
 		cellsKeys?.add(this.key);
@@ -311,25 +267,20 @@ abstract class BaseCell {
 		this.count++;
 	}
 
-
 	public delete(cellsKeys: Set<number>): void {
 		cellsKeys.delete(this.key);
 
 		this.count--;
 	}
 
-
 	public clear(): void {
 		this.count = 0;
 	}
 }
 
-
-
 class UntypedCell<T extends Entity> extends BaseCell {
 	public readonly typed: false;
 	public readonly objects: T[];
-
 
 	public constructor(key: number) {
 		super(key);
@@ -338,20 +289,17 @@ class UntypedCell<T extends Entity> extends BaseCell {
 		this.objects = [];
 	}
 
-
 	public insert(object: T, cellsKeys?: Set<number>): void {
 		this.objects.push(object);
 
 		this.add(cellsKeys);
 	}
 
-
 	public remove(object: T, cellsKeys: Set<number>): void {
 		removeFromArray(this.objects, object);
 
 		this.delete(cellsKeys);
 	}
-
 
 	public override clear(): void {
 		this.objects.length = 0;
@@ -360,12 +308,9 @@ class UntypedCell<T extends Entity> extends BaseCell {
 	}
 }
 
-
-
 class TypedCell<T extends Entity, Types extends Record<string, Constructor<T>>> extends BaseCell {
 	public readonly objects: { [K in keyof Types]: InstanceType<Types[K]>[] };
 	public readonly typed = true;
-
 
 	public constructor(key: number, types: Types) {
 		super(key);
@@ -378,20 +323,17 @@ class TypedCell<T extends Entity, Types extends Record<string, Constructor<T>>> 
 		}
 	}
 
-
 	public insert(object: T, type: keyof Types, cellsKeys?: Set<number>): void {
 		this.objects[type].push(object as InstanceType<Types[typeof type]>);
 
 		this.add(cellsKeys);
 	}
 
-
 	public remove(object: T, type: keyof Types, cellsKeys: Set<number>): void {
 		removeFromArray(this.objects[type], object);
 
 		this.delete(cellsKeys);
 	}
-
 
 	public override clear(): void {
 		for (const key in this.objects) {
@@ -401,7 +343,5 @@ class TypedCell<T extends Entity, Types extends Record<string, Constructor<T>>> 
 		super.clear();
 	}
 }
-
-
 
 export { HashGrid2D, type QueryCallback, type PairwiseCallback };

@@ -10,11 +10,7 @@ import { type Game } from "../../game";
 
 import Stats from "stats.js";
 
-
-
 const worldContainer = newContainer({ renderGroup: true });
-
-
 
 class RenderingLoop {
 	public readonly canvas: HTMLCanvasElement;
@@ -30,11 +26,10 @@ class RenderingLoop {
 	public frames: number;
 	public scale: number;
 	public stats: {
-		readonly frames: Stats,
-		readonly memory: Stats,
-		readonly ms: Stats,
+		readonly frames: Stats;
+		readonly memory: Stats;
+		readonly ms: Stats;
 	};
-
 
 	public constructor(game: Game) {
 		this.canvas = document.querySelector("#canvas")!;
@@ -54,10 +49,8 @@ class RenderingLoop {
 		};
 		this.scale = 1;
 
-
 		this.stage.addChild(this.worldContainer, this.vertices);
 	}
-
 
 	public async init(settings: any): Promise<void> {
 		this.resolution = settings.resolution ?? 1;
@@ -72,50 +65,42 @@ class RenderingLoop {
 			canvas: this.canvas,
 		});
 
-
 		// Resize all elements when resizing window
 		window.addEventListener("resize", this.resize.bind(this));
 
 		this.resize();
 
-
 		// Init stats pannels
 		this.stats.frames.showPanel(0);
 		this.stats.ms.showPanel(1);
 		this.stats.memory.showPanel(2);
-		
+
 		document.body.appendChild(this.stats.frames.dom);
 		document.body.appendChild(this.stats.memory.dom);
 		document.body.appendChild(this.stats.ms.dom);
-		
+
 		this.stats.ms.dom.style.left = "0px";
 		this.stats.ms.dom.style.left = "80px";
 		this.stats.memory.dom.style.left = "160px";
 
-		
 		// Start rendering
 		requestAnimationFrame(this.render.bind(this));
 	}
-
 
 	public render(now: number): void {
 		// Stats monitoring performances
 		this.stats.frames.begin();
 		this.stats.ms.begin();
 
-
 		requestAnimationFrame(this.render.bind(this));
-
 
 		// Run timers registered in eventLoop mode
 		Timer.runAll(now);
-
 
 		// Dont run the frame when document is hidden to avoid jumpy animations
 		if (document.hidden) {
 			return;
 		}
-		
 
 		// Delta time used for consistant animations (interpolation..)
 		const deltaTime: number = Math.min(100, now - this.lastFrame) / 10;
@@ -123,36 +108,29 @@ class RenderingLoop {
 		this.lastFrame = now;
 		this.frames++;
 
-
 		// Update the camera and apply its transformations to the scene
 		this.game.camera.update(this.scale, deltaTime).transform(this.worldContainer);
-
 
 		// Render the background grid
 		this.game.map.renderGrid(this.game.camera, 500 / 5, 2, true);
 		this.game.map.renderGrid(this.game.camera, 500, 6, false, true);
 
-		
 		// Render all entities
 		for (const entity of this.game.entities.values()) {
 			entity.render(deltaTime);
 		}
-		
 
 		// Render debug vertices for textures if the feature is enabled
 		this.debug(this.worldContainer);
 
-
 		// Call pixijs internal renderer
 		this.renderer?.render(this.stage);
-
 
 		// Update the performance stats
 		this.stats.frames.end();
 		this.stats.ms.end();
 		this.stats.memory.update();
 	}
-
 
 	private debug(container: Container, scaleX: number = container.scale.x, scaleY: number = container.scale.y, rotation: number = container.rotation, firstContainer: boolean = true, depth: number = 0): void {
 		if (firstContainer) {
@@ -166,12 +144,9 @@ class RenderingLoop {
 
 				this.vertices.rect(0, 0, this.canvas.width, this.canvas.height);
 				this.vertices.fill({ color: "black" });
-			}
-
-			else {
+			} else {
 				this.worldContainer.visible = true;
 			}
-
 
 			if (!this.renderVertices) {
 				if (this.renderTextures) {
@@ -182,29 +157,25 @@ class RenderingLoop {
 			}
 		}
 
-		if (container.visible && container.renderable || (container === this.worldContainer && !this.renderTextures)) {
+		if ((container.visible && container.renderable) || (container === this.worldContainer && !this.renderTextures)) {
 			// Colors for different depths - add or modify as needed
 			const depthColors = [
-				"white",      // depth 0
-				"#00FFFF",    // depth 1 (cyan)
-				"#FFFF00",    // depth 2 (yellow)
-				"#FF00FF",    // depth 3 (magenta)
-				"#00FF00",    // depth 4 (green)
-				"#FF8000",    // depth 5 (orange)
-				"#0080FF",    // depth 6 (light blue)
+				"white", // depth 0
+				"#00FFFF", // depth 1 (cyan)
+				"#FFFF00", // depth 2 (yellow)
+				"#FF00FF", // depth 3 (magenta)
+				"#00FF00", // depth 4 (green)
+				"#FF8000", // depth 5 (orange)
+				"#0080FF", // depth 6 (light blue)
 			];
-
 
 			// Determine color for current depth (cycle if more depths than colors)
 			const color = depthColors[depth % depthColors.length];
 
-
 			for (const children of container.children) {
 				if (children.constructor.name === Container.name) {
 					this.debug(children, scaleX * children.scale.x, scaleY * children.scale.y, rotation + children.rotation, false, depth + 1);
-				}
-
-				else if (children instanceof Sprite || children instanceof BitmapText) {
+				} else if (children instanceof Sprite || children instanceof BitmapText) {
 					let globalPosition: Vector | Point = children.getGlobalPosition();
 					globalPosition = new Vector(globalPosition.x, globalPosition.y);
 
@@ -221,7 +192,6 @@ class RenderingLoop {
 
 					const draws = [1, 2, 3, 0, 2];
 
-
 					this.vertices.moveTo(cornerVertices[0].x, cornerVertices[0].y);
 
 					for (const i of draws) {
@@ -229,7 +199,6 @@ class RenderingLoop {
 					}
 
 					this.vertices.stroke({ width: 2 * this.game.camera.zoom, color });
-
 
 					for (const vertex of cornerVertices) {
 						this.vertices.circle(vertex.x, vertex.y, 5 * this.game.camera.zoom);
@@ -241,23 +210,17 @@ class RenderingLoop {
 		}
 	}
 
-
 	public resize(): void {
 		// Resize the canvas resolution
-		this.renderer?.resize(
-			document.documentElement.clientWidth * devicePixelRatio * this.resolution,
-			document.documentElement.clientHeight * devicePixelRatio * this.resolution
-		);
+		this.renderer?.resize(document.documentElement.clientWidth * devicePixelRatio * this.resolution, document.documentElement.clientHeight * devicePixelRatio * this.resolution);
 
 		// Resize the canvas display size
-		this.canvas.style.width = `${ document.documentElement.clientWidth }px`;
-		this.canvas.style.height = `${ document.documentElement.clientHeight }px`;
+		this.canvas.style.width = `${document.documentElement.clientWidth}px`;
+		this.canvas.style.height = `${document.documentElement.clientHeight}px`;
 
 		// Set the new scale
 		this.scale = Math.min(this.canvas.width, this.canvas.height) / 1080;
 	}
 }
-
-
 
 export { RenderingLoop, worldContainer };

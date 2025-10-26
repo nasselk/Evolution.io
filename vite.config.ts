@@ -6,22 +6,25 @@ import { createHtmlPlugin } from "vite-plugin-html";
 
 import { UserConfig } from "vite";
 
-
-
 export default {
 	base: "./",
 
 	server: {
-		port: 80,
+		port: 5173,
 		open: true,
 		headers: {
 			"Cross-Origin-Opener-Policy": "same-origin",
 			"Cross-Origin-Embedder-Policy": "require-corp",
-		}
+		},
 	},
 
 	preview: {
-		port: 80,
+		port: 4173,
+		open: true,
+		headers: {
+			"Cross-Origin-Opener-Policy": "same-origin",
+			"Cross-Origin-Embedder-Policy": "require-corp",
+		},
 	},
 
 	build: {
@@ -53,7 +56,7 @@ export default {
 
 					return "[name]-[hash].js";
 				},
-			}
+			},
 		},
 		minify: "esbuild",
 		target: "esnext",
@@ -61,7 +64,7 @@ export default {
 	},
 
 	optimizeDeps: {
-		include: [ "pixi.js" ],
+		include: ["pixi.js"],
 	},
 
 	plugins: [

@@ -20,25 +20,21 @@ import Simulation from "../core/simulation";
 
 import { type Biome } from "../map";
 
-
-
 type EntityTypes = keyof typeof Entities;
 type GetEntityInstanceType<T extends keyof typeof Entities> = InstanceType<(typeof Simulation.classes)[T]>;
 
-
 interface ConstructorOptions {
 	readonly position?: Vector;
-	readonly x?: number,
-	readonly y?: number,
+	readonly x?: number;
+	readonly y?: number;
 	readonly size?: number;
 	readonly width?: number;
 	readonly height?: number;
 	readonly angle?: number;
 	readonly health?: number;
 	readonly biome?: Biome;
-	readonly mass?: number,
+	readonly mass?: number;
 }
-
 
 abstract class Entity<T extends EntityTypes = EntityTypes> {
 	public static readonly updatables: Entity[] = [];
@@ -47,7 +43,6 @@ abstract class Entity<T extends EntityTypes = EntityTypes> {
 	public static type: keyof typeof Entities;
 	public static updatable: boolean;
 	public static dynamic: boolean;
-	
 
 	public readonly id: number;
 	public readonly cellsKeys: Set<number>[];
@@ -65,10 +60,9 @@ abstract class Entity<T extends EntityTypes = EntityTypes> {
 	private updateIndex?: number | null;
 	protected reproductionCooldown: number;
 	declare ["constructor"]: typeof Entity;
-	public abstract readonly collider: Collider<this>;	
+	public abstract readonly collider: Collider<this>;
 	protected staticInteraction?(objects: Parameters<Parameters<typeof Simulation.staticGrid.query>[1]>[0], queryID: number): boolean | void;
 	public biteReaction?(entity: Entity): void;
-
 
 	protected constructor(options: ConstructorOptions = {}) {
 		this.position = new Vector();
@@ -83,31 +77,25 @@ abstract class Entity<T extends EntityTypes = EntityTypes> {
 		this.spawned = true;
 		this.queryID = 0;
 
-
 		// Settings :
 		this.reproductionCooldown = 10000; // 10 seconds
 		this.health = this.size.x * 3;
 
-
 		if (options.position) {
 			this.position.set(options.position);
-		}
-
-		else if (options.x !== undefined) {
+		} else if (options.x !== undefined) {
 			this.position.set(options.x, options.y ?? 0);
 		}
-
 
 		if (this.constructor.updatable) {
 			this.updatable = true;
 		}
 	}
-	
 
-	public static create<T extends EntityTypes>(type: T, ...args: ConstructorParameters<typeof Simulation.classes[T]>): InstanceType<typeof Simulation.classes[T]> {
+	public static create<T extends EntityTypes>(type: T, ...args: ConstructorParameters<(typeof Simulation.classes)[T]>): InstanceType<(typeof Simulation.classes)[T]> {
 		const constructor = Simulation.classes[type] as any;
 
-		const entity = new constructor(...args) as InstanceType<typeof Simulation.classes[T]>;
+		const entity = new constructor(...args) as InstanceType<(typeof Simulation.classes)[T]>;
 
 		constructor.list.set(entity.id, entity);
 		Entity.list.set(entity.id, entity);
@@ -115,18 +103,15 @@ abstract class Entity<T extends EntityTypes = EntityTypes> {
 		return entity;
 	}
 
-
 	public static has<T extends EntityTypes>(id: number, type?: T): boolean {
 		const entity = Entity.get<T>(id);
 
 		return Boolean(entity && (!type || entity.type === type));
 	}
 
-
-	public static get<T extends EntityTypes | undefined>(id: number): (T extends EntityTypes ? InstanceType<typeof Simulation.classes[T]> : Entity) | undefined {
+	public static get<T extends EntityTypes | undefined>(id: number): (T extends EntityTypes ? InstanceType<(typeof Simulation.classes)[T]> : Entity) | undefined {
 		return Entity.list.get(id) as ReturnType<typeof this.get<T>>;
 	}
-
 
 	public static clear(...types: EntityTypes[]): void {
 		for (const obj of Entity.list.values()) {
@@ -135,7 +120,6 @@ abstract class Entity<T extends EntityTypes = EntityTypes> {
 			}
 		}
 	}
-
 
 	public update(deltaTime?: number, now?: number): void {
 		void deltaTime;
@@ -146,7 +130,6 @@ abstract class Entity<T extends EntityTypes = EntityTypes> {
 		}
 	}
 
-
 	public destroy(): void {
 		this.updatable = false;
 
@@ -154,18 +137,15 @@ abstract class Entity<T extends EntityTypes = EntityTypes> {
 
 		Simulation.classes[this.type].list.delete(this.id);
 
-		
 		// Make sure the ID is not reused for 1 second (for client-side animations)
 		new Timer(() => {
 			Simulation.spawner.IDAllocator.free(this.id);
 		}, 1000);
 
-		
 		this.spawned = false;
 
 		this.cleanup();
 	}
-	
 
 	private cleanup(): void {
 		for (const key in this) {
@@ -177,11 +157,10 @@ abstract class Entity<T extends EntityTypes = EntityTypes> {
 		}
 	}
 
-
 	public resize(size: number): void;
 	public resize(width: number, height: number): void;
 	public resize(a: number, b?: number): void {
-		if (a < 0 || b && b < 0) {
+		if (a < 0 || (b && b < 0)) {
 			throw new Error("Invalid size");
 		}
 
@@ -194,10 +173,8 @@ abstract class Entity<T extends EntityTypes = EntityTypes> {
 		}
 	}
 
-
 	public packProperties(writer?: BufferWriter, additionalBytes: number = 0): BufferWriter {
 		const buffer = writer ?? new BufferWriter(10 + additionalBytes);
-
 
 		const type = Entities[this.type];
 
@@ -215,19 +192,15 @@ abstract class Entity<T extends EntityTypes = EntityTypes> {
 
 		buffer.writeUint16(this.size.x);
 
-
 		return buffer;
 	}
-
 
 	set updatable(value: boolean) {
 		if (value) {
 			if (this.updateIndex === undefined || this.updateIndex === null) {
 				this.updateIndex = Entity.updatables.push(this) - 1;
 			}
-		}
-
-		else {
+		} else {
 			if (this.updateIndex !== undefined && this.updateIndex !== null) {
 				const element = removeFromArray(Entity.updatables, this, this.updateIndex);
 
@@ -241,25 +214,19 @@ abstract class Entity<T extends EntityTypes = EntityTypes> {
 	}
 }
 
-
-
 function defineCustomType(name: EntityTypes) {
 	return function <T extends typeof Entity<EntityTypes>>(target: T): void {
 		target.type = name;
-		
+
 		const properties = EntitiesConfig[name];
-		
+
 		if (properties) {
 			target.updatable = properties.updatable;
 			target.dynamic = properties.dynamic;
-		}
-
-		else {
-			throw new Error(`Entity ${ name } not found in EntitiesConfig`);
+		} else {
+			throw new Error(`Entity ${name} not found in EntitiesConfig`);
 		}
 	};
 }
-
-
 
 export { Entity, type ConstructorOptions, type EntityTypes, type GetEntityInstanceType, defineCustomType };

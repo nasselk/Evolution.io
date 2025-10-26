@@ -8,9 +8,7 @@ export function removeFromArray<T>(array: T[], item?: T, index?: number): T | vo
 
 			return last!;
 		}
-	}
-
-	else {
+	} else {
 		for (let i = 0; i < array.length; i++) {
 			if (array[i] === item) {
 				const last = array.pop();

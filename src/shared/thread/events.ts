@@ -5,5 +5,5 @@ export const enum ThreadEvents {
 	SPEED,
 	STATS,
 	MOVE,
-	DESTROY
+	DESTROY,
 }

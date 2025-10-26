@@ -6,8 +6,6 @@ import { Vector } from "../../math/vector";
 
 import Simulation from "../core/simulation";
 
-
-
 abstract class DynamicEntity<T extends EntityTypes = EntityTypes> extends Entity<T> {
 	protected readonly forces: Set<Vector>;
 	public readonly velocity: Vector;
@@ -19,7 +17,6 @@ abstract class DynamicEntity<T extends EntityTypes = EntityTypes> extends Entity
 	protected angularFriction: number;
 	protected rotationSpeed?: number;
 	protected movingDirection?: number | null;
-
 
 	public constructor(options?: ConstructorOptions) {
 		super(options);
@@ -35,7 +32,6 @@ abstract class DynamicEntity<T extends EntityTypes = EntityTypes> extends Entity
 		this.mass = options?.mass || Math.pow(this.size.x, 2) * 0.01; // Should be >= 1
 	}
 
-
 	public override update(deltaTime: number, now?: number): void {
 		super.update(deltaTime, now);
 
@@ -49,13 +45,11 @@ abstract class DynamicEntity<T extends EntityTypes = EntityTypes> extends Entity
 		}
 	}
 
-
 	public dynamicInteraction(entity: DynamicEntity): boolean | void {
 		const intersects = this.collider.collide(entity.collider);
 
 		return intersects;
 	}
-
 
 	protected move(deltaTime: number): this {
 		// Add velocity in the moving direction (entity default movements)
@@ -69,7 +63,6 @@ abstract class DynamicEntity<T extends EntityTypes = EntityTypes> extends Entity
 
 			this.velocity.add(vector);
 		}
-		
 
 		// Add velocity from stored vectors (some forces applied to it)
 		for (const vector of this.forces) {
@@ -78,17 +71,14 @@ abstract class DynamicEntity<T extends EntityTypes = EntityTypes> extends Entity
 			this.velocity.add(vector);
 		}
 
-
 		// Apply friction
 		this.velocity.scale(this.friction ** deltaTime);
 
 		// Update position based on velocity
 		this.position.add(this.velocity, deltaTime);
 
-
 		return this;
 	}
-
 
 	protected rotate(deltaTime: number): this {
 		if (typeof this.rotationSpeed === "number" && typeof this.targetAngle === "number") {
@@ -106,17 +96,12 @@ abstract class DynamicEntity<T extends EntityTypes = EntityTypes> extends Entity
 			this.angularVelocity += delta * this.rotationSpeed * deltaTime;
 		}
 
-
-		this.angularVelocity /= (1 + this.angularFriction * deltaTime);
-
+		this.angularVelocity /= 1 + this.angularFriction * deltaTime;
 
 		this.angle = normalizeAngle(this.angle + this.angularVelocity * deltaTime);
-
 
 		return this;
 	}
 }
-
-
 
 export { DynamicEntity };

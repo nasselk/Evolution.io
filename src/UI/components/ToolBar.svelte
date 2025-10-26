@@ -1,61 +1,54 @@
 <script lang="ts">
-    import { activeTool, Tools, type Tool } from "../stores/tool";
-    import SelectorHighlight from "./SelectorHighlight.svelte";
-    import { onMount, onDestroy } from "svelte";
-    
+import { activeTool, Tools, type Tool } from "../stores/tool";
+import SelectorHighlight from "./SelectorHighlight.svelte";
+import { onMount, onDestroy } from "svelte";
 
-    const { id = "", class: classList = "", tools = [], default: defaultTool = Tools.Camera } = $props();
-    
+const { id = "", class: classList = "", tools = [], default: defaultTool = Tools.Camera } = $props();
 
-    let highlightComponent: SelectorHighlight;    
+let highlightComponent: SelectorHighlight;
 
-    function updateHighlight(pressed: boolean = false, toolId?: Tools, event?: MouseEvent) {
-        if (!event || event.button === 0) {
-			const button = document.querySelector(`.toolbar > button[data-tool-id="${ toolId }"]`) as HTMLButtonElement;
-			
-			highlightComponent.updateHighlight(pressed, true, button);
-        }
-    }
+function updateHighlight(pressed: boolean = false, toolId?: Tools, event?: MouseEvent) {
+	if (!event || event.button === 0) {
+		const button = document.querySelector(`.toolbar > button[data-tool-id="${toolId}"]`) as HTMLButtonElement;
 
+		highlightComponent.updateHighlight(pressed, true, button);
+	}
+}
 
-	function selectTool(tool: Tool): void {
-        document.body.style.cursor = tool.cursor;
+function selectTool(tool: Tool): void {
+	document.body.style.cursor = tool.cursor;
 
-        activeTool.set(tool);
-    }
-    
+	activeTool.set(tool);
+}
 
-    function handleGlobalMouseUp() {
-		updateHighlight();
-    }
+function handleGlobalMouseUp() {
+	updateHighlight();
+}
 
-    
-    function initializeHighlight() {
-        if (tools.length > 0) {
-            const firstTool = tools.find(tool => tool.id === defaultTool);
-            const button = document.querySelector(`.toolbar > button[data-tool-id="${firstTool.id}"]`);
+function initializeHighlight() {
+	if (tools.length > 0) {
+		const firstTool = tools.find((tool) => tool.id === defaultTool);
+		const button = document.querySelector(`.toolbar > button[data-tool-id="${firstTool.id}"]`);
 
-            if (button) {
-                activeTool.set(firstTool);
-                document.body.style.cursor = firstTool.cursor;
-                
-                if (highlightComponent) {
-                	highlightComponent.updateHighlight(false, true, button);
-                }
-            }
-        }
-    }
-    
+		if (button) {
+			activeTool.set(firstTool);
+			document.body.style.cursor = firstTool.cursor;
 
-    onMount(() => {
-        window.addEventListener("mouseup", handleGlobalMouseUp);
-        initializeHighlight();
-    });
-    
+			if (highlightComponent) {
+				highlightComponent.updateHighlight(false, true, button);
+			}
+		}
+	}
+}
 
-    onDestroy(() => {
-        window.removeEventListener("mouseup", handleGlobalMouseUp);
-    });
+onMount(() => {
+	window.addEventListener("mouseup", handleGlobalMouseUp);
+	initializeHighlight();
+});
+
+onDestroy(() => {
+	window.removeEventListener("mouseup", handleGlobalMouseUp);
+});
 </script>
 
 

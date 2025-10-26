@@ -202,40 +202,30 @@
 
 
 <script lang="ts">
-    import Grid from "../components/GridLayout.svelte";
-    import Game from "../../game";
-    
-    // For syncing range and number inputs
-    const syncInputs = (event) => {
-        const input = event.target;
-        const targetId = input.type === "range" ? input.id + "Value" : input.id.replace("Value", "");
-        const target = document.getElementById(targetId);
-        if (target) target.value = input.value;
+import Grid from "../components/GridLayout.svelte";
+import Game from "../../game";
 
-		if (input.id.includes("herbivore")) {
-			Game.config.entities.herbivore = parseInt(input.value);
-		}
+// For syncing range and number inputs
+const syncInputs = (event) => {
+	const input = event.target;
+	const targetId = input.type === "range" ? input.id + "Value" : input.id.replace("Value", "");
+	const target = document.getElementById(targetId);
+	if (target) target.value = input.value;
 
-		else if (input.id.includes("carnivore")) {
-			Game.config.entities.carnivore = parseInt(input.value);
-		}
-
-		else if (input.id.includes("plant")) {
-			Game.config.entities.plant = parseInt(input.value);
-		}
-
-		else if (input.id.includes("mapWidth")) {
-			Game.map.shape.dimensions.x = parseInt(input.value);
-		}
-
-		else if (input.id.includes("mapHeight")) {
-			Game.map.shape.dimensions.y = parseInt(input.value);
-		}
-
-		else if (input.id.includes("turbo")) {
-			Game.config.turbo = input.checked;
-		}
-    }
+	if (input.id.includes("herbivore")) {
+		Game.config.entities.herbivore = parseInt(input.value);
+	} else if (input.id.includes("carnivore")) {
+		Game.config.entities.carnivore = parseInt(input.value);
+	} else if (input.id.includes("plant")) {
+		Game.config.entities.plant = parseInt(input.value);
+	} else if (input.id.includes("mapWidth")) {
+		Game.map.shape.dimensions.x = parseInt(input.value);
+	} else if (input.id.includes("mapHeight")) {
+		Game.map.shape.dimensions.y = parseInt(input.value);
+	} else if (input.id.includes("turbo")) {
+		Game.config.turbo = input.checked;
+	}
+};
 </script>
 
 

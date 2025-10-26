@@ -1,7 +1,5 @@
 import { Sprite, Container, Texture, Graphics } from "pixi.js";
 
-
-
 interface settings {
 	x?: number;
 	y?: number;
@@ -18,9 +16,7 @@ interface settings {
 	label?: string;
 }
 
-
-
-// Each function creates a new visual object with the given and default settings 
+// Each function creates a new visual object with the given and default settings
 
 function newContainer(settings: settings = {}): Container {
 	const container = new Container({
@@ -37,11 +33,9 @@ function newContainer(settings: settings = {}): Container {
 		eventMode: "static",
 		cullable: false,
 	});
-    
+
 	return container;
 }
-
-
 
 function newSprite(texture: Texture, settings: settings = {}): Sprite {
 	const sprite = new Sprite({
@@ -62,14 +56,12 @@ function newSprite(texture: Texture, settings: settings = {}): Sprite {
 		//eventMode: "auto",
 	});
 
-    
 	if (settings.anchor !== false) {
 		sprite.anchor.set(0.5, 0.5);
 	}
 
 	return sprite;
 }
-
 
 function newGraphics(settings: settings = {}): Graphics {
 	const graphics = new Graphics({
@@ -91,10 +83,7 @@ function newGraphics(settings: settings = {}): Graphics {
 		eventMode: "none",
 	});
 
-
 	return graphics;
 }
-
-
 
 export { newContainer, newSprite, newGraphics };

@@ -2,8 +2,6 @@ import { type Sprite } from "pixi.js";
 
 import { Entity } from "./entity";
 
-
-
 export default abstract class Animal<T extends "carnivore" | "herbivore" = any> extends Entity<T> {
 	public static override readonly list = new Map<number, Animal>();
 

@@ -1,82 +1,71 @@
 <script lang="ts">
-    import SelectorHighlight from "./SelectorHighlight.svelte";
-    import { Toggles, type Toggle } from "../stores/toggle";
-    import { onMount, onDestroy } from "svelte";
-    
+import SelectorHighlight from "./SelectorHighlight.svelte";
+import { Toggles, type Toggle } from "../stores/toggle";
+import { onMount, onDestroy } from "svelte";
 
-    const { id = "", class: classList = "", toggles: t = [] } = $props();
+const { id = "", class: classList = "", toggles: t = [] } = $props();
 
+const toggles = $state<Toggle[]>(t);
 
-	const toggles = $state<Toggle[]>(t);
+// Store references to SelectorHighlight components
+const highlightComponents = $state<Record<string, SelectorHighlight>>({});
+const buttons = $state<Record<string, HTMLButtonElement | null>>({});
+let pressedToggle: Toggles | null = null;
 
-    
-    // Store references to SelectorHighlight components
-    const highlightComponents = $state<Record<string, SelectorHighlight>>({});
-    const buttons = $state<Record<string, HTMLButtonElement | null>>({});
-	let pressedToggle: Toggles | null = null;
-    
-
-    function updateHighlight(toggle: Toggle, pressed: boolean = false, event?: MouseEvent) {
-        if (!event || event.button === 0) {
-			if (pressed) {
-				pressedToggle = toggle.id;
-        	}
-			
-			else {
-            	pressedToggle = null;
-			}
-
-            const button = buttons[toggle.id];
-            const isActive = toggle.toggled;
-            
-            if (button && highlightComponents[toggle.id]) {
-                highlightComponents[toggle.id].updateHighlight(pressed, isActive, button);
-            }
-        }
-    }
-
-
-    function toggleOption(toggle: Toggle): void {
-		toggle.toggled = !toggle.toggled;
-
-		toggle.callback?.(toggle.toggled);
-        
-        updateHighlight(toggle);
-    }
-    
-
-    function handleGlobalMouseUp() {
-		const toggle = toggles.find(t => t.id === pressedToggle);
-
-		// When mouse is released, remove all highlight effects
-		if (toggle) {
-			updateHighlight(toggle, false);
+function updateHighlight(toggle: Toggle, pressed: boolean = false, event?: MouseEvent) {
+	if (!event || event.button === 0) {
+		if (pressed) {
+			pressedToggle = toggle.id;
+		} else {
+			pressedToggle = null;
 		}
 
-		pressedToggle = null;
-    }
+		const button = buttons[toggle.id];
+		const isActive = toggle.toggled;
 
-    
-    function initializeHighlights() {
-        for (const toggle of toggles) {
-            // Initialize highlighting with proper active state
-            updateHighlight(toggle, false);
+		if (button && highlightComponents[toggle.id]) {
+			highlightComponents[toggle.id].updateHighlight(pressed, isActive, button);
+		}
+	}
+}
 
-			toggle.callback?.(toggle.toggled);
-        }
-    }
+function toggleOption(toggle: Toggle): void {
+	toggle.toggled = !toggle.toggled;
 
-    
-    onMount(() => {
-        window.addEventListener("mouseup", handleGlobalMouseUp);
+	toggle.callback?.(toggle.toggled);
 
-		initializeHighlights()
-    });
-    
-	
-    onDestroy(() => {
-        window.removeEventListener("mouseup", handleGlobalMouseUp);
-    });
+	updateHighlight(toggle);
+}
+
+function handleGlobalMouseUp() {
+	const toggle = toggles.find((t) => t.id === pressedToggle);
+
+	// When mouse is released, remove all highlight effects
+	if (toggle) {
+		updateHighlight(toggle, false);
+	}
+
+	pressedToggle = null;
+}
+
+function initializeHighlights() {
+	for (const toggle of toggles) {
+		// Initialize highlighting with proper active state
+		updateHighlight(toggle, false);
+
+		toggle.callback?.(toggle.toggled);
+	}
+}
+
+onMount(() => {
+	window.addEventListener("mouseup", handleGlobalMouseUp);
+
+	initializeHighlights();
+});
+
+onDestroy(() => {
+	window.removeEventListener("mouseup", handleGlobalMouseUp);
+});
 </script>
 
 

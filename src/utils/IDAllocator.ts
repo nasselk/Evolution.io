@@ -4,7 +4,6 @@ class IDAllocator {
 	private nextPositiveID: number;
 	private nextNegativeID: number;
 
-
 	constructor() {
 		this.freePositiveIDs = [];
 		this.freeNegativeIDs = [];
@@ -12,30 +11,23 @@ class IDAllocator {
 		this.nextNegativeID = -1;
 	}
 
-
 	// Allocate a positive numeric ID
 	public allocate(): number {
 		if (this.freePositiveIDs.length > 0) {
 			return this.freePositiveIDs.pop()!; // Retrieve from the pool
-		}
-
-		else {
+		} else {
 			return this.nextPositiveID++;
 		}
 	}
-
 
 	// Allocate a negative numeric ID
 	public allocateNegative(): number {
 		if (this.freeNegativeIDs.length > 0) {
 			return this.freeNegativeIDs.pop()!; // Retrieve from the pool
-		}
-
-		else {
+		} else {
 			return this.nextNegativeID--;
 		}
 	}
-
 
 	// Free a set of numeric IDs
 	public free(...ids: number[]): void {
@@ -44,9 +36,7 @@ class IDAllocator {
 				if (id < this.nextPositiveID) {
 					this.freePositiveIDs.push(id);
 				}
-			}
-
-			else {
+			} else {
 				if (id > this.nextNegativeID) {
 					this.freeNegativeIDs.push(id);
 				}
@@ -54,6 +44,5 @@ class IDAllocator {
 		}
 	}
 }
-
 
 export { IDAllocator };

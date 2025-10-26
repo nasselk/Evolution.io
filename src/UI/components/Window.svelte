@@ -1,116 +1,104 @@
 <script lang="ts">
-  	import ResizableBox from "./ResizableBox.svelte";
+import ResizableBox from "./ResizableBox.svelte";
 
-	import { Vector } from "../../math/vector";
+import { Vector } from "../../math/vector";
 
+const {
+	id = "",
+	class: classList = "",
+	title = "Window",
+	style = "",
+	isOpen = true,
+	x = undefined,
+	y = undefined,
+	width = undefined,
+	height = undefined,
+	minWidth = undefined,
+	minHeight = undefined,
+	maxWidth = undefined,
+	maxHeight = undefined,
+	children = () => {},
+	padding = "16px",
+	resizable = true,
+	moveable = true,
+} = $props();
 
-  	const {
-    	id = "",
-    	class: classList = "",
-    	title = "Window",
-		style = "",
-    	isOpen = true,
-    	x = undefined,
-    	y = undefined,
-    	width = undefined,
-    	height = undefined,
-    	minWidth = undefined,
-    	minHeight = undefined,
-    	maxWidth = undefined,
-    	maxHeight = undefined,
-		children = () => {},
-		padding = "16px",
-		resizable = true,
-		moveable = true,
-  	} = $props();
+let box: ResizableBox;
+let header: HTMLDivElement;
+let originalHeight: number;
+let isDragging = false;
+let activePointerId = -1;
+const dragOffset = new Vector();
 
+const state = $state({
+	minimized: false,
+	zIndex: 0,
+});
 
-  	let box: ResizableBox;
-	let header: HTMLDivElement;
-	let originalHeight: number;	
-  	let isDragging = false;
- 	let activePointerId = -1;
-  	const dragOffset = new Vector();
+function focus() {
+	state.zIndex = 1000;
+}
 
-	const state = $state({
-		minimized: false,
-		zIndex: 0,
-	});
+function startDrag(event: PointerEvent): void {
+	focus();
 
+	if (moveable) {
+		if ((event.target as HTMLElement)?.classList.contains("control")) return;
 
-	function focus() {
-		state.zIndex = 1000;
+		box.state.position = "fixed";
+		isDragging = true;
+		activePointerId = event.pointerId;
+
+		const position = box.getPosition();
+
+		dragOffset.set(event.clientX - position.x, event.clientY - position.y);
+
+		document.addEventListener("pointermove", drag);
+		document.addEventListener("pointerup", stopDrag);
+		document.addEventListener("pointercancel", stopDrag);
+
+		drag(event);
+
+		event.preventDefault();
 	}
+}
 
+function drag(event: PointerEvent): void {
+	if (isDragging && event.pointerId === activePointerId) {
+		box.state.x = `${event.clientX - dragOffset.x}px`;
+		box.state.y = `${event.clientY - dragOffset.y}px`;
 
-  	function startDrag(event: PointerEvent): void {
-		focus();
+		event.preventDefault();
+	}
+}
 
-		if (moveable) {
-			if ((event.target as HTMLElement)?.classList.contains("control")) return;
+function stopDrag() {
+	isDragging = false;
+	activePointerId = -1;
 
-			box.state.position = "fixed";
-    		isDragging = true;
-    		activePointerId = event.pointerId;
+	document.removeEventListener("pointermove", drag);
+	document.removeEventListener("pointerup", stopDrag);
+	document.removeEventListener("pointercancel", stopDrag);
+}
 
-			const position = box.getPosition();
+function minimize() {
+	originalHeight = box.getSize().height;
+	state.minimized = true;
 
-    		dragOffset.set(
-      			event.clientX - position.x,
-      			event.clientY - position.y
-    		);
+	const headerHeight = header.getBoundingClientRect().height;
 
-    		document.addEventListener("pointermove", drag);
-    		document.addEventListener("pointerup", stopDrag);
-    		document.addEventListener("pointercancel", stopDrag);
+	box.state.height = `${headerHeight}px`;
+}
 
-			drag(event);
+function expand() {
+	box.state.height = `${originalHeight}px`;
 
-    		event.preventDefault();
-		}
-  	}
+	state.minimized = false;
+}
 
-
-  	function drag(event: PointerEvent): void {
-    	if (isDragging && event.pointerId === activePointerId) {
-			box.state.x = `${ event.clientX - dragOffset.x }px`;
-			box.state.y = `${ event.clientY - dragOffset.y }px`;
-			
-      		event.preventDefault();
-    	}
- 	}
-
-
-  	function stopDrag() {
-    	isDragging = false;
-    	activePointerId = -1;
-
-    	document.removeEventListener("pointermove", drag);
-    	document.removeEventListener("pointerup", stopDrag);
-    	document.removeEventListener("pointercancel", stopDrag);
-  	}
-
-
-	function minimize() {
-    	originalHeight = box.getSize().height;
-      	state.minimized = true;
-
-	  	const headerHeight = header.getBoundingClientRect().height;
-
-		box.state.height = `${ headerHeight }px`;
-  	}
-  
-
-  	function expand() {
-		box.state.height = `${ originalHeight }px`;
-
-		state.minimized = false;
-  	}
-
-
-  	function close() {
-    	// You could dispatch an event here for parent components to handle
-  	}
+function close() {
+	// You could dispatch an event here for parent components to handle
+}
 </script>
 
 

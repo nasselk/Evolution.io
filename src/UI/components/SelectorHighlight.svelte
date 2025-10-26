@@ -1,36 +1,34 @@
 <script lang="ts">
-	let style = $state("");
+let style = $state("");
 
-	let lastTarget: HTMLElement | undefined;
+let lastTarget: HTMLElement | undefined;
 
-    export function updateHighlight(pressed: boolean = false, active: boolean = true, target?: HTMLElement): string | void {		
-		if (!target) {
-			target = lastTarget;
-		}
+export function updateHighlight(pressed: boolean = false, active: boolean = true, target?: HTMLElement): string | void {
+	if (!target) {
+		target = lastTarget;
+	} else {
+		lastTarget = target;
+	}
 
-		else {
-			lastTarget = target;
-		}
-		
-		if (target) {
-			const rect = target.getBoundingClientRect();
-    
-           	const width = rect.width * 1.225 + (pressed ? 10 : 0);	
-           	const height = rect.height * 1.225;
-    
-           	const offsetWidth = width - rect.width;
-           	const offsetHeight = height - rect.height;
-    
-           	return style = `
-               	left: ${ target.offsetLeft - offsetWidth / 2 }px;
-               	top: ${ target.offsetTop - offsetHeight / 2 }px;
-               	width: ${ width }px;
-               	height: ${ height }px;
+	if (target) {
+		const rect = target.getBoundingClientRect();
+
+		const width = rect.width * 1.225 + (pressed ? 10 : 0);
+		const height = rect.height * 1.225;
+
+		const offsetWidth = width - rect.width;
+		const offsetHeight = height - rect.height;
+
+		return (style = `
+               	left: ${target.offsetLeft - offsetWidth / 2}px;
+               	top: ${target.offsetTop - offsetHeight / 2}px;
+               	width: ${width}px;
+               	height: ${height}px;
 				transform: scale(${active ? 1 : 0});
                 opacity: ${active ? 1 : 0};
-           	`;
-		}
-    }
+           	`);
+	}
+}
 </script>
 
 

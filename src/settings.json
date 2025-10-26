@@ -6,7 +6,6 @@
 		"backgroundColor": "#242424"
 	},
 
-
 	"interpolation": {
 		"moves": 0.05,
 		"angle": 0.05,

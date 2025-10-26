@@ -1,21 +1,18 @@
 import { Vector } from "./vector";
 
-
-
 class Polygon {
 	public readonly points: Vector[];
-
 
 	public constructor(x: number, y: number, width: number, height: number, offset?: number, scale?: number);
 	public constructor(shape: Vector[], offset?: number, scale?: number);
 	public constructor(a: number | Vector[], b?: number, c?: number, d?: number, e?: number, f?: number) {
-		if (Array.isArray(a)) { // (shape, offset?, scale?)
+		if (Array.isArray(a)) {
+			// (shape, offset?, scale?)
 			this.points = a;
 
 			this.init(b, c);
-		}
-
-		else { //(x, y, width, height, offset?, scale?)
+		} else {
+			//(x, y, width, height, offset?, scale?)
 			this.points = [];
 
 			this.fromRectangle(a, b, c, d);
@@ -24,12 +21,11 @@ class Polygon {
 		}
 	}
 
-
 	public static union(...polygons: Polygon[]): Polygon {
 		const allPoints: Vector[] = [];
 
 		// Gather all vertices from the provided polygons
-		polygons.forEach(poly => allPoints.push(...poly.points));
+		polygons.forEach((poly) => allPoints.push(...poly.points));
 
 		// If there are no points, return an empty polygon
 		if (allPoints.length === 0) {
@@ -65,14 +61,11 @@ class Polygon {
 		return new Polygon(hull);
 	}
 
-
-
 	public *[Symbol.iterator](): IterableIterator<Vector> {
 		for (const point of this.points) {
 			yield point;
 		}
 	}
-
 
 	public forEach(callback: (value: Vector, index?: number) => void): void {
 		let i = 0;
@@ -84,28 +77,17 @@ class Polygon {
 		}
 	}
 
-
 	private init(offset: number = 0, scale: number = 1): void {
 		for (let i = 0; i < this.points.length; i++) {
 			const point = this.points[i];
 
-			this.points[i] = new Vector(
-				offset + point.x * scale,
-				offset + point.y * scale
-			);
+			this.points[i] = new Vector(offset + point.x * scale, offset + point.y * scale);
 		}
 	}
 
-
 	private fromRectangle(x: number = 0, y: number = 0, width: number = 0, height: number = 0): void {
-		this.points.push(
-			new Vector(x - width / 2, y - height / 2),
-			new Vector(x + width / 2, y - height / 2),
-			new Vector(x + width / 2, y + height / 2),
-			new Vector(x - width / 2, y + height / 2)
-		);
+		this.points.push(new Vector(x - width / 2, y - height / 2), new Vector(x + width / 2, y - height / 2), new Vector(x + width / 2, y + height / 2), new Vector(x - width / 2, y + height / 2));
 	}
-
 
 	public set(points: Vector[]): this {
 		this.points.length = 0;
@@ -115,20 +97,17 @@ class Polygon {
 		return this;
 	}
 
-
 	public add(point: Vector): this {
 		this.points.push(point);
 
 		return this;
 	}
 
-
 	public remove(): this {
 		this.points.pop();
 
 		return this;
 	}
-
 
 	public extrude(offset: number, apply: boolean = false): Polygon {
 		if (offset === 0) return this;
@@ -168,9 +147,7 @@ class Polygon {
 
 			if (Math.abs(det) < 1e-10) {
 				modified.push(p1);
-			}
-
-			else {
+			} else {
 				// Compute t such that intersection = p1 + t*d1.
 				const diff = p2.clone.subtract(p1);
 				const t = diff.cross(d2) / det;
@@ -192,11 +169,8 @@ class Polygon {
 		return new Polygon(modified);
 	}
 
-
-
 	public intersects(position: Vector, radius: number = 0): boolean {
 		const n = this.points.length;
-
 
 		let angleSum = 0;
 
@@ -210,7 +184,6 @@ class Polygon {
 		// If the circle center is inside the polygon, they overlap.
 		if (Math.abs(angleSum) > Math.PI) return true;
 
-
 		// Otherwise, check if any edge is closer than the radius.
 		for (let i = 0; i < n; i++) {
 			const a = this.points[i];
@@ -221,10 +194,8 @@ class Polygon {
 			}
 		}
 
-
 		return false;
 	}
-
 
 	public get center(): Vector {
 		const center = new Vector();
@@ -238,7 +209,6 @@ class Polygon {
 		return center;
 	}
 
-
 	public get width(): number {
 		let minX = Infinity;
 		let maxX = -Infinity;
@@ -246,16 +216,13 @@ class Polygon {
 		for (const point of this.points) {
 			if (point.x < minX) {
 				minX = point.x;
-			}
-
-			else if (point.x > maxX) {
+			} else if (point.x > maxX) {
 				maxX = point.x;
 			}
 		}
 
 		return maxX - minX;
 	}
-
 
 	public get height(): number {
 		let minY = Infinity;
@@ -264,16 +231,13 @@ class Polygon {
 		for (const point of this.points) {
 			if (point.y < minY) {
 				minY = point.y;
-			}
-
-			else if (point.y > maxY) {
+			} else if (point.y > maxY) {
 				maxY = point.y;
 			}
 		}
 
 		return maxY - minY;
 	}
-
 
 	public get dimensions(): Vector {
 		let minX = Infinity;
@@ -285,17 +249,13 @@ class Polygon {
 		for (const point of this.points) {
 			if (point.x < minX) {
 				minX = point.x;
-			}
-
-			else if (point.x > maxX) {
+			} else if (point.x > maxX) {
 				maxX = point.x;
 			}
 
 			if (point.y < minY) {
 				minY = point.y;
-			}
-
-			else if (point.y > maxY) {
+			} else if (point.y > maxY) {
 				maxY = point.y;
 			}
 		}
@@ -303,12 +263,10 @@ class Polygon {
 		return new Vector(maxX - minX, maxY - minY);
 	}
 
-
 	get clone(): Polygon {
 		return new Polygon(this.points);
 	}
 }
-
 
 /**
  * Computes the cross product of OA x OB
@@ -317,8 +275,5 @@ class Polygon {
 function cross(o: Vector, a: Vector, b: Vector): number {
 	return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
 }
-
-
-
 
 export { Polygon };

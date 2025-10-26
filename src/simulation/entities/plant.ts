@@ -14,8 +14,6 @@ import Simulation from "../core/simulation";
 
 import { Vector } from "../../math/vector";
 
-
-
 export default class Plant extends DynamicEntity<"plant"> {
 	static override readonly list: Map<number, Plant> = new Map();
 
@@ -28,7 +26,7 @@ export default class Plant extends DynamicEntity<"plant"> {
 			size: Simulation.spawner.randomInt(50, 150),
 			angle: randomAngle(),
 			mass: 1,
-			...options
+			...options,
 		});
 
 		this.collider = new Collider(Hitboxes.CIRCLE, this);
@@ -38,8 +36,7 @@ export default class Plant extends DynamicEntity<"plant"> {
 		this.replicate(replications);
 
 		Simulation.staticGrid.insert(this);
-  	}
-
+	}
 
 	public override update(deltaTime: number): void {
 		super.update(deltaTime);
@@ -49,14 +46,12 @@ export default class Plant extends DynamicEntity<"plant"> {
 
 		Simulation.staticGrid.move(this); // Met à jour la grille statique avec la position de la plante
 	}
-	
 
 	public override destroy(): void {
 		Simulation.staticGrid.remove(this); // Supprime la plante de la grille statique
 
 		super.destroy();
 	}
-
 
 	// Fonction pour répliquer (créer) une ou plusieurs nouvelles plantes
 	public replicate<T extends number = number>(amount: T = 1 as T): Plant | void {
@@ -66,15 +61,19 @@ export default class Plant extends DynamicEntity<"plant"> {
 			// Cherche une position valide (à l'intérieur de la carte)
 			while (!position! || Simulation.map.isOutside(position)) {
 				const angle = Simulation.spawner.randomAngle(); // Angle aléatoire
-				const distance = Simulation.spawner.randomInt(25, 350);// Distance aléatoire entre 25 et 350 unités
+				const distance = Simulation.spawner.randomInt(25, 350); // Distance aléatoire entre 25 et 350 unités
 
-				position = new Vector(angle, distance, true).add(this.position);  // Calcule la position autour de la plante actuelle
+				position = new Vector(angle, distance, true).add(this.position); // Calcule la position autour de la plante actuelle
 			}
-			
+
 			// Crée une nouvelle plante à la position trouvée
-			const plant = Entity.create("plant", {
-				position,
-			}, amount - 1);
+			const plant = Entity.create(
+				"plant",
+				{
+					position,
+				},
+				amount - 1,
+			);
 
 			return plant; // Retourne la nouvelle plante
 		}

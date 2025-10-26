@@ -2,13 +2,9 @@ import { Assets, Texture } from "pixi.js";
 
 import { warn } from "../utils/logger";
 
-
-
 type textureFormats = "jpg" | "png" | "avif" | "webp" | "jxl" | "ktx2";
 
 const textures: Map<string, Texture | Promise<Texture>> = new Map();
-
-
 
 async function getTexture(url: string, format?: textureFormats, fallbacks: string | string[] = []): Promise<Texture> {
 	url = formatTextureURL(url, format);
@@ -17,9 +13,7 @@ async function getTexture(url: string, format?: textureFormats, fallbacks: strin
 
 	if (texture instanceof Texture || texture instanceof Promise) {
 		return texture;
-	}
-
-	else {
+	} else {
 		const promise: Promise<Texture> = Assets.load(url).catch(() => {
 			if (typeof fallbacks === "string") {
 				fallbacks = [fallbacks];
@@ -31,9 +25,7 @@ async function getTexture(url: string, format?: textureFormats, fallbacks: strin
 				const fallback = fallbacks.shift()!;
 
 				return getTexture(fallback, format, fallbacks);
-			}
-
-			else {
+			} else {
 				throw new Error(`Texture ${url} not found`);
 			}
 		});
@@ -44,13 +36,9 @@ async function getTexture(url: string, format?: textureFormats, fallbacks: strin
 	}
 }
 
-
-
 async function getTextures<T extends readonly string[]>(...urls: T): Promise<{ [K in keyof T]: Texture }> {
-	return Promise.all(urls.map(url => getTexture(url))) as Promise<{ [K in keyof T]: Texture }>;
+	return Promise.all(urls.map((url) => getTexture(url))) as Promise<{ [K in keyof T]: Texture }>;
 }
-
-
 
 function formatTextureURL(url: string, format: textureFormats = "webp"): string {
 	if (!url.startsWith("./assets")) {
@@ -63,7 +51,5 @@ function formatTextureURL(url: string, format: textureFormats = "webp"): string 
 
 	return url;
 }
-
-
 
 export { getTexture, getTextures };

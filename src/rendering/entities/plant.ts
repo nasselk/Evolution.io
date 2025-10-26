@@ -8,21 +8,17 @@ import { type Sprite } from "pixi.js";
 
 import { Entity } from "./entity";
 
-
-
 export default class Plant extends Entity<"plant"> {
 	public static override readonly list = new Map<number, Plant>();
 	public static override readonly container = newContainer();
 
 	private texture?: Sprite;
 
-
 	public constructor(id: number, properties: BufferReader) {
 		super(id, properties);
-		
-		this.init();
-  	}
 
+		this.init();
+	}
 
 	public async init(): Promise<this> {
 		// Load the texture in async
@@ -40,7 +36,6 @@ export default class Plant extends Entity<"plant"> {
 		return this;
 	}
 
-
 	public override render(deltaTime: number): void {
 		const visible = super.render(deltaTime);
 
@@ -48,7 +43,7 @@ export default class Plant extends Entity<"plant"> {
 			this.texture!.setSize(this.size.x, this.size.y);
 
 			this.container.position.set(this.position.x, this.position.y);
-			
+
 			this.container.rotation = this.angle;
 		}
 	}

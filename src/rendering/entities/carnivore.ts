@@ -6,18 +6,14 @@ import { newSprite } from "../createVisuals";
 
 import Animal from "./animal";
 
-
-
 export default class Carnivore extends Animal<"carnivore"> {
 	public static override readonly list = new Map<number, Carnivore>();
-
 
 	public constructor(id: number, properties: BufferReader) {
 		super(id, properties);
 
 		this.init();
 	}
-
 
 	public override async init(): Promise<this> {
 		// Load the texture in async

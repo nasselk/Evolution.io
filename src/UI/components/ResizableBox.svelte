@@ -1,161 +1,127 @@
 <script lang="ts">
-	import { Vector } from "../../math/vector";
-    import { clamp } from "../../math/global";
+import { Vector } from "../../math/vector";
+import { clamp } from "../../math/global";
 
+const { id = "", class: classList = "", style = "", x = "0px", y = "0px", width = "400px", height = "300px", minWidth = "0px", minHeight = "150px", maxWidth = "500px", maxHeight = "500px", directions = ["n", "e", "s", "w", "nw", "ne", "sw", "se"], transition = false, children = () => {} } = $props();
 
-  	const {
-    	id = "",
-    	class: classList = "",
-		style = "",
-    	x = "0px",
-    	y = "0px",
-    	width = "400px",
-    	height = "300px",
-    	minWidth = "0px",
-    	minHeight = "150px",
-    	maxWidth = "500px",
-    	maxHeight = "500px",
-		directions = [
-			"n",
-			"e",
-			"s",
-			"w",
-			"nw",
-			"ne",
-			"sw",
-			"se"
-		],
-		transition = false,
-		children = () => {}
-  	} = $props();
+// Initialize state with parsed values and export it
+export const state = $state({
+	position: x === "0px" && y === "0px" ? "static" : "fixed",
+	x,
+	y,
+	width,
+	height,
+	transition,
+});
 
+let box: HTMLDivElement;
+let activePointerID = -1;
+let resizeAxis: keyof typeof handlers;
+const startProperties = { x: 0, y: 0, width: 0, height: 0 };
+const startAnchor = new Vector();
 
-	 
-  	// Initialize state with parsed values and export it
-  	export const state = $state({
-		position: x === "0px" && y === "0px" ? "static" : "fixed",
-    	x,
-    	y,
-    	width,
-    	height,
-		transition
-  	});
+const handlers = {
+	n: (dx: number, dy: number): void => {
+		const newHeight = startProperties.height - dy;
+		const constrainedHeight = clamp(newHeight, parseFloat(minHeight), parseFloat(maxHeight));
+		const actualDy = startProperties.height - constrainedHeight;
 
+		state.height = `${constrainedHeight}px`;
+		state.y = `${startProperties.y + actualDy}px`;
+	},
 
-	let box: HTMLDivElement;
-  	let activePointerID = -1;
-  	let resizeAxis: keyof typeof handlers;
-  	const startProperties = { x: 0, y: 0, width: 0, height: 0 };
-  	const startAnchor = new Vector();
+	e: (dx: number, dy: number): void => {
+		const width = Math.max(startProperties.width + dx, parseFloat(minWidth));
 
+		state.width = `${width}px`;
+	},
 
-  	const handlers = {
-    	n: (dx: number, dy: number): void => {
-      		const newHeight = startProperties.height - dy;
-      		const constrainedHeight = clamp(newHeight, parseFloat(minHeight), parseFloat(maxHeight));
-      		const actualDy = startProperties.height - constrainedHeight;
+	s: (dx: number, dy: number): void => {
+		const height = Math.max(startProperties.height + dy, parseFloat(minHeight));
 
-			state.height = `${ constrainedHeight }px`;
-			state.y = `${ startProperties.y + actualDy }px`;
-		},
+		state.height = `${height}px`;
+	},
 
-    	e: (dx: number, dy: number): void => {
-      		const width = Math.max(startProperties.width + dx, parseFloat(minWidth));
+	w: (dx: number, dy: number): void => {
+		const newWidth = startProperties.width - dx;
+		const constrainedWidth = clamp(newWidth, parseFloat(minWidth), parseFloat(maxWidth));
+		const actualDx = startProperties.width - constrainedWidth;
 
-			state.width = `${ width }px`;
-    	},
+		state.width = `${constrainedWidth}px`;
+		state.x = `${startProperties.x + actualDx}px`;
+	},
 
-    	s: (dx: number, dy: number): void => {
-      		const height =  Math.max(startProperties.height + dy, parseFloat(minHeight));
+	nw: (dx: number, dy: number): void => {
+		handlers.n(dx, dy);
+		handlers.w(dx, dy);
+	},
 
-			state.height = `${ height }px`;
-    	},
+	ne: (dx: number, dy: number): void => {
+		handlers.n(dx, dy);
+		handlers.e(dx, dy);
+	},
 
-    	w: (dx: number, dy: number): void => {
-      		const newWidth = startProperties.width - dx;
-      		const constrainedWidth = clamp(newWidth, parseFloat(minWidth), parseFloat(maxWidth));
-      		const actualDx = startProperties.width - constrainedWidth;
+	sw: (dx: number, dy: number): void => {
+		handlers.s(dx, dy);
+		handlers.w(dx, dy);
+	},
 
-      		state.width = `${ constrainedWidth }px`;
-      		state.x = `${ startProperties.x + actualDx }px`;
-    	},
+	se: (dx: number, dy: number): void => {
+		handlers.s(dx, dy);
+		handlers.e(dx, dy);
+	},
+};
 
-    	nw: (dx: number, dy: number): void => {
-      		handlers.n(dx, dy);
-      		handlers.w(dx, dy);
-    	},
+function startResize(event: PointerEvent, direction: keyof typeof handlers): void {
+	// Set the active pointer ID and resize axis
+	state.position = "fixed";
+	activePointerID = event.pointerId;
+	resizeAxis = direction;
 
-    	ne: (dx: number, dy: number): void => {
-      		handlers.n(dx, dy);
-      		handlers.e(dx, dy);
-    	},
+	const bounds = box.getBoundingClientRect();
 
-    	sw: (dx: number, dy: number): void => {
-     	 	handlers.s(dx, dy);
-      		handlers.w(dx, dy);
-    	},
+	state.x = `${bounds.x}px`;
+	state.y = `${bounds.y}px`;
+	startProperties.x = bounds.x;
+	startProperties.y = bounds.y;
+	startProperties.width = bounds.width;
+	startProperties.height = bounds.height;
 
-    	se: (dx: number, dy: number): void => {
-      		handlers.s(dx, dy);
-      		handlers.e(dx, dy);
-    	}
-  	};
+	startAnchor.set(event.clientX, event.clientY);
 
+	document.addEventListener("pointermove", resize);
+	document.addEventListener("pointerup", stopResize);
+	document.addEventListener("pointercancel", stopResize);
+}
 
-  	function startResize(event: PointerEvent, direction: keyof typeof handlers): void {
-		// Set the active pointer ID and resize axis
-		state.position = "fixed";
-		activePointerID = event.pointerId;
-    	resizeAxis = direction;
+function resize(event: PointerEvent): void {
+	if (event.pointerId === activePointerID) {
+		const dx = event.clientX - startAnchor.x;
+		const dy = event.clientY - startAnchor.y;
 
-		const bounds = box.getBoundingClientRect();
+		handlers[resizeAxis](dx, dy);
+	}
+}
 
-		state.x = `${ bounds.x }px`;
-		state.y = `${ bounds.y }px`;
-    	startProperties.x = bounds.x;
-    	startProperties.y = bounds.y;
-    	startProperties.width = bounds.width;
-    	startProperties.height = bounds.height; 
+function stopResize(): void {
+	document.removeEventListener("pointermove", resize);
+	document.removeEventListener("pointerup", stopResize);
+	document.removeEventListener("pointercancel", stopResize);
 
-		startAnchor.set(event.clientX, event.clientY);
+	activePointerID = -1;
+}
 
-    	document.addEventListener("pointermove", resize);
-    	document.addEventListener("pointerup", stopResize);
-    	document.addEventListener("pointercancel", stopResize);
-  	}
+export function getPosition(): { x: number; y: number } {
+	const position = box.getBoundingClientRect();
 
+	return { x: position.x, y: position.y };
+}
 
-  	function resize(event: PointerEvent): void {
-    	if (event.pointerId === activePointerID) {
-      		const dx = event.clientX - startAnchor.x;
-      		const dy = event.clientY - startAnchor.y;
+export function getSize(): { width: number; height: number } {
+	const size = box.getBoundingClientRect();
 
-      		handlers[resizeAxis](dx, dy);
-    	}
-  	}
-
-
-  	function stopResize(): void {
-    	document.removeEventListener("pointermove", resize);
-    	document.removeEventListener("pointerup", stopResize);
-    	document.removeEventListener("pointercancel", stopResize);
-
-    	activePointerID = -1;
-  	}
-
-
-	export function getPosition(): { x: number; y: number } {
-		const position = box.getBoundingClientRect();
-
-		return { x: position.x, y: position.y };
-  	}
-
-
-	export function getSize(): { width: number; height: number } {
-		const size = box.getBoundingClientRect();
-
-		return { width: size.width, height: size.height };
-  	}
+	return { width: size.width, height: size.height };
+}
 </script>
 
 
