@@ -19,7 +19,7 @@ Although the app runs entirely in the browser, [*Node.js*](https://nodejs.org/) 
 npm install
 ```
 
-2. Run the project locally (it should automatically open in a browser tab, otherwise, navigate to `http://localhost:5173`).
+2. Run the project locally (it should automatically open in a browser tab, otherwise, navigate to [`http://localhost:5173`]()).
 ```pwsh
 npm run dev
 ```
