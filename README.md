@@ -1,7 +1,7 @@
 # Evolution.io
 
 Evolution.io is a simulation project built in TypeScript on top of a lightweight in-house engine (Phoenix.Engine).  
-It simulates interactions between carnivores, herbivores and plants on a large procedurally-generated map and produces rich emergent behaviours (hunting, fleeing, reproduction, foraging, territory dynamics). The engine is optimized for performance and can handle very large populations (reported >55k animals on an average machine) while keeping deterministic simulation features and good visual responsiveness.
+It simulates interactions between carnivores, herbivores and plants on a large procedurally-generated map and produces rich emergent behaviours (hunting, fleeing, reproduction, foraging). The engine is optimized for performance and can handle very large populations (>55k animals on an average machine) while keeping deterministic simulation features and good visual responsiveness.
 
 Key features
 - Agent-based ecosystem simulation with emergent behaviour
@@ -9,16 +9,17 @@ Key features
 - Configurable genetics, movement, combat and reproduction systems
 - TypeScript codebase with modular systems for simulation, rendering and UI
 
-How to run
+# Requirements
+Although the app runs entirely in the browser, [*Node.js*](https://nodejs.org/)  (>= 20.x) is required for development to start the local server that serves the static files.
 
-# First
-- Run `npm install` to install dependencies and auto build
+# Run locally
 
-# For development
-- Run `npm run dev` to start the development server.
-- Open your browser and navigate to `http://localhost:5173` to see the application in action (it should open itself).
+1. Install dependencies:
+```pwsh
+npm install
+```
 
-# For production
-- Run `npm run build` to build the application for production.
-- Run `npm run preview` to start the production server.
-- Open your browser and navigate to `http://localhost:4173` to see the application in action (it should open itself).
+2. Run the project locally (it should automatically open in a browser tab, otherwise, navigate to `http://localhost:5173`).
+```pwsh
+npm run dev
+```
