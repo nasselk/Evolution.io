@@ -1,6 +1,6 @@
 # Evolution.io
 
-# Overview
+## Overview
 
 <p align="center">
 	<img src="public/assets/showcase.webp" alt="Evolution.io showcase" />
@@ -25,16 +25,16 @@ It simulates interactions between carnivores, herbivores and plants on a large p
 - TypeScript codebase with modular systems for simulation, rendering and UI
 
 
-# Structure
+## Structure
 
 The project uses multithreading to run rendering and physics loops in parallel. Rendering-related systems (camera, layers, UI, input handling, etc.) are implemented in `src/rendering`. Physics, AI, and entity interaction logic are located in `src/physics`.
 
 
-# Requirements
+## Requirements
 Although the app runs entirely in the browser, [*Node.js*](https://nodejs.org/) (v20 or higher) is required for development to start the local server that serves the static files.
 
 
-# Run locally
+## Run locally
 
 1. Install dependencies:
 ```pwsh
@@ -46,6 +46,6 @@ npm install
 npm run dev
 ```
 
-# Licence
+## Licence
 
 View and experiment locally only — redistribution or production use is prohibited. See LICENSE.
