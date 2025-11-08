@@ -1,5 +1,6 @@
 # Evolution.io
 
+
 ## Overview
 
 <p align="center">
@@ -8,6 +9,9 @@
 
 Evolution.io is a simulation project built in TypeScript on top of a lightweight in-house engine (Phoenix.Engine).  
 It simulates interactions between carnivores, herbivores and plants on a large procedurally-generated map and produces rich emergent behaviours (hunting, fleeing, reproduction, foraging). The engine is optimized for performance and can handle very large populations (>55k animals on an average machine) while keeping deterministic simulation features and good visual responsiveness.
+
+**[Live Demo](https://evolution.elkarati.dev)**
+
 
 ## Table of contents
 
