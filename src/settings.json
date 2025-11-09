@@ -2,7 +2,7 @@
 	"rendering": {
 		"resolution": 1,
 		"antialiasing": true,
-		"renderer": "webgpu",
+		"renderer": "wegbl",
 		"backgroundColor": "#242424"
 	},
 
